@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "Notes about all kind of objects",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "text": {
+      "type": "string"
+    },
+    "link": {
+      "type": "string"
+    },
+    "senderId": {
+      "type": "string"
+    },
+    "seen": {
+      "type": "boolean"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema"
+    }
+  },
+  "required": [
+    "text"
+  ]
+}
