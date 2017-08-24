@@ -56,32 +56,32 @@
   "permissionSets": [
     {
       "permissionName": "notify.collection.get",
-      "displayName": "Notes - get notify collection",
+      "displayName": "Notifications - get notify collection",
       "description": "Get notify collection"
     },
     {
       "permissionName": "notify.item.get",
-      "displayName": "Notes - get individual note from storage",
-      "description": "Get individual note"
+      "displayName": "Notifications- get individual notification from storage",
+      "description": "Get individual notification"
     },
     {
       "permissionName": "notify.item.post",
-      "displayName": "Notes - create note",
-      "description": "Create note"
+      "displayName": "Notifications - create notification",
+      "description": "Create notification"
     },
     {
       "permissionName": "notify.item.put",
-      "displayName": "Notes - modify note",
-      "description": "Modify note"
+      "displayName": "Notifications - modify notification",
+      "description": "Modify notification"
     },
     {
       "permissionName": "notify.item.delete",
-      "displayName": "Notes - delete note",
-      "description": "Delete note"
+      "displayName": "Notifications - delete notification",
+      "description": "Delete notification"
     },
     {
       "permissionName": "notify.all",
-      "displayName": "Notes module - all permissions",
+      "displayName": "Notifications module - all permissions",
       "description": "Entire set of permissions needed to use the notify modules",
       "subPermissions": [
         "notify.collection.get",
