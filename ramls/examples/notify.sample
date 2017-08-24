@@ -1,5 +1,5 @@
 {
- "id":"12345",
- "text":"The book is now available for you",
- "link":"items/23456"
+  "id": "12345",
+  "text": "The book is now available for you",
+  "link": "items/23456"
 }
