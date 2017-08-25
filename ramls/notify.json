@@ -6,24 +6,28 @@
     "id": {
       "type": "string"
     },
+    "recipientId": {
+      "type": "string"
+    },
+    "senderId": {
+      "type": "string"
+    },
     "text": {
       "type": "string"
     },
     "link": {
       "type": "string"
     },
-    "senderId": {
-      "type": "string"
-    },
     "seen": {
       "type": "boolean"
     },
-    "metadata": {
+    "metaData": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema"
     }
   },
   "required": [
+    "recipientId",
     "text"
   ]
 }

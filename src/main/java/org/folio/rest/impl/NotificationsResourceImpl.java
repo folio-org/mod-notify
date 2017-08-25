@@ -195,8 +195,76 @@ public class NotificationsResourceImpl implements NotificationsResource {
   }
 
   @Override
-  public void getNotifySelf(String query, int offset, int limit, String lang, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  public void getNotifySelf(String query, int offset, int limit,
+    String lang, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) throws Exception {
+    try {
+      logger.info("Getting self notes. " + offset + "+" + limit + " q=" + query);
+      String tenantId = TenantTool.calculateTenantId(
+        okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
+      String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
+      if (userId == null || userId.isEmpty()) {
+        logger.error("No userId for getNotesSelf");
+        asyncResultHandler.handle(succeededFuture(GetNotifyResponse
+          .withPlainBadRequest("No UserId")));
+        return;
+      }
+      String selfQuery = "recipientId=" + userId;
+      if (query == null || query.isEmpty()) {
+        query = selfQuery;
+      } else {
+        query = selfQuery + " and (" + query + ")";
+      }
+      logger.info("Getting self notes. new query:" + query);
+      CQLWrapper cql = getCQL(query, limit, offset, NOTE_SCHEMA);
+
+      PostgresClient.getInstance(vertxContext.owner(), tenantId)
+        .get(NOTE_TABLE, Notification.class, new String[]{"*"}, cql,
+          true /*get count too*/, false /* set id */,
+          reply -> {
+            try {
+              if (reply.succeeded()) {
+                NotifyCollection notes = new NotifyCollection();
+                @SuppressWarnings("unchecked")
+                List<Notification> notelist = (List<Notification>) reply.result()[0];
+                notes.setNotifications(notelist);
+                notes.setTotalRecords((Integer) reply.result()[1]);
+                asyncResultHandler.handle(succeededFuture(
+                    GetNotifyResponse.withJsonOK(notes)));
+              } else {
+                logger.error(reply.cause().getMessage(), reply.cause());
+                asyncResultHandler.handle(succeededFuture(GetNotifyResponse
+                    .withPlainBadRequest(reply.cause().getMessage())));
+              }
+            } catch (Exception e) {
+              logger.error(e.getMessage(), e);
+              asyncResultHandler.handle(succeededFuture(GetNotifyResponse
+                  .withPlainInternalServerError(messages.getMessage(
+                      lang, MessageConsts.InternalServerError))));
+            }
+          });
+    } catch (CQLQueryValidationException e1) {
+      int start = e1.getMessage().indexOf("'");
+      int end = e1.getMessage().lastIndexOf("'");
+      String field = e1.getMessage();
+      if (start != -1 && end != -1) {
+        field = field.substring(start + 1, end);
+      }
+      Errors e = ValidationHelper.createValidationErrorMessage(field,
+        "", e1.getMessage());
+      asyncResultHandler.handle(succeededFuture(GetNotifyResponse
+        .withJsonUnprocessableEntity(e)));
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      String message = messages.getMessage(lang, MessageConsts.InternalServerError);
+      if (e.getCause() != null && e.getCause().getClass().getSimpleName()
+        .endsWith("CQLParseException")) {
+        message = " CQL parse error " + e.getLocalizedMessage();
+      }
+      asyncResultHandler.handle(succeededFuture(GetNotifyResponse
+        .withPlainInternalServerError(message)));
+    }
   }
 
   @Override
