@@ -19,7 +19,8 @@
       "type": "string"
     },
     "seen": {
-      "type": "boolean"
+      "type": "boolean",
+      "default": false
     },
     "metaData": {
       "type": "object",
