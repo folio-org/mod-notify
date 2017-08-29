@@ -47,7 +47,7 @@ public class NotifyTest {
 
   private final Header JSON = new Header("Content-Type", "application/json");
   private String moduleName = "mod-notify";
-  private String moduleVersion = "0.1.0-SNAPSHOT";
+  private String moduleVersion = "0.1.0";
   private String moduleId = moduleName + "-" + moduleVersion;
   Vertx vertx;
   Async async;
