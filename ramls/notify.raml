@@ -61,6 +61,13 @@ resourceTypes:
         pageable,
         validate
       ]
+    delete:
+      queryParameters:
+        olderthan:
+          description: Delete all seen notifications not modified since this timestamp
+          required: false
+          type: string
+          example: "2017-12-25"
   /{id}:
     displayName: Notifications
     description: Get, Delete or Update a specific notification
