@@ -62,6 +62,9 @@ resourceTypes:
         validate
       ]
     delete:
+      is : [
+        validate
+      ]
       queryParameters:
         olderthan:
           description: Delete all seen notifications not modified since this timestamp

@@ -36,18 +36,16 @@ import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 public class NotificationsResourceImpl implements NotificationsResource {
   private final Logger logger = LoggerFactory.getLogger("okapi");
   private final Messages messages = Messages.getInstance();
-  // TODO - Rename the NOTE_somethings to NOTIFY_somethings
-  // But only after pasting lots of code from notes
-  public static final String NOTE_TABLE = "notify_data";
+  private static final String NOTIFY_TABLE = "notify_data";
   private static final String LOCATION_PREFIX = "/notify/";
   private final String idFieldName = "id";
-  private static String NOTE_SCHEMA = null;
-  private static final String NOTE_SCHEMA_NAME = "apidocs/raml/notify.json";
+  private static String NOTIFY_SCHEMA = null;
+  private static final String NOTIFY_SCHEMA_NAME = "apidocs/raml/notify.json";
 
   private void initCQLValidation() {
-    String path = NOTE_SCHEMA_NAME;
+    String path = NOTIFY_SCHEMA_NAME;
     try {
-      NOTE_SCHEMA = IOUtils.toString(
+      NOTIFY_SCHEMA = IOUtils.toString(
         getClass().getClassLoader().getResourceAsStream(path), "UTF-8");
     } catch (Exception e) {
       logger.error("unable to load schema - " + path
@@ -56,7 +54,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
   }
 
   public NotificationsResourceImpl(Vertx vertx, String tenantId) {
-    if (NOTE_SCHEMA == null) {
+    if (NOTIFY_SCHEMA == null) {
       //initCQLValidation();  // COmmented out, the validation fails a
       // prerfectly valid query=metaData.createdByUserId=e037b...
     }
@@ -65,15 +63,26 @@ public class NotificationsResourceImpl implements NotificationsResource {
 
   private CQLWrapper getCQL(String query, int limit, int offset,
     String schema) throws Exception {
-    CQL2PgJSON cql2pgJson = null;
+    CQL2PgJSON cql2pgJson;
     if (schema != null) {
-      cql2pgJson = new CQL2PgJSON(NOTE_TABLE + ".jsonb", schema);
+      cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb", schema);
     } else {
-      cql2pgJson = new CQL2PgJSON(NOTE_TABLE + ".jsonb");
+      cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb");
     }
     return new CQLWrapper(cql2pgJson, query)
       .setLimit(new Limit(limit))
       .setOffset(new Offset(offset));
+  }
+
+  private CQLWrapper getCQL(String query,
+    String schema) throws Exception {
+    CQL2PgJSON cql2pgJson = null;
+    if (schema != null) {
+      cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb", schema);
+    } else {
+      cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb");
+    }
+    return new CQLWrapper(cql2pgJson, query);
   }
 
 
@@ -88,10 +97,10 @@ public class NotificationsResourceImpl implements NotificationsResource {
       logger.info("Getting notifications. " + offset + "+" + limit + " q=" + query);
       String tenantId = TenantTool.calculateTenantId(
         okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-      CQLWrapper cql = getCQL(query, limit, offset, NOTE_SCHEMA);
+      CQLWrapper cql = getCQL(query, limit, offset, NOTIFY_SCHEMA);
 
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
-        .get(NOTE_TABLE, Notification.class, new String[]{"*"}, cql, true, true,
+        .get(NOTIFY_TABLE, Notification.class, new String[]{"*"}, cql, true, true,
           reply -> {
             try {
               if (reply.succeeded()) {
@@ -146,7 +155,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
       String tenantId = TenantTool.calculateTenantId(
         okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       String id = entity.getId();
-      PostgresClient.getInstance(context.owner(), tenantId).save(NOTE_TABLE,
+      PostgresClient.getInstance(context.owner(), tenantId).save(NOTIFY_TABLE,
         id, entity,
         reply -> {
           try {
@@ -200,7 +209,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
     try {
-      logger.info("Getting self notes. " + offset + "+" + limit + " q=" + query);
+      logger.debug("Getting self notes. " + offset + "+" + limit + " q=" + query);
       String tenantId = TenantTool.calculateTenantId(
         okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
@@ -216,11 +225,11 @@ public class NotificationsResourceImpl implements NotificationsResource {
       } else {
         query = selfQuery + " and (" + query + ")";
       }
-      logger.info("Getting self notes. new query:" + query);
-      CQLWrapper cql = getCQL(query, limit, offset, NOTE_SCHEMA);
+      logger.debug("Getting self notes. new query:" + query);
+      CQLWrapper cql = getCQL(query, limit, offset, NOTIFY_SCHEMA);
 
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
-        .get(NOTE_TABLE, Notification.class, new String[]{"*"}, cql,
+        .get(NOTIFY_TABLE, Notification.class, new String[]{"*"}, cql,
           true /*get count too*/, false /* set id */,
           reply -> {
             try {
@@ -267,9 +276,83 @@ public class NotificationsResourceImpl implements NotificationsResource {
     }
   }
 
+  /**
+   * Post to _self is not supported, but RMB builds this anyway.
+   *
+   */
   @Override
   public void postNotifySelf(String lang, Notification entity, Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) throws Exception {
-    throw new UnsupportedOperationException("Not supported yet.");
+    throw new UnsupportedOperationException("Not supported.");
+  }
+
+  @Override
+  public void deleteNotifySelf(String olderthan,
+    //String query,
+    //int offset, int limit,
+    String lang, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) throws Exception {
+    try {
+      String tenantId = TenantTool.calculateTenantId(
+        okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
+      String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
+      logger.debug("Trying to delete _self notifies for "
+        + tenantId + "/" + userId + " since " + olderthan);
+      if (userId == null || userId.isEmpty()) {
+        logger.error("No userId for deleteNotesSelf");
+        asyncResultHandler.handle(succeededFuture(GetNotifyResponse
+          .withPlainBadRequest("No UserId")));
+        return;
+      }
+      String query;
+      String selfQuery = "recipientId=\"" + userId + "\""
+        + " and seen=true";
+      if (olderthan == null || olderthan.isEmpty()) {
+        query = selfQuery;
+      } else {
+        query = selfQuery + " and ( metaData.updatedDate<" + olderthan + ")";
+      }
+      logger.info("Deleting self notes. new query:" + query);
+      CQLWrapper cql = getCQL(query, NOTIFY_SCHEMA);
+      PostgresClient.getInstance(vertxContext.owner(), tenantId)
+        .delete(NOTIFY_TABLE, cql,
+          reply -> {
+            if (reply.succeeded()) {
+              if (reply.result().getUpdated() > 0) {
+                logger.info("Deleted " + reply.result().getUpdated() + " notifies");
+                asyncResultHandler.handle(succeededFuture(
+                    DeleteNotifyByIdResponse.withNoContent()));
+              } else {
+                logger.error(messages.getMessage(lang,
+                    MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
+                asyncResultHandler.handle(succeededFuture(DeleteNotifyByIdResponse
+                    .withPlainNotFound(messages.getMessage(lang,
+                        MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
+              }
+            } else {
+              String error = PgExceptionUtil.badRequestMessage(reply.cause());
+              logger.error(error, reply.cause());
+              if (error == null) {
+                asyncResultHandler.handle(succeededFuture(PostNotifyResponse
+                    .withPlainInternalServerError(
+                      messages.getMessage(lang, MessageConsts.InternalServerError))));
+              } else {
+                asyncResultHandler.handle(succeededFuture(PostNotifyResponse
+                    .withPlainBadRequest(error)));
+              }
+            }
+
+          });
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      String message = messages.getMessage(lang, MessageConsts.InternalServerError);
+      if (e.getCause() != null && e.getCause().getClass().getSimpleName()
+        .endsWith("CQLParseException")) {
+        message = " CQL parse error " + e.getLocalizedMessage();
+      }
+      asyncResultHandler.handle(succeededFuture(GetNotifyResponse
+        .withPlainInternalServerError(message)));
+    }
   }
 
   @Override
@@ -289,7 +372,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
         .setOperation("=").setValue("'" + id + "'"));
 
       PostgresClient.getInstance(context.owner(), tenantId)
-        .get(NOTE_TABLE, Notification.class, c, true,
+        .get(NOTIFY_TABLE, Notification.class, c, true,
           reply -> {
             try {
               if (reply.succeeded()) {
@@ -334,8 +417,13 @@ public class NotificationsResourceImpl implements NotificationsResource {
     String tenantId = TenantTool.calculateTenantId(
       okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
     try {
+      if (id.equals("_self")) {
+        // The _self endpoint has already handled this request
+        return;
+      }
+
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
-        .delete(NOTE_TABLE, id,
+        .delete(NOTIFY_TABLE, id,
           reply -> {
             if (reply.succeeded()) {
               if (reply.result().getUpdated() == 1) {
@@ -388,8 +476,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
       }
       String tenantId = TenantTool.calculateTenantId(
         okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-      PostgresClient.getInstance(vertxContext.owner(), tenantId).update(
-        NOTE_TABLE, entity, id,
+      PostgresClient.getInstance(vertxContext.owner(), tenantId).update(NOTIFY_TABLE, entity, id,
         reply -> {
           try {
             if (reply.succeeded()) {

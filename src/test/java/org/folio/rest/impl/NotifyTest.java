@@ -6,7 +6,7 @@ import com.jayway.restassured.RestAssured;
 import static com.jayway.restassured.RestAssured.given;
 import com.jayway.restassured.response.Header;
 import static org.hamcrest.Matchers.containsString;
-
+import org.folio.rest.tools.PomReader;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
@@ -46,16 +46,20 @@ public class NotifyTest {
     "99999999-9999-9999-9999-999999999999");
 
   private final Header JSON = new Header("Content-Type", "application/json");
-  private String moduleName = "mod-notify";
-  private String moduleVersion = "0.2.0-SNAPSHOT";
-  private String moduleId = moduleName + "-" + moduleVersion;
+  private String moduleName; // = "mod-notify";
+  private String moduleVersion; // = "0.2.0-SNAPSHOT";
+  private String moduleId; //  = moduleName + "-" + moduleVersion;
   Vertx vertx;
   Async async;
 
   @Before
   public void setUp(TestContext context) {
     vertx = Vertx.vertx();
-    logger.info("notifyTest: Setup starting");
+    moduleName = PomReader.INSTANCE.getModuleName();
+    moduleVersion = PomReader.INSTANCE.getVersion();
+    moduleId = moduleName + "-" + moduleVersion;
+
+    logger.info("Test setup starting for " + moduleId);
 
     try {
       PostgresClient.setIsEmbedded(true);
@@ -200,7 +204,7 @@ public class NotifyTest {
       .statusCode(400)
       .body(containsString("invalid input syntax for uuid"));
 
-    // Post a good note
+    // Post a good notification
     given()
       .header(TEN).header(USER9).header(JSON)
       .body(note1)
@@ -346,6 +350,14 @@ public class NotifyTest {
       .body(containsString("with a comment"));
 
     given()
+      .header(TEN).header(USER7)
+      .get("/notify/_self?query=seen=true")
+      .then()
+      .statusCode(200)
+      .body(containsString("\"totalRecords\" : 1"))
+      .body(containsString("First"));
+
+    given()
       .header(TEN).header(USER8)
       .get("/notify/_self")
       .then()
@@ -366,24 +378,31 @@ public class NotifyTest {
       .then()
       .statusCode(404);
 
-    // delete them
+    // self delete 1111
     given()
-      .header(TEN)
-      .delete("/notify/11111111-1111-1111-1111-111111111111")
+      .header(TEN).header(USER7)
+      .delete("/notify/_self?olderthan=2001-01-01")
       .then()
-      .statusCode(204);
+      .statusCode(404); // too new
 
     given()
-      .header(TEN)
-      .delete("/notify/11111111-1111-1111-1111-111111111111") // no longer there
+      .header(TEN).header(USER7)
+      .delete("/notify/_self?olderthan=2099-01-01")
       .then()
-      .statusCode(404);
+      .statusCode(204); // gone!
 
+    // delete 2222
     given()
       .header(TEN)
       .delete("/notify/22222222-2222-2222-2222-222222222222")
       .then()
       .statusCode(204);
+
+    given()
+      .header(TEN)
+      .delete("/notify/22222222-2222-2222-2222-222222222222")
+      .then()
+      .statusCode(404); // no longer there
 
     given()
       .header(TEN)
