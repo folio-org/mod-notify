@@ -1,7 +1,6 @@
 package org.folio.rest.impl;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
 import com.jayway.restassured.RestAssured;
 import static com.jayway.restassured.RestAssured.given;
 import com.jayway.restassured.response.Header;
@@ -24,7 +23,7 @@ import org.folio.rest.persist.PostgresClient;
 import org.junit.After;
 
 /**
- * Interface test for mod-notes. Tests the API with restAssured, directly
+ * Interface test for mod-notify. Tests the API with restAssured, directly
  * against the module - without any Okapi in the picture. Since we run with an
  * embedded postgres, we always start with an empty database, and can safely
  * leave test data in it.
@@ -46,16 +45,17 @@ public class NotifyTest {
     "99999999-9999-9999-9999-999999999999");
 
   private final Header JSON = new Header("Content-Type", "application/json");
-  private String moduleName; // = "mod-notify";
-  private String moduleVersion; // = "0.2.0-SNAPSHOT";
-  private String moduleId; //  = moduleName + "-" + moduleVersion;
+  private String moduleName; // "mod-notify";
+  private String moduleVersion; // "0.2.0-SNAPSHOT";
+  private String moduleId; // "mod-notify-0.2.0-SNAPSHOT"
   Vertx vertx;
   Async async;
 
   @Before
   public void setUp(TestContext context) {
     vertx = Vertx.vertx();
-    moduleName = PomReader.INSTANCE.getModuleName();
+    moduleName = PomReader.INSTANCE.getModuleName()
+      .replaceAll("_", "-");  // Rmb returns a 'normalized' name, with underscores
     moduleVersion = PomReader.INSTANCE.getVersion();
     moduleId = moduleName + "-" + moduleVersion;
 
@@ -65,7 +65,6 @@ public class NotifyTest {
       PostgresClient.setIsEmbedded(true);
       PostgresClient.getInstance(vertx).startEmbeddedPostgres();
     } catch (Exception e) {
-      e.printStackTrace();
       context.fail(e);
       return;
     }
@@ -86,12 +85,12 @@ public class NotifyTest {
 
   @After
   public void tearDown(TestContext context) {
-    logger.info("Cleaning up after ModuleTest");
+    logger.info("Cleaning up after notifyTest");
     async = context.async();
-    vertx.close(context.asyncAssertSuccess(res -> {
-      PostgresClient.stopEmbeddedPostgres();
+    PostgresClient.stopEmbeddedPostgres();
+    vertx.close(res -> {   // This logs a stack trace, ignore it.
       async.complete();
-    }));
+    });
   }
 
   /**
@@ -142,7 +141,7 @@ public class NotifyTest {
       .log().ifError()
       .statusCode(201);
 
-    // Empty list of notes
+    // Empty list of notifications
     given()
       .header(TEN)
       .get("/notify")
@@ -151,7 +150,7 @@ public class NotifyTest {
       .statusCode(200)
       .body(containsString("\"notifications\" : [ ]"));
 
-    // Post some malformed notes
+    // Post some malformed notifications
     String bad1 = "This is not json";
     given()
       .header(TEN) // no content-type header
@@ -169,13 +168,13 @@ public class NotifyTest {
       .statusCode(400)
       .body(containsString("Json content error"));
 
-    String note1 = "{"
+    String notify1 = "{"
       + "\"id\" : \"11111111-1111-1111-1111-111111111111\"," + LS
       + "\"recipientId\" : \"77777777-7777-7777-7777-777777777777\"," + LS
       + "\"link\" : \"users/1234\"," + LS
       + "\"text\" : \"First notification\"}" + LS;
 
-    String bad2 = note1.replaceFirst("}", ")"); // make it invalid json
+    String bad2 = notify1.replaceFirst("}", ")"); // make it invalid json
     given()
       .header(TEN).header(JSON)
       .body(bad2)
@@ -184,7 +183,7 @@ public class NotifyTest {
       .statusCode(400)
       .body(containsString("Json content error"));
 
-    String bad3 = note1.replaceFirst("text", "badFieldName");
+    String bad3 = notify1.replaceFirst("text", "badFieldName");
     given()
       .header(TEN).header(JSON)
       .body(bad3)
@@ -194,7 +193,7 @@ public class NotifyTest {
       .body(containsString("may not be null"))
       .body(containsString("\"text\","));
 
-    String bad4 = note1.replaceAll("-1111-", "-2-");  // make bad UUID
+    String bad4 = notify1.replaceAll("-1111-", "-2-");  // make bad UUID
     given()
       .header(TEN).header(JSON)
       .body(bad4)
@@ -207,7 +206,7 @@ public class NotifyTest {
     // Post a good notification
     given()
       .header(TEN).header(USER9).header(JSON)
-      .body(note1)
+      .body(notify1)
       .post("/notify")
       .then()
       .log().ifError()
@@ -245,23 +244,23 @@ public class NotifyTest {
       .statusCode(200)
       .body(containsString("First notification"));
 
-    String note2 = "{"
+    String notify2 = "{"
       + "\"id\" : \"22222222-2222-2222-2222-222222222222\"," + LS
       + "\"recipientId\" : \"77777777-7777-7777-7777-777777777777\"," + LS
       + "\"link\" : \"things/23456\"," + LS
       + "\"seen\" : false,"
       + "\"text\" : \"Notification on a thing\"}" + LS;
 
-    // Post another note
+    // Post another notification
     given()
       .header(TEN).header(USER8).header(JSON)
-      .body(note2)
+      .body(notify2)
       .post("/notify")
       .then()
       .log().ifError()
       .statusCode(201);
 
-    // Get both notes a few different ways
+    // Get both notifications a few different ways
     given()
       .header(TEN)
       .get("/notify?query=text=notification")
@@ -288,7 +287,7 @@ public class NotifyTest {
       .statusCode(200)
       .body(containsString("\"totalRecords\" : 0"));
 
-    // Update a note
+    // Update a notification
     String updated1 = "{"
       + "\"id\" : \"11111111-1111-1111-1111-111111111111\"," + LS
       + "\"recipientId\" : \"77777777-7777-7777-7777-777777777777\"," + LS
