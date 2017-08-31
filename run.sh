@@ -73,7 +73,7 @@ $CURL \
   -H "Content-type:application/json" \
   -H "X-Okapi-Tenant:testlib" \
   -H "X-Okapi-User-Id: 66666666-6666-6666-6666-666666666666" \
-  -X POST -d '{"id":"11111111-1111-1111-1111-111111111111", "link":"items/23456","recipientId":"77777777-7777-7777-7777-777777777777","text":"hello thing"}' \
+  -X POST -d '{"id":"11111111-1111-1111-1111-111111111111", "link":"items/23456","recipientId":"77777777-7777-7777-7777-777777777777","text":"hello thing", "seen":true}' \
   $OKAPIURL/notify
 
 echo Test 5: get a list with both
@@ -120,11 +120,26 @@ $CURL \
 $CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify/11111111-1111-1111-1111-111111111111
 echo
 
-echo Test 14: Delete
-$CURL -X DELETE -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify/11111111-1111-1111-1111-111111111111
-echo
-$CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify/11111111-1111-1111-1111-111111111111
-echo
+#echo Test 14: Delete
+#$CURL -X DELETE -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify/11111111-1111-1111-1111-111111111111
+#echo
+#$CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify/11111111-1111-1111-1111-111111111111
+#echo
+
+echo Test 15: Delete self - notfound
+$CURL \
+  -H "X-Okapi-Tenant:testlib" \
+  -H "X-Okapi-User-Id:77777777-7777-7777-7777-777777777777" \
+  -X DELETE\
+  $OKAPIURL/notify/_self?olderthan=1999-12-31
+
+echo Test 15: Delete self
+$CURL \
+  -H "X-Okapi-Tenant:testlib" \
+  -H "X-Okapi-User-Id:77777777-7777-7777-7777-777777777777" \
+  -X DELETE\
+  $OKAPIURL/notify/_self?olderthan=2099-12-31
+
 
 
 # Let it run
