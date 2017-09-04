@@ -104,13 +104,15 @@ public class NotificationsResourceImpl implements NotificationsResource {
           reply -> {
             try {
               if (reply.succeeded()) {
-                NotifyCollection notes = new NotifyCollection();
+                NotifyCollection notifycoll = new NotifyCollection();
+                Integer totalRecords = reply.result().getResultInfo().getTotalRecords();
+                notifycoll.setTotalRecords(totalRecords);
                 @SuppressWarnings("unchecked")
-                List<Notification> notifylist = (List<Notification>) reply.result()[0];
-                notes.setNotifications(notifylist);
-                notes.setTotalRecords((Integer) reply.result()[1]);
+                List<Notification> notifylist
+                  = (List<Notification>) reply.result().getResults();
+                notifycoll.setNotifications(notifylist);
                 asyncResultHandler.handle(succeededFuture(
-                    GetNotifyResponse.withJsonOK(notes)));
+                  GetNotifyResponse.withJsonOK(notifycoll)));
               } else {
                 logger.error(reply.cause().getMessage(), reply.cause());
                 asyncResultHandler.handle(succeededFuture(GetNotifyResponse                    .withPlainBadRequest(reply.cause().getMessage())));
@@ -236,11 +238,13 @@ public class NotificationsResourceImpl implements NotificationsResource {
               if (reply.succeeded()) {
                 NotifyCollection notes = new NotifyCollection();
                 @SuppressWarnings("unchecked")
-                List<Notification> notelist = (List<Notification>) reply.result()[0];
-                notes.setNotifications(notelist);
-                notes.setTotalRecords((Integer) reply.result()[1]);
+                List<Notification> notifylist
+                  = (List<Notification>) reply.result().getResults();
+                notes.setNotifications(notifylist);
+                Integer totalRecords = reply.result().getResultInfo().getTotalRecords();
+                notes.setTotalRecords(totalRecords);
                 asyncResultHandler.handle(succeededFuture(
-                    GetNotifyResponse.withJsonOK(notes)));
+                  GetNotifyResponse.withJsonOK(notes)));
               } else {
                 logger.error(reply.cause().getMessage(), reply.cause());
                 asyncResultHandler.handle(succeededFuture(GetNotifyResponse
@@ -310,7 +314,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
       if (olderthan == null || olderthan.isEmpty()) {
         query = selfQuery;
       } else {
-        query = selfQuery + " and ( metaData.updatedDate<" + olderthan + ")";
+        query = selfQuery + " and (metadata.updatedDate<" + olderthan + ")";
       }
       logger.info("Deleting self notes. new query:" + query);
       CQLWrapper cql = getCQL(query, NOTIFY_SCHEMA);
@@ -323,6 +327,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
                 asyncResultHandler.handle(succeededFuture(
                     DeleteNotifyByIdResponse.withNoContent()));
               } else {
+                logger.info("Deleted no notifications");
                 logger.error(messages.getMessage(lang,
                     MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
                 asyncResultHandler.handle(succeededFuture(DeleteNotifyByIdResponse
@@ -376,14 +381,16 @@ public class NotificationsResourceImpl implements NotificationsResource {
           reply -> {
             try {
               if (reply.succeeded()) {
+
                 @SuppressWarnings("unchecked")
-                List<Notification> config = (List<Notification>) reply.result()[0];
-                if (config.isEmpty()) {
+                List<Notification> notifylist
+                  = (List<Notification>) reply.result().getResults();
+                if (notifylist.isEmpty()) {
                   asyncResultHandler.handle(succeededFuture(GetNotifyByIdResponse
                       .withPlainNotFound(id)));
                 } else {
                   asyncResultHandler.handle(succeededFuture(GetNotifyByIdResponse
-                      .withJsonOK(config.get(0))));
+                    .withJsonOK(notifylist.get(0))));
                 }
               } else {
                 String error = PgExceptionUtil.badRequestMessage(reply.cause());
