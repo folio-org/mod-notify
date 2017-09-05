@@ -22,7 +22,7 @@
       "type": "boolean",
       "default": false
     },
-    "metaData": {
+    "metadata": {
       "type": "object",
       "$ref": "raml-util/schemas/metadata.schema"
     }
