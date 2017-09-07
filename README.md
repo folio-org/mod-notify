@@ -15,9 +15,41 @@ that a batch job has finished importing 1000 users, with 27 errors.
 
 ## Additional information
 
-Other [modules](http://dev.folio.org/source-code/#server-side).
+### Other documentation
+
+Other [modules](http://dev.folio.org/source-code/#server-side) are described,
+with further FOLIO Developer documentation at [dev.folio.org](http://dev.folio.org/)
+
+### Issue tracker
 
 See project [MODNOTIFY](https://issues.folio.org/browse/MODNOTIFY)
 at the [FOLIO issue tracker](http://dev.folio.org/community/guide-issues).
 
-Other FOLIO Developer documentation is at [dev.folio.org](http://dev.folio.org/)
+### Quick start
+
+Compile with `mvn clean install`
+
+Run the local stand-alone instance:
+
+```
+java -jar target/mod-notify-fat.jar \
+  -Dhttp.port=8085 embed_postgres=true
+```
+
+### API documentation
+
+This module's [API documentation](http://dev.folio.org/doc/api/#mod-notify).
+
+The local API docs are available, for example:
+```
+http://localhost:8085/apidocs/?raml=raml/notify.raml
+http://localhost:8085/apidocs/?raml=raml/admin.raml
+etc.
+```
+
+### Download and configuration
+
+The built artifacts for this module are available.
+See [configuration](http://dev.folio.org/doc/artifacts) for repository access,
+and the [Docker image](https://hub.docker.com/r/folioorg/mod-notify/).
+
