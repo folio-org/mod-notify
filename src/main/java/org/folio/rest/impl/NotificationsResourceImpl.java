@@ -8,6 +8,9 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.*;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.core.Response;
@@ -41,6 +44,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
   private final String idFieldName = "id";
   private static String NOTIFY_SCHEMA = null;
   private static final String NOTIFY_SCHEMA_NAME = "apidocs/raml/notify.json";
+  private static final int DAYS_TO_KEEP_SEEN_NOTIFICATIONS = 365;
 
   private void initCQLValidation() {
     String path = NOTIFY_SCHEMA_NAME;
@@ -289,6 +293,39 @@ public class NotificationsResourceImpl implements NotificationsResource {
     throw new UnsupportedOperationException("Not supported.");
   }
 
+  /**
+   * Helper to delete old, seen notifications.
+   *
+   * @param tenantId
+   * @param userId
+   */
+  private void deleteAllOldNotifications(String tenantId, String userId,
+    Handler<AsyncResult<Void>> asyncResultHandler,
+    Context vertxContext) throws Exception {
+    String query;
+    String selfQuery = "recipientId=\"" + userId + "\""
+       + " and seen=true";
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime limit = now.minus(DAYS_TO_KEEP_SEEN_NOTIFICATIONS, ChronoUnit.DAYS);
+    // TODO - This is not right, hard coding the time limit. We need a better
+    // way to purge old notifications. Some day when we know what we do with other
+    // housekeeping jobs
+    String olderthan = limit.format(DateTimeFormatter.ISO_DATE);
+    query = selfQuery + " and (metadata.updatedDate<" + olderthan + ")";
+    logger.info(" deleteAllOldNotifications: new query:" + query);
+    CQLWrapper cql = getCQL(query, NOTIFY_SCHEMA);
+    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+      .delete(NOTIFY_TABLE, cql, reply -> {
+        if (reply.succeeded()) {
+          logger.info("deleteAllOldNotifications ok. Deleted " + reply.result().getUpdated() + " records");
+        } else {
+          logger.error("deleteAllOldNotifications failure " + reply.cause());
+        }
+      // Ignore all errors, we will catch old notifies the next time
+        asyncResultHandler.handle(succeededFuture());
+      });
+  }
+
   @Override
   public void deleteNotifySelf(String olderthan,
     //String query,
@@ -316,7 +353,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
       } else {
         query = selfQuery + " and (metadata.updatedDate<" + olderthan + ")";
       }
-      logger.info("Deleting self notes. new query:" + query);
+      logger.info("Deleting self notifications. new query:" + query);
       CQLWrapper cql = getCQL(query, NOTIFY_SCHEMA);
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .delete(NOTIFY_TABLE, cql,
@@ -483,6 +520,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
       }
       String tenantId = TenantTool.calculateTenantId(
         okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
+      String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
       PostgresClient.getInstance(vertxContext.owner(), tenantId).update(NOTIFY_TABLE, entity, id,
         reply -> {
           try {
@@ -491,9 +529,11 @@ public class NotificationsResourceImpl implements NotificationsResource {
                 asyncResultHandler.handle(succeededFuture(
                     PutNotifyByIdResponse.withPlainInternalServerError(
                       messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
-              } else {
-                asyncResultHandler.handle(succeededFuture(
+              } else { // all ok
+                deleteAllOldNotifications(tenantId, userId, dres -> {
+                  asyncResultHandler.handle(succeededFuture(
                     PutNotifyByIdResponse.withNoContent()));
+                }, vertxContext);
               }
             } else {
               logger.error(reply.cause().getMessage());
