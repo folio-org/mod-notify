@@ -2,7 +2,8 @@
 # Simple test script for mod-notify
 
 # Parameters
-OKAPIURL="http://localhost:9130"
+OKAPIPORT=9170
+OKAPIURL="http://localhost:$OKAPIPORT"
 CURL="curl -w\n -D - "
 
 # Check we have the fat jar
@@ -13,10 +14,11 @@ then
 fi
 
 # Start Okapi (in dev mode, no database)
+# on a higher port, not to conflict with mvn install running at the same time
 OKAPIPATH="../okapi/okapi-core/target/okapi-core-fat.jar"
-java -jar $OKAPIPATH dev > okapi.log 2>&1 &
+java -Dport=$OKAPIPORT -jar $OKAPIPATH dev > okapi.log 2>&1 &
 PID=$!
-echo Started okapi PID=$PID
+echo Started okapi on port $OKAPIPORT. PID=$PID
 sleep 1 # give it time to start
 echo
 
@@ -42,9 +44,9 @@ cat > /tmp/okapi.tenant.json <<END
 END
 $CURL -d@/tmp/okapi.tenant.json $OKAPIURL/_/proxy/tenants
 echo
-echo "Enabling it"
+echo "Enabling it (without specifying the version)"
 $CURL -X POST \
-   -d'{"id":"mod-notify-0.2.0-SNAPSHOT"}' \
+   -d'{"id":"mod-notify"}' \
    $OKAPIURL/_/proxy/tenants/testlib/modules
 echo
 sleep 1
