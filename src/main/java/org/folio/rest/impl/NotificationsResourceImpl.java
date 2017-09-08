@@ -44,6 +44,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
   private final String idFieldName = "id";
   private static String NOTIFY_SCHEMA = null;
   private static final String NOTIFY_SCHEMA_NAME = "apidocs/raml/notify.json";
+  private static final int DAYS_TO_KEEP_SEEN_NOTIFICATIONS = 365;
 
   private void initCQLValidation() {
     String path = NOTIFY_SCHEMA_NAME;
@@ -305,9 +306,10 @@ public class NotificationsResourceImpl implements NotificationsResource {
     String selfQuery = "recipientId=\"" + userId + "\""
        + " and seen=true";
     LocalDateTime now = LocalDateTime.now();
-    LocalDateTime limit = now.minus(30, ChronoUnit.DAYS);
+    LocalDateTime limit = now.minus(DAYS_TO_KEEP_SEEN_NOTIFICATIONS, ChronoUnit.DAYS);
     // TODO - This is not right, hard coding the time limit. We need a better
-    // way to purge old notifications.
+    // way to purge old notifications. Some day when we know what we do with other
+    // housekeeping jobs
     String olderthan = limit.format(DateTimeFormatter.ISO_DATE);
     query = selfQuery + " and (metadata.updatedDate<" + olderthan + ")";
     logger.info(" deleteAllOldNotifications: new query:" + query);
@@ -319,7 +321,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
         } else {
           logger.error("deleteAllOldNotifications failure " + reply.cause());
         }
-        // Ignore all errors, we will catch old notifies the next time
+      // Ignore all errors, we will catch old notifies the next time
         asyncResultHandler.handle(succeededFuture());
       });
   }
