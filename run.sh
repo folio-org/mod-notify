@@ -2,7 +2,7 @@
 # Simple test script for mod-notify
 
 # Parameters
-OKAPIPORT=9170
+OKAPIPORT=9130
 OKAPIURL="http://localhost:$OKAPIPORT"
 CURL="curl -w\n -D - "
 
@@ -14,7 +14,6 @@ then
 fi
 
 # Start Okapi (in dev mode, no database)
-# on a higher port, not to conflict with mvn install running at the same time
 OKAPIPATH="../okapi/okapi-core/target/okapi-core-fat.jar"
 java -Dport=$OKAPIPORT -jar $OKAPIPATH dev > okapi.log 2>&1 &
 PID=$!
