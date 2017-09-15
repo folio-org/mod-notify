@@ -59,7 +59,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
 
   public NotificationsResourceImpl(Vertx vertx, String tenantId) {
     if (NOTIFY_SCHEMA == null) {
-      initCQLValidation();  // COmmented out, the validation fails a
+      //initCQLValidation();  // COmmented out, the validation fails a
       // prerfectly valid query=metaData.createdByUserId=e037b...
     }
     PostgresClient.getInstance(vertx, tenantId).setIdField(idFieldName);
