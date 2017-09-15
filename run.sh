@@ -93,8 +93,12 @@ echo Test 8: query both
 $CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify?query='link=*56*'
 echo
 
-echo Test 9: Bad query
-$CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify?query='link='
+echo Test 9: Bad queries. Should all fail with 422
+$CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify?query=BADQUERY
+echo
+$CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify?query=BADFIELD=foo
+echo
+$CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify?query=metadata.BADFIELD=foo
 echo
 
 echo Test 10: limit

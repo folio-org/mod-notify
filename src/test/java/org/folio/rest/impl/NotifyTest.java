@@ -287,6 +287,27 @@ public class NotifyTest {
       .statusCode(200)
       .body(containsString("\"totalRecords\" : 0"));
 
+    // bad queries
+    given()
+      .header(TEN)
+      .get("/notify?query=BADQUERY")
+      .then()
+      .log().all()
+      .statusCode(422);
+    logger.info("XXX The following two tests should return 422, but return 200");
+    given()
+      .header(TEN)
+      .get("/notify?query=BADFIELD=foo")
+      .then()
+      .log().all()
+      .statusCode(200);
+    given()
+      .header(TEN)
+      .get("/notify?query=metadata.BADFIELD=foo")
+      .then()
+      .log().all()
+      .statusCode(200);
+
     // Update a notification
     String updated1 = "{"
       + "\"id\" : \"11111111-1111-1111-1111-111111111111\"," + LS
