@@ -33,9 +33,9 @@ notification is meant to, and the text.  There can also be a link to the thing
 the notification is all about.
 
 The most common operations on notifications are
-  POST a new notification to the system
-  PUT an update to a ntification, typically to set the seen flag to true
-  GET notifications for a given user, typically with a filter for unseen ones
+*  POST a new notification to the system
+*  PUT an update to a notification, typically to set the seen flag to true
+*  GET notifications for a given user, typically with a filter for unseen ones
 
 At this point the UI will have to check for available notifications. Later we
 may well add alternative ways to deliver notifications, for example by email.
