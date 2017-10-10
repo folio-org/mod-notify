@@ -20,6 +20,7 @@ import org.junit.runner.RunWith;
 
 import org.folio.rest.RestVerticle;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.tools.client.test.HttpClientMock2;
 import org.junit.After;
 
 /**
@@ -70,6 +71,7 @@ public class NotifyTest {
     }
 
     JsonObject conf = new JsonObject()
+      .put(HttpClientMock2.MOCK_MODE, "true")
       .put("http.port", port);
 
     logger.info("notifyTest: Deploying "
@@ -202,6 +204,16 @@ public class NotifyTest {
       .log().all()
       .statusCode(400)
       .body(containsString("invalid input syntax for uuid"));
+
+    String bad5 = notify1.replaceAll("recipientId", "senderId"); // recip missing
+    given()
+      .header(TEN).header(JSON)
+      .body(bad5)
+      .post("/notify")
+      .then()
+      .log().all()
+      .statusCode(422)
+      .body(containsString("recipientId"));
 
     // Post a good notification
     given()
@@ -360,6 +372,28 @@ public class NotifyTest {
       .body(containsString("with a comment"))
       .body(containsString("-8888-"));   // updated by
 
+    // post by userId
+    String notify3 = "{"
+      + "\"id\" : \"33333333-3333-3333-3333-333333333333\"," + LS
+      + "\"link\" : \"things/34567\"," + LS
+      + "\"text\" : \"Notification on a thing, for mockuser9\"}" + LS;
+    given()
+      .header(TEN).header(USER8).header(JSON)
+      .body(notify3)
+      .post("/notify/_userid/mockuser9")
+      .then()
+      .log().ifError()
+      .statusCode(201);
+
+    given()
+      .header(TEN).header(USER7)
+      .get("/notify/33333333-3333-3333-3333-333333333333")
+      .then()
+      .log().ifError()
+      .statusCode(200)
+      .body(containsString("999999"));  // uuid of mockuser9
+    // TODO - Test cases for lookup errors
+
     // _self
     given()
       .header(TEN).header(USER7)
@@ -411,6 +445,13 @@ public class NotifyTest {
       .then()
       .statusCode(204); // gone!
 
+    // delete 3333
+    given()
+      .header(TEN)
+      .delete("/notify/33333333-3333-3333-3333-333333333333")
+      .then()
+      .statusCode(204);
+
     // delete 2222
     given()
       .header(TEN)
@@ -422,7 +463,7 @@ public class NotifyTest {
       .header(TEN)
       .delete("/notify/22222222-2222-2222-2222-222222222222")
       .then()
-      .statusCode(404); // no longer there
+      .statusCode(404);
 
     given()
       .header(TEN)

@@ -47,6 +47,33 @@ resourceTypes:
       pageable,
       validate
     ]
+  /_userid/{uid}:
+    description: "Post a notification to the user behind the given userId"
+    post:
+      is: [ validate, language ]
+      body:
+        application/json:
+          schema: notify.json
+      responses:
+        201:
+          description: Created
+          headers:
+            Location:
+              description: URI to the notification
+            X-Okapi-Trace:
+              description: Okapi trace and timing
+          body:
+            application/json:
+              schema: notify.json
+        400:
+          description: Bad Request
+          body:
+            text/plain:
+        500:
+          description: Server Error
+          body:
+            text/plain:
+
   /_self:
     displayName: Notifications addressed to the current user
     type:

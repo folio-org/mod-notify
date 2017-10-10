@@ -37,6 +37,10 @@ The most common operations on notifications are
 *  PUT an update to a notification, typically to set the seen flag to true
 *  GET notifications for a given user, typically with a filter for unseen ones
 
+There is also an endpoint to post a notification with the userId in the URL.
+This gets looked up in mod-users, and the recipient UUID is inserted in the
+notification.
+
 At this point the UI will have to check for available notifications. Later we
 may well add alternative ways to deliver notifications, for example by email.
 
@@ -64,6 +68,9 @@ Run the local stand-alone instance:
 java -jar target/mod-notify-fat.jar \
   -Dhttp.port=8085 embed_postgres=true
 ```
+
+See the `run.sh` script for some simple curl examples.
+
 
 ### API documentation
 

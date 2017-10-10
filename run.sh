@@ -1,5 +1,9 @@
 #!/bin/bash
 # Simple test script for mod-notify
+# Loads mod-notify, but does not bother with the whole auth stack.
+# That means userId lookup will not work.
+# Those tests are included in mod-notes
+
 
 # Parameters
 OKAPIPORT=9130
