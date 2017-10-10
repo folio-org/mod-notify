@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.*;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import javax.ws.rs.core.Response;
 import org.apache.commons.io.IOUtils;
 import org.folio.rest.RestVerticle;
@@ -20,6 +21,7 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Notification;
 import org.folio.rest.jaxrs.model.NotifyCollection;
 import org.folio.rest.jaxrs.resource.NotificationsResource;
+import org.folio.rest.jaxrs.model.User;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -28,6 +30,8 @@ import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.client.HttpClientFactory;
+import org.folio.rest.tools.client.interfaces.HttpClientInterface;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.OutStream;
@@ -151,13 +155,90 @@ public class NotificationsResourceImpl implements NotificationsResource {
   }
 
   @Override
+  public void postNotifyUseridByUid(String userId, String lang, Notification notification,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
+    throws Exception {
+
+    logger.info("postNotifyUseridByUid starting userId='" + userId + "'");
+    String tenantId = TenantTool.calculateTenantId(
+      okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
+    String okapiURL = okapiHeaders.get("X-Okapi-Url");
+    HttpClientInterface client = HttpClientFactory.getHttpClient(okapiURL, tenantId);
+    String url = "/users?query=userid=" + userId;
+    try {
+      logger.debug("Looking up user " + url);
+      CompletableFuture<org.folio.rest.tools.client.Response> response
+        = client.request(url, okapiHeaders);
+      response.whenComplete((resp, ex)
+        -> handleLookupUserResponse(resp, notification, okapiHeaders,
+          asyncResultHandler, userId, vertxContext, lang)
+      );
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      asyncResultHandler.handle(
+        succeededFuture(PostNotifyUseridByUidResponse.withPlainInternalServerError(
+            messages.getMessage(lang, MessageConsts.InternalServerError))));
+    }
+  }
+
+  private void handleLookupUserResponse(
+    org.folio.rest.tools.client.Response resp, Notification notification,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler,
+    String userId, Context vertxContext, String lang) {
+    try {
+      if (resp.getCode() == 200) {
+        logger.info("Received user " + resp.getBody());
+        User usr = (User) resp.convertToPojo(User.class);
+        notification.setRecipientId(usr.getId());
+        // null indicates all is well, and we can proceed
+        postNotify(lang, notification, okapiHeaders, asyncResultHandler, vertxContext);
+      } else if (resp.getCode() == 404) {
+        logger.error("User lookup failed for " + userId);
+        logger.error(Json.encodePrettily(resp));
+        asyncResultHandler.handle(succeededFuture(PostNotifyUseridByUidResponse
+          .withPlainBadRequest("User lookup failed. "
+            + "Can not find user " + userId)));
+      } else if (resp.getCode() == 403) {
+        logger.error("User lookup failed for " + userId);
+        logger.error(Json.encodePrettily(resp));
+        asyncResultHandler.handle(succeededFuture(PostNotifyUseridByUidResponse
+          .withPlainBadRequest("User lookup failed with 403. " + userId
+            + " " + Json.encode(resp.getError()))));
+      } else {
+        logger.error("User lookup failed with " + resp.getCode());
+        logger.error(Json.encodePrettily(resp));
+        asyncResultHandler.handle(
+          succeededFuture(PostNotifyUseridByUidResponse.withPlainInternalServerError(
+              messages.getMessage(lang, MessageConsts.InternalServerError))));
+      }
+    } catch (Exception e) {
+      logger.error(e.getMessage(), e);
+      asyncResultHandler.handle(
+        succeededFuture(PostNotifyUseridByUidResponse.withPlainInternalServerError(
+            messages.getMessage(lang, MessageConsts.InternalServerError))));
+    }
+
+  }
+
+  @Override
   public void postNotify(String lang,
     Notification entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context context)
-    throws Exception {
+    Context context) throws Exception {
+
     try {
+      String recip = entity.getRecipientId();
+      if (recip == null || recip.isEmpty()) {
+        Errors valErr = ValidationHelper.createValidationErrorMessage(
+          "recipientId", "", "Required");
+        asyncResultHandler.handle(succeededFuture(PostNotifyResponse
+          .withJsonUnprocessableEntity(valErr)));
+        return;
+      }
+
       String tenantId = TenantTool.calculateTenantId(
         okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       String id = entity.getId();

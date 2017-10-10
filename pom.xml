@@ -60,6 +60,12 @@
       <artifactId>domain-models-runtime</artifactId>
       <version>14.0.0</version>
     </dependency>
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>mod-users</artifactId>
+      <version>14.2.0</version>
+      <type>jar</type>
+    </dependency>
 
     <dependency>
       <groupId>junit</groupId>
