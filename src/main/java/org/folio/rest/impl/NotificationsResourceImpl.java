@@ -599,6 +599,15 @@ public class NotificationsResourceImpl implements NotificationsResource {
           .withJsonUnprocessableEntity(valErr)));
         return;
       }
+      String recip = entity.getRecipientId();
+      if (recip == null || recip.isEmpty()) {
+        Errors valErr = ValidationHelper.createValidationErrorMessage(
+          "recipientId", "", "Required");
+        asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
+          .withJsonUnprocessableEntity(valErr)));
+        return;
+
+      }
       String tenantId = TenantTool.calculateTenantId(
         okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);

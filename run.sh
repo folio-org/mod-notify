@@ -127,11 +127,12 @@ $CURL \
   -H "Content-type:application/json" \
   -H "X-Okapi-Tenant:testlib" \
   -H "X-Okapi-User-Id: 77777777-7777-7777-7777-777777777777" \
-  -X PUT -d '{"id":"11111111-1111-1111-1111-111111111111", "link":"items/23456",
-    "text":"hello AGAIN, thing"}' \
+  -X PUT -d '{"id":"11111111-1111-1111-1111-111111111111", "link":"items/23456","seen":true,
+    "text":"hello AGAIN, thing", "recipientId":"77777777-7777-7777-7777-777777777777"}' \
   $OKAPIURL/notify/11111111-1111-1111-1111-111111111111
 $CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify/11111111-1111-1111-1111-111111111111
 echo
+
 
 #echo Test 14: Delete
 #$CURL -X DELETE -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify/11111111-1111-1111-1111-111111111111
@@ -145,6 +146,7 @@ $CURL \
   -H "X-Okapi-User-Id:77777777-7777-7777-7777-777777777777" \
   -X DELETE\
   $OKAPIURL/notify/_self?olderthan=1999-12-31
+echo
 
 echo Test 15: Delete self
 $CURL \
@@ -152,8 +154,9 @@ $CURL \
   -H "X-Okapi-User-Id:77777777-7777-7777-7777-777777777777" \
   -X DELETE\
   $OKAPIURL/notify/_self?olderthan=2099-12-31
+echo
 
-echo Test 3: get a list with both notes gone
+echo "Test 16: get a list with the remaining (unseen) note"
 $CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify
 echo
 

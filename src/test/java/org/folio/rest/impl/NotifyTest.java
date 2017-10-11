@@ -356,6 +356,14 @@ public class NotifyTest {
 
     given()
       .header(TEN).header(USER8).header(JSON)
+      .body(updated1.replace("recipientId", "senderId")) // no recipient
+      .put("/notify/11111111-1111-1111-1111-111111111111")
+      .then()
+      .log().ifError()
+      .statusCode(422);
+
+    given() // This should work
+      .header(TEN).header(USER8).header(JSON)
       .body(updated1)
       .put("/notify/11111111-1111-1111-1111-111111111111")
       .then()
@@ -373,6 +381,7 @@ public class NotifyTest {
       .body(containsString("-8888-"));   // updated by
 
     // post by userId
+    // no recipientId here, it should come from the URL
     String notify3 = "{"
       + "\"id\" : \"33333333-3333-3333-3333-333333333333\"," + LS
       + "\"link\" : \"things/34567\"," + LS
