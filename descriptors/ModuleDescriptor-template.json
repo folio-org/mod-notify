@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "notify",
-      "version": "1.0",
+      "version": "1.1",
       "handlers": [
         {
           "methods": ["GET"],
@@ -93,5 +93,10 @@
       "visible": false
     }
   ],
-  "requires": []
+  "requires": [
+    {
+      "id": "users",
+      "version": "14.0"
+    }
+  ]
 }
