@@ -1,3 +1,7 @@
+## 1.1.1 2017-10-11
+ * MODNOTIFY-8: prevent PUT without recipient
+ * MODNOTIFY-9: hack run.sh to work without dependencies
+
 ## 1.1.0 2017-10-11
  * MODNOTIFY-6: New endpoint to post notifications for userId.
    Dependency on mod-users.
