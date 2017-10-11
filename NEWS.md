@@ -1,3 +1,7 @@
+## 1.1.0 2017-10-11
+ * MODNOTIFY-6: New endpoint to post notifications for userId.
+   Dependency on mod-users.
+
 ## 1.0.0 2017-09-08
  * First real release
  * MODNOTIFY-2: Delete old notifications
