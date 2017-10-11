@@ -27,7 +27,10 @@ echo
 
 # Load mod-notify
 echo "Loading mod-notify"
-$CURL -X POST -d@target/ModuleDescriptor.json $OKAPIURL/_/proxy/modules
+# Dirty trick: Remove the dependency on mod-users.
+echo `cat target/ModuleDescriptor.json` |
+  sed 's/"requires": \[.*\]/"requires":[]/' > /tmp/md.json
+$CURL -X POST -d@/tmp/md.json $OKAPIURL/_/proxy/modules
 echo
 
 echo "Deploying it"
@@ -97,7 +100,7 @@ echo Test 8: query both
 $CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify?query='link=*56*'
 echo
 
-echo Test 9: Bad queries. Should all fail with 422
+echo Test 9: Bad queries. Should all fail with 422 - some may succeed with no hits
 $CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify?query=BADQUERY
 echo
 $CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify?query=BADFIELD=foo
@@ -124,7 +127,8 @@ $CURL \
   -H "Content-type:application/json" \
   -H "X-Okapi-Tenant:testlib" \
   -H "X-Okapi-User-Id: 77777777-7777-7777-7777-777777777777" \
-  -X PUT -d '{"id":"11111111-1111-1111-1111-111111111111", "link":"items/23456","text":"hello AGAIN, thing"}' \
+  -X PUT -d '{"id":"11111111-1111-1111-1111-111111111111", "link":"items/23456",
+    "text":"hello AGAIN, thing"}' \
   $OKAPIURL/notify/11111111-1111-1111-1111-111111111111
 $CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify/11111111-1111-1111-1111-111111111111
 echo
@@ -135,7 +139,7 @@ echo
 #$CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify/11111111-1111-1111-1111-111111111111
 #echo
 
-echo Test 15: Delete self - notfound
+echo Test 14: Delete self - notfound
 $CURL \
   -H "X-Okapi-Tenant:testlib" \
   -H "X-Okapi-User-Id:77777777-7777-7777-7777-777777777777" \
@@ -149,6 +153,9 @@ $CURL \
   -X DELETE\
   $OKAPIURL/notify/_self?olderthan=2099-12-31
 
+echo Test 3: get a list with both notes gone
+$CURL -H "X-Okapi-Tenant:testlib" $OKAPIURL/notify
+echo
 
 
 # Let it run
