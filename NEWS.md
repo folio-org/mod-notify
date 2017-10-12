@@ -1,3 +1,6 @@
+## 1.1.3 2017-10-12
+ * Move the artifact into org.folio, not org.folio.rest.
+
 ## 1.1.2 2017-10-12
  * No changes, just re-releasing with a new version because of Jenkins problems
 
