@@ -1,3 +1,6 @@
+## 1.1.2 2017-10-12
+ * No changes, just re-releasing with a new version because of Jenkins problems
+
 ## 1.1.1 2017-10-11
  * MODNOTIFY-8: prevent PUT without recipient
  * MODNOTIFY-9: hack run.sh to work without dependencies
