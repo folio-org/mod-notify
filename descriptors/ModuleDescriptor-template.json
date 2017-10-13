@@ -17,6 +17,11 @@
           "permissionsRequired": ["notify.item.post"]
         },
         {
+          "methods": ["POST"],
+          "pathPattern": "/notify/_userid/{uid}",
+          "permissionsRequired": ["notify.item.post"]
+        },
+        {
           "methods": ["GET"],
           "pathPattern": "/notify/{id}",
           "permissionsRequired": ["notify.item.get"]
