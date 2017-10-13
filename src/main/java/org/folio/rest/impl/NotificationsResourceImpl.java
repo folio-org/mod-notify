@@ -22,6 +22,7 @@ import org.folio.rest.jaxrs.model.Notification;
 import org.folio.rest.jaxrs.model.NotifyCollection;
 import org.folio.rest.jaxrs.resource.NotificationsResource;
 import org.folio.rest.jaxrs.model.User;
+import org.folio.rest.jaxrs.model.UserdataCollection;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -123,11 +124,13 @@ public class NotificationsResourceImpl implements NotificationsResource {
                   GetNotifyResponse.withJsonOK(notifycoll)));
               } else {
                 logger.error(reply.cause().getMessage(), reply.cause());
-                asyncResultHandler.handle(succeededFuture(GetNotifyResponse                    .withPlainBadRequest(reply.cause().getMessage())));
+                asyncResultHandler.handle(succeededFuture(GetNotifyResponse
+                  .withPlainBadRequest(reply.cause().getMessage())));
               }
             } catch (Exception e) {
               logger.error(e.getMessage(), e);
-              asyncResultHandler.handle(succeededFuture(GetNotifyResponse                  .withPlainInternalServerError(messages.getMessage(
+              asyncResultHandler.handle(succeededFuture(GetNotifyResponse
+                .withPlainInternalServerError(messages.getMessage(
                       lang, MessageConsts.InternalServerError))));
             }
           });
@@ -165,7 +168,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
       okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
     String okapiURL = okapiHeaders.get("X-Okapi-Url");
     HttpClientInterface client = HttpClientFactory.getHttpClient(okapiURL, tenantId);
-    String url = "/users?query=userid=" + userId;
+    String url = "/users?query=username=" + userId;
     try {
       logger.debug("Looking up user " + url);
       CompletableFuture<org.folio.rest.tools.client.Response> response
@@ -190,11 +193,19 @@ public class NotificationsResourceImpl implements NotificationsResource {
     try {
       if (resp.getCode() == 200) {
         logger.info("Received user " + resp.getBody());
-        User usr = (User) resp.convertToPojo(User.class);
-        notification.setRecipientId(usr.getId());
-        // null indicates all is well, and we can proceed
-        postNotify(lang, notification, okapiHeaders, asyncResultHandler, vertxContext);
-      } else if (resp.getCode() == 404) {
+        UserdataCollection userlist = (UserdataCollection) resp.convertToPojo(UserdataCollection.class);
+        if (userlist.getTotalRecords()>0) {
+          User usr = userlist.getUsers().get(0);
+          notification.setRecipientId(usr.getId());
+          postNotify(lang, notification, okapiHeaders, asyncResultHandler, vertxContext);
+        } else {
+          logger.error("User lookup failed for " + userId);
+          logger.error(Json.encodePrettily(resp));
+          asyncResultHandler.handle(succeededFuture(PostNotifyUseridByUidResponse
+            .withPlainBadRequest("User lookup failed. "
+              + "Can not find user " + userId)));
+        }
+      } else if (resp.getCode() == 404) { // should not happen
         logger.error("User lookup failed for " + userId);
         logger.error(Json.encodePrettily(resp));
         asyncResultHandler.handle(succeededFuture(PostNotifyUseridByUidResponse
