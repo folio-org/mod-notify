@@ -209,10 +209,10 @@ public class NotificationsResourceImpl implements NotificationsResource {
         logger.error("User lookup failed for " + userId);
         logger.error(Json.encodePrettily(resp));
         asyncResultHandler.handle(succeededFuture(PostNotifyUseridByUidResponse
-          .withPlainBadRequest("User lookup failed. "
+          .withPlainBadRequest("User lookup failed with 404. "
             + "Can not find user " + userId)));
       } else if (resp.getCode() == 403) {
-        logger.error("User lookup failed for " + userId);
+        logger.error("Permission problem: User lookup failed for " + userId);
         logger.error(Json.encodePrettily(resp));
         asyncResultHandler.handle(succeededFuture(PostNotifyUseridByUidResponse
           .withPlainBadRequest("User lookup failed with 403. " + userId
