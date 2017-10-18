@@ -1,3 +1,7 @@
+## 1.1.4 2017-10-18
+ * modnotify-13: The lookup path is /_username/{username}, nothing with id.
+ * modnotify-11: The user lookup returns a collection, not a user item
+
 ## 1.1.3 2017-10-12
  * Move the artifact into org.folio, not org.folio.rest.
 
