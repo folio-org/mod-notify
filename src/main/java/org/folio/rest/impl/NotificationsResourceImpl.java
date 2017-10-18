@@ -158,29 +158,29 @@ public class NotificationsResourceImpl implements NotificationsResource {
   }
 
   @Override
-  public void postNotifyUseridByUid(String userId, String lang, Notification notification,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
-    throws Exception {
+  public void postNotifyUsernameByUsername(String userName, String lang,
+          Notification notification, Map<String, String> okapiHeaders,
+          Handler<AsyncResult<Response>> asyncResultHandler,
+          Context vertxContext) throws Exception {
 
-    logger.info("postNotifyUseridByUid starting userId='" + userId + "'");
+    logger.info("postNotifyUseridByUid starting userId='" + userName + "'");
     String tenantId = TenantTool.calculateTenantId(
       okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
     String okapiURL = okapiHeaders.get("X-Okapi-Url");
     HttpClientInterface client = HttpClientFactory.getHttpClient(okapiURL, tenantId);
-    String url = "/users?query=username=" + userId;
+    String url = "/users?query=username=" + userName;
     try {
       logger.debug("Looking up user " + url);
       CompletableFuture<org.folio.rest.tools.client.Response> response
         = client.request(url, okapiHeaders);
       response.whenComplete((resp, ex)
         -> handleLookupUserResponse(resp, notification, okapiHeaders,
-          asyncResultHandler, userId, vertxContext, lang)
+          asyncResultHandler, userName, vertxContext, lang)
       );
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
       asyncResultHandler.handle(
-        succeededFuture(PostNotifyUseridByUidResponse.withPlainInternalServerError(
+        succeededFuture(PostNotifyUsernameByUsernameResponse.withPlainInternalServerError(
             messages.getMessage(lang, MessageConsts.InternalServerError))));
     }
   }
@@ -201,33 +201,33 @@ public class NotificationsResourceImpl implements NotificationsResource {
         } else {
           logger.error("User lookup failed for " + userId);
           logger.error(Json.encodePrettily(resp));
-          asyncResultHandler.handle(succeededFuture(PostNotifyUseridByUidResponse
+          asyncResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
             .withPlainBadRequest("User lookup failed. "
               + "Can not find user " + userId)));
         }
       } else if (resp.getCode() == 404) { // should not happen
         logger.error("User lookup failed for " + userId);
         logger.error(Json.encodePrettily(resp));
-        asyncResultHandler.handle(succeededFuture(PostNotifyUseridByUidResponse
+        asyncResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
           .withPlainBadRequest("User lookup failed with 404. "
             + "Can not find user " + userId)));
       } else if (resp.getCode() == 403) {
         logger.error("Permission problem: User lookup failed for " + userId);
         logger.error(Json.encodePrettily(resp));
-        asyncResultHandler.handle(succeededFuture(PostNotifyUseridByUidResponse
+        asyncResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
           .withPlainBadRequest("User lookup failed with 403. " + userId
             + " " + Json.encode(resp.getError()))));
       } else {
         logger.error("User lookup failed with " + resp.getCode());
         logger.error(Json.encodePrettily(resp));
         asyncResultHandler.handle(
-          succeededFuture(PostNotifyUseridByUidResponse.withPlainInternalServerError(
+          succeededFuture(PostNotifyUsernameByUsernameResponse.withPlainInternalServerError(
               messages.getMessage(lang, MessageConsts.InternalServerError))));
       }
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
       asyncResultHandler.handle(
-        succeededFuture(PostNotifyUseridByUidResponse.withPlainInternalServerError(
+        succeededFuture(PostNotifyUsernameByUsernameResponse.withPlainInternalServerError(
             messages.getMessage(lang, MessageConsts.InternalServerError))));
     }
 
@@ -656,5 +656,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
           messages.getMessage(lang, MessageConsts.InternalServerError))));
     }
   }
+
+
 
 }

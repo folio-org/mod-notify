@@ -389,7 +389,7 @@ public class NotifyTest {
     given()
       .header(TEN).header(USER8).header(JSON)
       .body(notify3)
-      .post("/notify/_userid/mockuser9")
+      .post("/notify/_username/mockuser9")
       .then()
       .log().ifError()
       .statusCode(201);
