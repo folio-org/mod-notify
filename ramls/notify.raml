@@ -47,8 +47,8 @@ resourceTypes:
       pageable,
       validate
     ]
-  /_userid/{uid}:
-    description: "Post a notification to the user behind the given userId"
+  /_username/{username}:
+    description: "Post a notification to the user behind the given username"
     post:
       is: [ validate, language ]
       body:

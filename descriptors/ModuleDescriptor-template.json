@@ -18,7 +18,7 @@
         },
         {
           "methods": ["POST"],
-          "pathPattern": "/notify/_userid/{uid}",
+          "pathPattern": "/notify/_username/{uid}",
           "permissionsRequired": ["notify.item.post"]
         },
         {
