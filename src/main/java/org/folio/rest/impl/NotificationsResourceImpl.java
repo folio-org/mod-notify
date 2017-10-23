@@ -81,21 +81,16 @@ public class NotificationsResourceImpl implements NotificationsResource {
     } else {
       cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb");
     }
-    return new CQLWrapper(cql2pgJson, query)
-      .setLimit(new Limit(limit))
-      .setOffset(new Offset(offset));
+    CQLWrapper wrap = new CQLWrapper(cql2pgJson, query);
+    if (limit >= 0) {
+      wrap.setLimit(new Limit(limit));
+    }
+    if (offset >= 0) {
+      wrap.setOffset(new Offset(offset));
+    }
+    return wrap;
   }
 
-  private CQLWrapper getCQL(String query,
-    String schema) throws FieldException, IOException, SchemaException {
-    CQL2PgJSON cql2pgJson;
-    if (schema != null) {
-      cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb", schema);
-    } else {
-      cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb");
-    }
-    return new CQLWrapper(cql2pgJson, query);
-  }
 
   @Override
   public void getNotify(String query,
@@ -133,14 +128,14 @@ public class NotificationsResourceImpl implements NotificationsResource {
         okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       if (self) {
         String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
-        if (userId == null || userId.isEmpty()) {
+        if (userId == null ) {
           logger.error("No userId for getNotesSelf");
           asyncResultHandler.handle(succeededFuture(GetNotifyResponse
             .withPlainBadRequest("No UserId")));
           return;
         }
         String selfQuery = "recipientId=" + userId;
-        if (query == null || query.isEmpty()) {
+        if (query == null) {
           query = selfQuery;
         } else {
           query = selfQuery + " and (" + query + ")";
@@ -354,14 +349,14 @@ public class NotificationsResourceImpl implements NotificationsResource {
        + " and seen=true";
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime limit = now.minus(DAYS_TO_KEEP_SEEN_NOTIFICATIONS, ChronoUnit.DAYS);
-    // TODO - This is not right, hard coding the time limit. We need a better
-    // way to purge old notifications. Some day when we know what we do with other
+    // This is not right, hard coding the time limit. We need a better way to
+    // purge old notifications. Some day when we know what we do with other
     // housekeeping jobs
     String olderthan = limit.format(DateTimeFormatter.ISO_DATE);
     query = selfQuery + " and (metadata.updatedDate<" + olderthan + ")";
     logger.info(" deleteAllOldNotifications: new query:" + query);
     try {
-      CQLWrapper cql = getCQL(query, NOTIFY_SCHEMA);
+      CQLWrapper cql = getCQL(query, -1, -1, NOTIFY_SCHEMA);
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .delete(NOTIFY_TABLE, cql, reply -> {
           if (reply.succeeded()) {
@@ -389,7 +384,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
       String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
       logger.debug("Trying to delete _self notifies for "
         + tenantId + "/" + userId + " since " + olderthan);
-      if (userId == null || userId.isEmpty()) {
+      if (userId == null) {
         logger.error("No userId for deleteNotesSelf");
         asyncResultHandler.handle(succeededFuture(GetNotifyResponse
           .withPlainBadRequest("No UserId")));
@@ -398,13 +393,13 @@ public class NotificationsResourceImpl implements NotificationsResource {
       String query;
       String selfQuery = "recipientId=\"" + userId + "\""
         + " and seen=true";
-      if (olderthan == null || olderthan.isEmpty()) {
+      if (olderthan == null) {
         query = selfQuery;
       } else {
         query = selfQuery + " and (metadata.updatedDate<" + olderthan + ")";
       }
       logger.info("Deleting self notifications. new query:" + query);
-      CQLWrapper cql = getCQL(query, NOTIFY_SCHEMA);
+      CQLWrapper cql = getCQL(query, -1, -1, NOTIFY_SCHEMA);
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .delete(NOTIFY_TABLE, cql,
           reply -> {
@@ -582,10 +577,10 @@ public class NotificationsResourceImpl implements NotificationsResource {
                     PutNotifyByIdResponse.withPlainInternalServerError(
                       messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
               } else { // all ok
-                deleteAllOldNotifications(tenantId, userId, dres -> {
+                deleteAllOldNotifications(tenantId, userId, dres ->
                   asyncResultHandler.handle(succeededFuture(
-                    PutNotifyByIdResponse.withNoContent()));
-                }, vertxContext);
+                    PutNotifyByIdResponse.withNoContent()))
+, vertxContext);
               }
             } else {
               logger.error(reply.cause().getMessage());
