@@ -98,6 +98,22 @@ resourceTypes:
           required: false
           type: string
           example: "2017-12-25"
+      responses:
+        204:
+          description: No Content
+        404:
+          description: Not found
+          body:
+            text/plain:
+        400:
+          description: Bad Request
+          body:
+            text/plain:
+        500:
+          description: Server Error
+          body:
+            text/plain:
+
   /{id}:
     displayName: Notifications
     description: Get, Delete or Update a specific notification

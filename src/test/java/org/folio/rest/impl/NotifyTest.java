@@ -386,13 +386,46 @@ public class NotifyTest {
       + "\"id\" : \"33333333-3333-3333-3333-333333333333\"," + LS
       + "\"link\" : \"things/34567\"," + LS
       + "\"text\" : \"Notification on a thing, for mockuser9\"}" + LS;
+
     given()
+      .header(TEN).header(USER8).header(JSON)
+      .body(notify3)
+      .post("/notify/_username/notfound")
+      .then()
+      .log().ifError()
+      .statusCode(400);
+    given()
+      .header(TEN).header(USER8).header(JSON)
+      .body(notify3)
+      .post("/notify/_username/error")
+      .then()
+      .log().ifError()
+      .statusCode(500);
+    given()
+      .header(TEN).header(USER8).header(JSON)
+      .body(notify3)
+      .post("/notify/_username/permissionproblem")
+      .then()
+      .log().ifError()
+      .body(containsString("User lookup failed with 403"))
+      .statusCode(400);
+
+    given() // a good one
       .header(TEN).header(USER8).header(JSON)
       .body(notify3)
       .post("/notify/_username/mockuser9")
       .then()
       .log().ifError()
       .statusCode(201);
+
+    given() // duplicate
+      .header(TEN).header(USER8).header(JSON)
+      .body(notify3)
+      .post("/notify/_username/mockuser9")
+      .then()
+      .log().ifError()
+      .body(containsString("Duplicate id"))
+      .statusCode(422);
 
     given()
       .header(TEN).header(USER7)
@@ -404,6 +437,13 @@ public class NotifyTest {
     // TODO - Test cases for lookup errors
 
     // _self
+    given()
+      .header(TEN)
+      .get("/notify/_self")
+      .then()
+      .statusCode(400)
+      .body(containsString("No UserId"));
+
     given()
       .header(TEN).header(USER7)
       .get("/notify/_self")
@@ -447,6 +487,13 @@ public class NotifyTest {
       .delete("/notify/_self?olderthan=2001-01-01")
       .then()
       .statusCode(404); // too new
+
+    given()
+      .header(TEN)
+      .delete("/notify/_self?olderthan=2099-01-01")
+      .then()
+      .statusCode(400)
+      .body(containsString("No UserId"));
 
     given()
       .header(TEN).header(USER7)

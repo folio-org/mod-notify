@@ -50,14 +50,14 @@ public class NotificationsResourceImpl implements NotificationsResource {
   private static final String NOTIFY_TABLE = "notify_data";
   private static final String LOCATION_PREFIX = "/notify/";
   private static final String IDFIELDNAME = "id";
-  private String NOTIFY_SCHEMA = null;
+  private String notifySchema = null;
   private static final String NOTIFY_SCHEMA_NAME = "apidocs/raml/notify.json";
   private static final int DAYS_TO_KEEP_SEEN_NOTIFICATIONS = 365;
 
   private void initCQLValidation() {
     String path = NOTIFY_SCHEMA_NAME;
     try {
-      NOTIFY_SCHEMA = IOUtils.toString(
+      notifySchema = IOUtils.toString(
         getClass().getClassLoader().getResourceAsStream(path), "UTF-8");
     } catch (Exception e) {
       logger.error("unable to load schema - " + path
@@ -66,18 +66,18 @@ public class NotificationsResourceImpl implements NotificationsResource {
   }
 
   public NotificationsResourceImpl(Vertx vertx, String tenantId) {
-    if (NOTIFY_SCHEMA == null) {
+    if (notifySchema == null) {
       //initCQLValidation();  // COmmented out, the validation fails a
       // prerfectly valid query=metaData.createdByUserId=e037b...
     }
     PostgresClient.getInstance(vertx, tenantId).setIdField(IDFIELDNAME);
   }
 
-  private CQLWrapper getCQL(String query, int limit, int offset,
-    String schema) throws FieldException, IOException, SchemaException {
+  private CQLWrapper getCQL(String query, int limit, int offset)
+    throws FieldException, IOException, SchemaException {
     CQL2PgJSON cql2pgJson;
-    if (schema != null) {
-      cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb", schema);
+    if (notifySchema != null) {
+      cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb", notifySchema);
     } else {
       cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb");
     }
@@ -113,6 +113,35 @@ public class NotificationsResourceImpl implements NotificationsResource {
   }
 
   /**
+   * Helper to add the 'self' clause to the query.
+   *
+   * @param query
+   * @param okapiHeaders
+   * @param asyncResultHandler
+   * @return the modified query, or null, in which case the handler has been
+   * called.
+   */
+  private String selfGetQuery(String query,
+    Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler) {
+    String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
+    if (userId == null) {
+      logger.error("No userId for getNotesSelf");
+      asyncResultHandler.handle(succeededFuture(GetNotifyResponse
+        .withPlainBadRequest("No UserId")));
+      return null;
+    }
+    String selfQuery = "recipientId=" + userId;
+    if (query == null) {
+      query = selfQuery;
+    } else {
+      query = selfQuery + " and (" + query + ")";
+    }
+    logger.debug("Getting self notes. new query:" + query);
+    return query;
+  }
+
+  /**
    * Helper to get a list of notifies, optionally limited to _self
    */
   @java.lang.SuppressWarnings({"squid:S00107"}) // 8 parameters, I know
@@ -127,22 +156,12 @@ public class NotificationsResourceImpl implements NotificationsResource {
       String tenantId = TenantTool.calculateTenantId(
         okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
       if (self) {
-        String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
-        if (userId == null ) {
-          logger.error("No userId for getNotesSelf");
-          asyncResultHandler.handle(succeededFuture(GetNotifyResponse
-            .withPlainBadRequest("No UserId")));
+        query = selfGetQuery(query, okapiHeaders, asyncResultHandler);
+        if (query == null) {
           return;
         }
-        String selfQuery = "recipientId=" + userId;
-        if (query == null) {
-          query = selfQuery;
-        } else {
-          query = selfQuery + " and (" + query + ")";
-        }
-        logger.debug("Getting self notes. new query:" + query);
       }
-      CQLWrapper cql = getCQL(query, limit, offset, NOTIFY_SCHEMA);
+      CQLWrapper cql = getCQL(query, limit, offset);
 
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .get(NOTIFY_TABLE, Notification.class, new String[]{"*"}, cql,
@@ -236,12 +255,6 @@ public class NotificationsResourceImpl implements NotificationsResource {
             .withPlainBadRequest("User lookup failed. "
               + "Can not find user " + userId)));
         }
-      } else if (resp.getCode() == 404) { // should not happen
-        logger.error("User lookup failed for " + userId);
-        logger.error(Json.encodePrettily(resp));
-        asyncResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
-          .withPlainBadRequest("User lookup failed with 404. "
-            + "Can not find user " + userId)));
       } else if (resp.getCode() == 403) {
         logger.error("Permission problem: User lookup failed for " + userId);
         logger.error(Json.encodePrettily(resp));
@@ -356,7 +369,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
     query = selfQuery + " and (metadata.updatedDate<" + olderthan + ")";
     logger.info(" deleteAllOldNotifications: new query:" + query);
     try {
-      CQLWrapper cql = getCQL(query, -1, -1, NOTIFY_SCHEMA);
+      CQLWrapper cql = getCQL(query, -1, -1);
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .delete(NOTIFY_TABLE, cql, reply -> {
           if (reply.succeeded()) {
@@ -373,6 +386,27 @@ public class NotificationsResourceImpl implements NotificationsResource {
     }
   }
 
+  private String selfDelQuery(String query, String olderthan, Map<String, String> okapiHeaders,
+    Handler<AsyncResult<Response>> asyncResultHandler) {
+    String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
+    logger.debug("Trying to delete _self notifies for "
+      + userId + " since " + olderthan);
+    if (userId == null) {
+      logger.error("No userId for deleteNotesSelf");
+      asyncResultHandler.handle(succeededFuture(GetNotifyResponse
+        .withPlainBadRequest("No UserId")));
+      return null;
+    }
+    String selfQuery = "recipientId=\"" + userId + "\""
+      + " and seen=true";
+    if (olderthan == null) {
+      query = selfQuery;
+    } else {
+      query = selfQuery + " and (metadata.updatedDate<" + olderthan + ")";
+    }
+    return query;
+  }
+
   @Override
   public void deleteNotifySelf(String olderthan,
     String lang, Map<String, String> okapiHeaders,
@@ -381,25 +415,12 @@ public class NotificationsResourceImpl implements NotificationsResource {
     try {
       String tenantId = TenantTool.calculateTenantId(
         okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-      String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
-      logger.debug("Trying to delete _self notifies for "
-        + tenantId + "/" + userId + " since " + olderthan);
-      if (userId == null) {
-        logger.error("No userId for deleteNotesSelf");
-        asyncResultHandler.handle(succeededFuture(GetNotifyResponse
-          .withPlainBadRequest("No UserId")));
-        return;
-      }
-      String query;
-      String selfQuery = "recipientId=\"" + userId + "\""
-        + " and seen=true";
-      if (olderthan == null) {
-        query = selfQuery;
-      } else {
-        query = selfQuery + " and (metadata.updatedDate<" + olderthan + ")";
+      String query = selfDelQuery(lang, olderthan, okapiHeaders, asyncResultHandler);
+      if (query == null) {
+        return; // erro has
       }
       logger.info("Deleting self notifications. new query:" + query);
-      CQLWrapper cql = getCQL(query, -1, -1, NOTIFY_SCHEMA);
+      CQLWrapper cql = getCQL(query, -1, -1);
       PostgresClient.getInstance(vertxContext.owner(), tenantId)
         .delete(NOTIFY_TABLE, cql,
           reply -> {
@@ -407,25 +428,23 @@ public class NotificationsResourceImpl implements NotificationsResource {
               if (reply.result().getUpdated() > 0) {
                 logger.info("Deleted " + reply.result().getUpdated() + " notifies");
                 asyncResultHandler.handle(succeededFuture(
-                    DeleteNotifyByIdResponse.withNoContent()));
+                  DeleteNotifySelfResponse.withNoContent()));
               } else {
                 logger.info("Deleted no notifications");
                 logger.error(messages.getMessage(lang,
                     MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
-                asyncResultHandler.handle(succeededFuture(DeleteNotifyByIdResponse
-                    .withPlainNotFound(messages.getMessage(lang,
-                        MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
+                asyncResultHandler.handle(succeededFuture(DeleteNotifySelfResponse
+                  .withPlainNotFound(messages.getMessage(lang,
+                      MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
               }
             } else {
               String error = PgExceptionUtil.badRequestMessage(reply.cause());
               logger.error(error, reply.cause());
               if (error == null) {
-                asyncResultHandler.handle(succeededFuture(PostNotifyResponse
-                    .withPlainInternalServerError(
+                asyncResultHandler.handle(succeededFuture(DeleteNotifySelfResponse                    .withPlainInternalServerError(
                       messages.getMessage(lang, MessageConsts.InternalServerError))));
               } else {
-                asyncResultHandler.handle(succeededFuture(PostNotifyResponse
-                    .withPlainBadRequest(error)));
+                asyncResultHandler.handle(succeededFuture(DeleteNotifySelfResponse                    .withPlainBadRequest(error)));
               }
             }
 

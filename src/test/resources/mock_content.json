@@ -40,6 +40,28 @@
           "value": "eeee"
         }
       ]
+    },
+    {
+      "description": "User not found",
+      "url": "/users?query=username=notfound",
+      "method": "get",
+      "status": 200,
+      "receivedData": {
+        "users": [],
+        "totalRecords": 0
+      }
+    },
+    {
+      "description": "Error in lookup",
+      "url": "/users?query=username=error",
+      "method": "get",
+      "status": 500
+    },
+    {
+      "description": "Permission problem",
+      "url": "/users?query=username=permissionproblem",
+      "method": "get",
+      "status": 403
     }
   ]
 }
