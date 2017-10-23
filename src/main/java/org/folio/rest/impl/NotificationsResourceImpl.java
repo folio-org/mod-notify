@@ -91,6 +91,22 @@ public class NotificationsResourceImpl implements NotificationsResource {
     return wrap;
   }
 
+  /**
+   * Helper to make a message for the "500 Internal error". Mostly to keep
+   * SonarQube happy about code complexity.
+   *
+   * @param e The exception we caught
+   * @param lang
+   * @return The message string
+   */
+  private String internalErrorMsg(Exception e, String lang) {
+    String message = messages.getMessage(lang, MessageConsts.InternalServerError);
+    if (e.getCause() != null && e.getCause().getClass().getSimpleName()
+      .endsWith("CQLParseException")) {
+      message = " CQL parse error " + e.getLocalizedMessage();
+    }
+    return message;
+  }
 
   @Override
   public void getNotify(String query,
@@ -196,11 +212,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
         .withJsonUnprocessableEntity(e)));
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
-      String message = messages.getMessage(lang, MessageConsts.InternalServerError);
-      if (e.getCause() != null && e.getCause().getClass().getSimpleName()
-        .endsWith("CQLParseException")) {
-        message = " CQL parse error " + e.getLocalizedMessage();
-      }
+      String message = internalErrorMsg(e, lang);
       asyncResultHandler.handle(succeededFuture(GetNotifyResponse
         .withPlainInternalServerError(message)));
     }
@@ -229,9 +241,10 @@ public class NotificationsResourceImpl implements NotificationsResource {
       );
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
+      String message = internalErrorMsg(e, lang);
       asyncResultHandler.handle(
-        succeededFuture(PostNotifyUsernameByUsernameResponse.withPlainInternalServerError(
-            messages.getMessage(lang, MessageConsts.InternalServerError))));
+        succeededFuture(PostNotifyUsernameByUsernameResponse
+          .withPlainInternalServerError(message)));
     }
   }
 
@@ -272,7 +285,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
       logger.error(e.getMessage(), e);
       asyncResultHandler.handle(
         succeededFuture(PostNotifyUsernameByUsernameResponse.withPlainInternalServerError(
-            messages.getMessage(lang, MessageConsts.InternalServerError))));
+            internalErrorMsg(e, lang))));
     }
 
   }
@@ -332,8 +345,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
       logger.error(e.getMessage(), e);
       asyncResultHandler.handle(
         succeededFuture(PostNotifyResponse.withPlainInternalServerError(
-            messages.getMessage(lang, MessageConsts.InternalServerError)))
-      );
+            internalErrorMsg(e, lang))));
     }
   }
 
@@ -386,7 +398,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
     }
   }
 
-  private String selfDelQuery(String query, String olderthan, Map<String, String> okapiHeaders,
+  private String selfDelQuery(String olderthan, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler) {
     String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
     logger.debug("Trying to delete _self notifies for "
@@ -397,6 +409,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
         .withPlainBadRequest("No UserId")));
       return null;
     }
+    String query;
     String selfQuery = "recipientId=\"" + userId + "\""
       + " and seen=true";
     if (olderthan == null) {
@@ -415,7 +428,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
     try {
       String tenantId = TenantTool.calculateTenantId(
         okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-      String query = selfDelQuery(lang, olderthan, okapiHeaders, asyncResultHandler);
+      String query = selfDelQuery(olderthan, okapiHeaders, asyncResultHandler);
       if (query == null) {
         return; // erro has
       }
@@ -441,25 +454,23 @@ public class NotificationsResourceImpl implements NotificationsResource {
               String error = PgExceptionUtil.badRequestMessage(reply.cause());
               logger.error(error, reply.cause());
               if (error == null) {
-                asyncResultHandler.handle(succeededFuture(DeleteNotifySelfResponse                    .withPlainInternalServerError(
-                      messages.getMessage(lang, MessageConsts.InternalServerError))));
+                asyncResultHandler.handle(succeededFuture(DeleteNotifySelfResponse
+                  .withPlainInternalServerError(
+                    messages.getMessage(lang, MessageConsts.InternalServerError))));
               } else {
-                asyncResultHandler.handle(succeededFuture(DeleteNotifySelfResponse                    .withPlainBadRequest(error)));
+                asyncResultHandler.handle(succeededFuture(DeleteNotifySelfResponse
+                  .withPlainBadRequest(error)));
               }
             }
 
           });
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
-      String message = messages.getMessage(lang, MessageConsts.InternalServerError);
-      if (e.getCause() != null && e.getCause().getClass().getSimpleName()
-        .endsWith("CQLParseException")) {
-        message = " CQL parse error " + e.getLocalizedMessage();
-      }
       asyncResultHandler.handle(succeededFuture(GetNotifyResponse
-        .withPlainInternalServerError(message)));
+        .withPlainInternalServerError(internalErrorMsg(e, lang))));
     }
   }
+
 
   @Override
   public void getNotifyById(String id,
@@ -508,8 +519,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
       asyncResultHandler.handle(succeededFuture(GetNotifyByIdResponse
-        .withPlainInternalServerError(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .withPlainInternalServerError(internalErrorMsg(e, lang))));
     }
   }
 
@@ -555,8 +565,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
       asyncResultHandler.handle(succeededFuture(DeleteNotifyByIdResponse
-        .withPlainInternalServerError(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .withPlainInternalServerError(internalErrorMsg(e, lang))));
     }
   }
 
@@ -611,8 +620,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
     } catch (Exception e) {
       logger.error(e.getMessage(), e);
       asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
-        .withPlainInternalServerError(
-          messages.getMessage(lang, MessageConsts.InternalServerError))));
+        .withPlainInternalServerError(internalErrorMsg(e, lang))));
     }
   }
 
