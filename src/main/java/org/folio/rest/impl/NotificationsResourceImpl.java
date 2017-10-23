@@ -55,20 +55,16 @@ public class NotificationsResourceImpl implements NotificationsResource {
   private static final int DAYS_TO_KEEP_SEEN_NOTIFICATIONS = 365;
 
   private void initCQLValidation() {
-    String path = NOTIFY_SCHEMA_NAME;
     try {
-      notifySchema = IOUtils.toString(
-        getClass().getClassLoader().getResourceAsStream(path), "UTF-8");
+      notifySchema = IOUtils.toString(getClass().getClassLoader().getResourceAsStream(NOTIFY_SCHEMA_NAME), "UTF-8");
     } catch (Exception e) {
-      logger.error("unable to load schema - " + path
-        + ", validation of query fields will not be active");
+      logger.error("unable to load schema - " + NOTIFY_SCHEMA_NAME + ", validation of query fields will not be active");
     }
   }
 
   public NotificationsResourceImpl(Vertx vertx, String tenantId) {
-    if (notifySchema == null) {
-      //initCQLValidation();  // COmmented out, the validation fails a
-      // prerfectly valid query=metaData.createdByUserId=e037b...
+    if (notifySchema == null) { // Commented out, the validation fails a
+      //initCQLValidation();   // prerfectly valid query=metaData.createdByUserId=e037b...
     }
     PostgresClient.getInstance(vertx, tenantId).setIdField(IDFIELDNAME);
   }
@@ -100,8 +96,11 @@ public class NotificationsResourceImpl implements NotificationsResource {
    * @return The message string
    */
   private String internalErrorMsg(Exception e, String lang) {
+    if (e != null) {
+      logger.error(e.getMessage(), e);
+    }
     String message = messages.getMessage(lang, MessageConsts.InternalServerError);
-    if (e.getCause() != null && e.getCause().getClass().getSimpleName()
+    if (e != null && e.getCause() != null && e.getCause().getClass().getSimpleName()
       .endsWith("CQLParseException")) {
       message = " CQL parse error " + e.getLocalizedMessage();
     }
@@ -211,10 +210,8 @@ public class NotificationsResourceImpl implements NotificationsResource {
       asyncResultHandler.handle(succeededFuture(GetNotifyResponse
         .withJsonUnprocessableEntity(e)));
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
-      String message = internalErrorMsg(e, lang);
       asyncResultHandler.handle(succeededFuture(GetNotifyResponse
-        .withPlainInternalServerError(message)));
+        .withPlainInternalServerError(internalErrorMsg(e, lang))));
     }
   }
 
@@ -240,11 +237,9 @@ public class NotificationsResourceImpl implements NotificationsResource {
           asyncResultHandler, userName, vertxContext, lang)
       );
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
-      String message = internalErrorMsg(e, lang);
       asyncResultHandler.handle(
         succeededFuture(PostNotifyUsernameByUsernameResponse
-          .withPlainInternalServerError(message)));
+          .withPlainInternalServerError(internalErrorMsg(e, lang))));
     }
   }
 
@@ -279,10 +274,9 @@ public class NotificationsResourceImpl implements NotificationsResource {
         logger.error(Json.encodePrettily(resp));
         asyncResultHandler.handle(
           succeededFuture(PostNotifyUsernameByUsernameResponse.withPlainInternalServerError(
-              messages.getMessage(lang, MessageConsts.InternalServerError))));
+              internalErrorMsg(null, lang))));
       }
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
       asyncResultHandler.handle(
         succeededFuture(PostNotifyUsernameByUsernameResponse.withPlainInternalServerError(
             internalErrorMsg(e, lang))));
@@ -332,8 +326,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
               logger.error(msg, reply.cause());
               if (error == null) {
                 asyncResultHandler.handle(succeededFuture(PostNotifyResponse
-                    .withPlainInternalServerError(
-                      messages.getMessage(lang, MessageConsts.InternalServerError))));
+                  .withPlainInternalServerError(internalErrorMsg(null, lang))));
               } else {
                 asyncResultHandler.handle(succeededFuture(PostNotifyResponse
                     .withPlainBadRequest(error)));
@@ -342,10 +335,8 @@ public class NotificationsResourceImpl implements NotificationsResource {
           }
         });
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
-      asyncResultHandler.handle(
-        succeededFuture(PostNotifyResponse.withPlainInternalServerError(
-            internalErrorMsg(e, lang))));
+      asyncResultHandler.handle(succeededFuture(PostNotifyResponse
+        .withPlainInternalServerError(internalErrorMsg(e, lang))));
     }
   }
 
@@ -455,8 +446,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
               logger.error(error, reply.cause());
               if (error == null) {
                 asyncResultHandler.handle(succeededFuture(DeleteNotifySelfResponse
-                  .withPlainInternalServerError(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+                  .withPlainInternalServerError(internalErrorMsg(null, lang))));
               } else {
                 asyncResultHandler.handle(succeededFuture(DeleteNotifySelfResponse
                   .withPlainBadRequest(error)));
@@ -465,7 +455,6 @@ public class NotificationsResourceImpl implements NotificationsResource {
 
           });
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
       asyncResultHandler.handle(succeededFuture(GetNotifyResponse
         .withPlainInternalServerError(internalErrorMsg(e, lang))));
     }
@@ -508,8 +497,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
               logger.error(error, reply.cause());
               if (error == null) {
                 asyncResultHandler.handle(succeededFuture(GetNotifyByIdResponse
-                    .withPlainInternalServerError(
-                      messages.getMessage(lang, MessageConsts.InternalServerError))));
+                  .withPlainInternalServerError(internalErrorMsg(null, lang))));
               } else {
                 asyncResultHandler.handle(succeededFuture(PostNotifyResponse
                     .withPlainBadRequest(error)));
@@ -517,7 +505,6 @@ public class NotificationsResourceImpl implements NotificationsResource {
             }
           });
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
       asyncResultHandler.handle(succeededFuture(GetNotifyByIdResponse
         .withPlainInternalServerError(internalErrorMsg(e, lang))));
     }
@@ -554,8 +541,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
               logger.error(error, reply.cause());
               if (error == null) {
                 asyncResultHandler.handle(succeededFuture(PostNotifyResponse
-                    .withPlainInternalServerError(
-                      messages.getMessage(lang, MessageConsts.InternalServerError))));
+                  .withPlainInternalServerError(internalErrorMsg(null, lang))));
               } else {
                 asyncResultHandler.handle(succeededFuture(PostNotifyResponse
                     .withPlainBadRequest(error)));
@@ -563,7 +549,6 @@ public class NotificationsResourceImpl implements NotificationsResource {
             }
           });
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
       asyncResultHandler.handle(succeededFuture(DeleteNotifyByIdResponse
         .withPlainInternalServerError(internalErrorMsg(e, lang))));
     }
@@ -601,9 +586,8 @@ public class NotificationsResourceImpl implements NotificationsResource {
         reply -> {
             if (reply.succeeded()) {
               if (reply.result().getUpdated() == 0) {
-                asyncResultHandler.handle(succeededFuture(
-                    PutNotifyByIdResponse.withPlainInternalServerError(
-                      messages.getMessage(lang, MessageConsts.NoRecordsUpdated))));
+                asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
+                  .withPlainInternalServerError(internalErrorMsg(null, lang))));
               } else { // all ok
                 deleteAllOldNotifications(tenantId, userId, dres ->
                   asyncResultHandler.handle(succeededFuture(
@@ -612,13 +596,11 @@ public class NotificationsResourceImpl implements NotificationsResource {
               }
             } else {
               logger.error(reply.cause().getMessage());
-              asyncResultHandler.handle(succeededFuture(
-                  PutNotifyByIdResponse.withPlainInternalServerError(
-                    messages.getMessage(lang, MessageConsts.InternalServerError))));
+              asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
+                .withPlainInternalServerError(internalErrorMsg(null, lang))));
             }
         });
     } catch (Exception e) {
-      logger.error(e.getMessage(), e);
       asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
         .withPlainInternalServerError(internalErrorMsg(e, lang))));
     }
