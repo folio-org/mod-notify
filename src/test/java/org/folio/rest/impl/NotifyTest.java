@@ -34,7 +34,7 @@ import org.junit.After;
 @RunWith(VertxUnitRunner.class)
 public class NotifyTest {
 
-  private final Logger logger = LoggerFactory.getLogger("okapi");
+  private final Logger logger = LoggerFactory.getLogger("notifytest");
   private final int port = Integer.parseInt(System.getProperty("port", "8081"));
   private static final String LS = System.lineSeparator();
   private final Header TEN = new Header("X-Okapi-Tenant", "testlib");
