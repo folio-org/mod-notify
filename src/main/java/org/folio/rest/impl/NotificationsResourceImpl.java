@@ -45,7 +45,7 @@ import org.z3950.zing.cql.cql2pgjson.SchemaException;
 
 
 public class NotificationsResourceImpl implements NotificationsResource {
-  private final Logger logger = LoggerFactory.getLogger("okapi");
+  private final Logger logger = LoggerFactory.getLogger("modnotify");
   private final Messages messages = Messages.getInstance();
   private static final String NOTIFY_TABLE = "notify_data";
   private static final String LOCATION_PREFIX = "/notify/";
