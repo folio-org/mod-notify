@@ -1,9 +1,10 @@
 {
-"tables":[
-  {
-    "tableName": "notify_data",
-    "generateId": true,
-    "withMetadata": true,
-    "ginIndex": true
-  }]
+  "tables": [
+    {
+      "tableName": "notify_data",
+      "generateId": true,
+      "withMetadata": true,
+      "ginIndex": true
+    }
+  ]
 }
