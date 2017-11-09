@@ -3,6 +3,7 @@
     {
       "tableName": "notify_data",
       "generateId": true,
+      "populateJsonWithId": true,
       "withMetadata": true,
       "ginIndex": true
     }
