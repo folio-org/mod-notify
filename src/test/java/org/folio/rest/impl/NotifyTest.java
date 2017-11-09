@@ -109,15 +109,13 @@ public class NotifyTest {
     // Simple GET request to see the module is running and we can talk to it.
     given()
       .get("/admin/health")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(200);
 
     // Simple GET request without a tenant
     given()
       .get("/notify")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("Tenant"));
 
@@ -127,8 +125,7 @@ public class NotifyTest {
     given()
       .header(TEN)
       .get("/notify")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("\"testlib_mod_notify.notify_data\" does not exist"));
 
@@ -139,16 +136,14 @@ public class NotifyTest {
       .header(TEN).header(JSON)
       .body(tenants)
       .post("/_/tenant")
-      .then()
-      .log().ifError()
+      .then().log().ifValidationFails()
       .statusCode(201);
 
     // Empty list of notifications
     given()
       .header(TEN)
       .get("/notify")
-      .then()
-      .log().ifError()
+      .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("\"notifications\" : [ ]"));
 
@@ -158,7 +153,7 @@ public class NotifyTest {
       .header(TEN) // no content-type header
       .body(bad1)
       .post("/notify")
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("Content-type"));
 
@@ -166,7 +161,7 @@ public class NotifyTest {
       .header(TEN).header(JSON)
       .body(bad1)
       .post("/notify")
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("Json content error"));
 
@@ -181,7 +176,7 @@ public class NotifyTest {
       .header(TEN).header(JSON)
       .body(bad2)
       .post("/notify")
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("Json content error"));
 
@@ -190,7 +185,7 @@ public class NotifyTest {
       .header(TEN).header(JSON)
       .body(bad3)
       .post("/notify")
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(422)
       .body(containsString("may not be null"))
       .body(containsString("\"text\","));
@@ -200,8 +195,7 @@ public class NotifyTest {
       .header(TEN).header(JSON)
       .body(bad4)
       .post("/notify")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("invalid input syntax for uuid"));
 
@@ -210,8 +204,7 @@ public class NotifyTest {
       .header(TEN).header(JSON)
       .body(bad5)
       .post("/notify")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(422)
       .body(containsString("recipientId"));
 
@@ -220,16 +213,15 @@ public class NotifyTest {
       .header(TEN).header(USER9).header(JSON)
       .body(notify1)
       .post("/notify")
-      .then()
-      .log().ifError()
+      .then().log().ifValidationFails()
+      .log().ifValidationFails()
       .statusCode(201);
 
     // Fetch the notification in various ways
     given()
       .header(TEN)
       .get("/notify")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("First notification"))
       .body(containsString("-9999-")) // CreatedBy userid in metadata
@@ -238,21 +230,20 @@ public class NotifyTest {
     given()
       .header(TEN)
       .get("/notify/11111111-1111-1111-1111-111111111111")
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("First notification"));
 
     given()
       .header(TEN)
       .get("/notify/777")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(400);
 
     given()
       .header(TEN)
       .get("/notify?query=text=fiRST")
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("First notification"));
 
@@ -268,8 +259,7 @@ public class NotifyTest {
       .header(TEN).header(USER8).header(JSON)
       .body(notify2)
       .post("/notify")
-      .then()
-      .log().ifError()
+      .then().log().ifValidationFails()
       .statusCode(201);
 
     // duplicate id
@@ -277,8 +267,7 @@ public class NotifyTest {
       .header(TEN).header(USER8).header(JSON)
       .body(notify2)
       .post("/notify")
-      .then()
-      .log().ifError()
+      .then().log().ifValidationFails()
       .body(containsString("Duplicate id"))
       .statusCode(422);
 
@@ -286,8 +275,7 @@ public class NotifyTest {
     given()
       .header(TEN)
       .get("/notify?query=text=notification")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("First notification"))
       .body(containsString("things/23456"));
@@ -296,16 +284,14 @@ public class NotifyTest {
     given()
       .header(TEN)
       .get("/notify?query=seen=false")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("First notification"));
 
     given()
       .header(TEN)
       .get("/notify?query=seen=true")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("\"totalRecords\" : 0"));
 
@@ -313,21 +299,18 @@ public class NotifyTest {
     given()
       .header(TEN)
       .get("/notify?query=BADQUERY")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(422);
     logger.info("XXX The following two tests should return 422, but return 200");
     given()
       .header(TEN)
       .get("/notify?query=BADFIELD=foo")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(200);
     given()
       .header(TEN)
       .get("/notify?query=metadata.BADFIELD=foo")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(200);
 
     // Update a notification
@@ -342,8 +325,7 @@ public class NotifyTest {
       .header(TEN).header(USER8).header(JSON)
       .body(updated1)
       .put("/notify/22222222-2222-2222-2222-222222222222") // wrong one
-      .then()
-      .log().ifError()
+      .then().log().ifValidationFails()
       .statusCode(422)
       .body(containsString("Can not change the id"));
 
@@ -351,8 +333,7 @@ public class NotifyTest {
       .header(TEN).header(USER8).header(JSON)
       .body(updated1)
       .put("/notify/55555555-5555-5555-5555-555555555555") // bad one
-      .then()
-      .log().ifError()
+      .then().log().ifValidationFails()
       .statusCode(422)
       .body(containsString("Can not change the id"));
 
@@ -360,31 +341,27 @@ public class NotifyTest {
       .header(TEN).header(USER8).header(JSON)
       .body(updated1)
       .put("/notify/11111111-222-1111-2-111111111111") // invalid UUID
-      .then()
-      .log().ifError()
+      .then().log().ifValidationFails()
       .statusCode(422);
 
     given()
       .header(TEN).header(USER8).header(JSON)
       .body(updated1.replace("recipientId", "senderId")) // no recipient
       .put("/notify/11111111-1111-1111-1111-111111111111")
-      .then()
-      .log().ifError()
+      .then().log().ifValidationFails()
       .statusCode(422);
 
     given() // This should work
       .header(TEN).header(USER8).header(JSON)
       .body(updated1)
       .put("/notify/11111111-1111-1111-1111-111111111111")
-      .then()
-      .log().ifError()
+      .then().log().ifValidationFails()
       .statusCode(204);
 
     given()
       .header(TEN)
       .get("/notify/11111111-1111-1111-1111-111111111111")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("\"seen\" : true"))
       .body(containsString("with a comment"))
@@ -401,22 +378,19 @@ public class NotifyTest {
       .header(TEN).header(USER8).header(JSON)
       .body(notify3)
       .post("/notify/_username/notfound")
-      .then()
-      .log().ifError()
+      .then().log().ifValidationFails()
       .statusCode(400);
     given()
       .header(TEN).header(USER8).header(JSON)
       .body(notify3)
       .post("/notify/_username/error")
-      .then()
-      .log().ifError()
+      .then().log().ifValidationFails()
       .statusCode(500);
     given()
       .header(TEN).header(USER8).header(JSON)
       .body(notify3)
       .post("/notify/_username/permissionproblem")
-      .then()
-      .log().ifError()
+      .then().log().ifValidationFails()
       .body(containsString("User lookup failed with 403"))
       .statusCode(400);
 
@@ -424,16 +398,14 @@ public class NotifyTest {
       .header(TEN).header(USER8).header(JSON)
       .body(notify3)
       .post("/notify/_username/mockuser9")
-      .then()
-      .log().ifError()
+      .then().log().ifValidationFails()
       .statusCode(201)
       .extract().header("Location");
 
     given() // get it via its location
       .header(TEN).header(USER7)
       .get(notify3Loc)
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("id")) // auto-generated id field
       .body(containsString("999999"));  // uuid of mockuser9
@@ -441,8 +413,7 @@ public class NotifyTest {
     given() // get it via the link.
       .header(TEN).header(USER7)
       .get("/notify?query=link=34567")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("id")) // auto-generated id field
       .body(containsString("999999"));  // uuid of mockuser9
@@ -451,14 +422,14 @@ public class NotifyTest {
     given()
       .header(TEN)
       .get("/notify/_self")
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("No UserId"));
 
     given()
       .header(TEN).header(USER7)
       .get("/notify/_self")
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("\"totalRecords\" : 2")) // both match recipient 7
       .body(containsString("with a comment"));
@@ -466,7 +437,7 @@ public class NotifyTest {
     given()
       .header(TEN).header(USER7)
       .get("/notify/_self?query=seen=true")
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("\"totalRecords\" : 1"))
       .body(containsString("First"));
@@ -474,69 +445,66 @@ public class NotifyTest {
     given()
       .header(TEN).header(USER8)
       .get("/notify/_self")
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .body(containsString("\"totalRecords\" : 0")); // none match 8
 
     // Failed deletes
     given()
       .header(TEN)
       .delete("/notify/11111111-3-1111-333-111111111111") // Bad UUID
-      .then()
-      .log().all()
+      .then().log().ifValidationFails()
       .statusCode(400);
 
     given()
       .header(TEN)
       .delete("/notify/11111111-2222-3333-4444-555555555555") // not found
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(404);
 
     // self delete 1111
     given()
       .header(TEN).header(USER7)
       .delete("/notify/_self?olderthan=2001-01-01")
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(404); // too new
 
     given()
       .header(TEN)
       .delete("/notify/_self?olderthan=2099-01-01")
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("No UserId"));
 
     given()
       .header(TEN).header(USER7)
       .delete("/notify/_self?olderthan=2099-01-01")
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(204); // gone!
 
     // delete notify3
     given()
       .header(TEN)
       .delete(notify3Loc)
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(204);
 
     // delete 2222
     given()
       .header(TEN)
       .delete("/notify/22222222-2222-2222-2222-222222222222")
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(204);
 
-    given()
+    given() // delete again, not found
       .header(TEN)
       .delete("/notify/22222222-2222-2222-2222-222222222222")
-      .then()
+      .then().log().ifValidationFails()
       .statusCode(404);
 
     given()
       .header(TEN)
       .get("/notify")
-      .then()
-      .log().ifError()
+      .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("\"notifications\" : [ ]"));
 
