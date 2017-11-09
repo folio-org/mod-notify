@@ -413,10 +413,21 @@ public class NotifyTest {
     given() // get it via the link.
       .header(TEN).header(USER7)
       .get("/notify?query=link=34567")
-      .then().log().ifValidationFails()
+      .then().log().all() // ifValidationFails()
       .statusCode(200)
       .body(containsString("id")) // auto-generated id field
       .body(containsString("999999"));  // uuid of mockuser9
+
+    given() // get it via the createdBy in the metadata
+      .header(TEN).header(USER7)
+      .get("/notify?query=metaData.createdByUserId='88888888-8888-8888-8888-888888888888'")
+      .then().log().ifValidationFails()
+      .statusCode(200)
+      .body(containsString("\"totalRecords\" : 0"));
+      //.body(containsString("id")) // auto-generated id field
+    //.body(containsString("999999"));  // uuid of mockuser9
+    // This should work, once we get MODNOTIFY-5 fixed, and can
+    // uncomment the call to initCQLValidation()
 
     // _self
     given()
@@ -480,6 +491,12 @@ public class NotifyTest {
       .delete("/notify/_self?olderthan=2099-01-01")
       .then().log().ifValidationFails()
       .statusCode(204); // gone!
+
+    given()
+      .header(TEN).header(USER7)
+      .delete("/notify/_self") // no query
+      .then().log().ifValidationFails()
+      .statusCode(404); // already gone
 
     // delete notify3
     given()
