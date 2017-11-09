@@ -187,8 +187,8 @@ public class NotifyTest {
       .post("/notify")
       .then().log().ifValidationFails()
       .statusCode(422)
-      .body(containsString("may not be null"))
-      .body(containsString("\"text\","));
+      .body(containsString("Unrecognized field"))
+      .body(containsString("badFieldName"));
 
     String bad4 = notify1.replaceAll("-1111-", "-2-");  // make bad UUID
     given()
@@ -347,6 +347,13 @@ public class NotifyTest {
     given()
       .header(TEN).header(USER8).header(JSON)
       .body(updated1.replace("recipientId", "senderId")) // no recipient
+      .put("/notify/11111111-1111-1111-1111-111111111111")
+      .then().log().ifValidationFails()
+      .statusCode(422);
+
+    given()
+      .header(TEN).header(USER8).header(JSON)
+      .body(updated1.replace("seen", "UNKNOWNFIELD")) // unknown field
       .put("/notify/11111111-1111-1111-1111-111111111111")
       .then().log().ifValidationFails()
       .statusCode(422);
