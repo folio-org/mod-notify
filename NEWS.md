@@ -1,3 +1,9 @@
+## 1.1.5 2017-11-10
+ * modnotify-15: Id is not returned with queries
+ * modnotify-12: Upgrade to RMB 15
+ * modnotify-14: Depend on mod-users 14.0 or 15.0, no direct mvn dependencies
+ * modnotify-16: More strict validation, reject unknown fields
+
 ## 1.1.4 2017-10-18
  * modnotify-13: The lookup path is /_username/{username}, nothing with id.
  * modnotify-11: The user lookup returns a collection, not a user item
