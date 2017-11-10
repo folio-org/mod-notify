@@ -1,6 +1,12 @@
 {
   "id": "${artifactId}-${version}",
   "name": "Notify",
+  "requires": [
+    {
+      "id": "users",
+      "version": "14.0 15.0"
+    }
+  ],
   "provides": [
     {
       "id": "notify",
@@ -96,12 +102,6 @@
         "notify.item.delete"
       ],
       "visible": false
-    }
-  ],
-  "requires": [
-    {
-      "id": "users",
-      "version": "14.0"
     }
   ]
 }

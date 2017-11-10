@@ -42,6 +42,42 @@
       ]
     },
     {
+      "description": "User lookup that succeeds, but lacks critical data",
+      "url": "/users?query=username=badmockuser",
+      "method": "get",
+      "status": 200,
+      "receivedData": {
+        "users": [
+          {
+            "username": "mockuser9",
+            "MISSINGid": "99999999-9999-9999-9999-999999999999",
+            "active": true,
+            "type": "patron",
+            "personal": {
+              "MISSINGlastName": "Mockerson",
+              "middleName": "M.",
+              "firstName": "Mockey",
+              "email": "mock@biglibrary.org",
+              "phone": "2125551212"
+            }
+          }
+        ],
+        "totalRecords": 1
+      },
+      "receivedPath": "",
+      "sendData": {},
+      "headers": [
+        {
+          "name": "x-okapi-token",
+          "value": "12345"
+        },
+        {
+          "name": "x-okapi-tenant",
+          "value": "eeee"
+        }
+      ]
+    },
+    {
       "description": "User not found",
       "url": "/users?query=username=notfound",
       "method": "get",
