@@ -42,7 +42,8 @@ import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 import org.z3950.zing.cql.cql2pgjson.SchemaException;
 
-
+// We have a few repeated strings, which SQ complains about.
+@java.lang.SuppressWarnings({"squid:S1192"})
 public class NotificationsResourceImpl implements NotificationsResource {
   private final Logger logger = LoggerFactory.getLogger("modnotify");
   private final Messages messages = Messages.getInstance();
@@ -159,7 +160,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
    * Helper to get a list of notifies, optionally limited to _self
    */
   @java.lang.SuppressWarnings({"squid:S00107"}) // 8 parameters, I know
-  public void getNotifyBoth(boolean self, String query, int offset, int limit,
+  private void getNotifyBoth(boolean self, String query, int offset, int limit,
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) throws Exception {
