@@ -29,7 +29,7 @@ echo
 echo "Loading mod-notify"
 # Dirty trick: Remove the dependency on mod-users.
 echo `cat target/ModuleDescriptor.json` |
-  sed 's/"requires": \[.*\]/"requires":[]/' > /tmp/md.json
+  sed 's/"requires": \[[^]]*\]/"requires":[]/' > /tmp/md.json
 $CURL -X POST -d@/tmp/md.json $OKAPIURL/_/proxy/modules
 echo
 

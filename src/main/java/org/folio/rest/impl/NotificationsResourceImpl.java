@@ -6,6 +6,7 @@ import static io.vertx.core.Future.succeededFuture;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import java.io.IOException;
@@ -22,8 +23,6 @@ import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Notification;
 import org.folio.rest.jaxrs.model.NotifyCollection;
 import org.folio.rest.jaxrs.resource.NotificationsResource;
-import org.folio.rest.jaxrs.model.User;
-import org.folio.rest.jaxrs.model.UserdataCollection;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
@@ -251,11 +250,21 @@ public class NotificationsResourceImpl implements NotificationsResource {
     try {
       if (resp.getCode() == 200) {
         logger.info("Received user " + resp.getBody());
-        UserdataCollection userlist = (UserdataCollection) resp.convertToPojo(UserdataCollection.class);
-        if (userlist.getTotalRecords()>0) {
-          User usr = userlist.getUsers().get(0);
-          notification.setRecipientId(usr.getId());
-          postNotify(lang, notification, okapiHeaders, asyncResultHandler, vertxContext);
+        JsonObject userResp = resp.getBody();
+        if (userResp.getInteger("totalRecords", 0) > 0) {
+          if (userResp.containsKey("users")
+            && !userResp.getJsonArray("users").isEmpty()
+            && userResp.getJsonArray("users").getJsonObject(0).containsKey("id")) {
+            String id = userResp.getJsonArray("users").getJsonObject(0).getString("id");
+            notification.setRecipientId(id);
+            postNotify(lang, notification, okapiHeaders, asyncResultHandler, vertxContext);
+          } else {
+            logger.error("User lookup failed for " + userId + ". Bad response");
+            logger.error(Json.encodePrettily(resp));
+            asyncResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
+              .withPlainBadRequest("User lookup failed for " + userId + ". "
+                + "Bad response " + userResp)));
+          }
         } else {
           logger.error("User lookup failed for " + userId);
           logger.error(Json.encodePrettily(resp));
