@@ -401,6 +401,13 @@ public class NotifyTest {
       .body(containsString("User lookup failed with 403"))
       .statusCode(400);
 
+    given() // lookup succeeds, but has no id
+      .header(TEN).header(USER8).header(JSON)
+      .body(notify3)
+      .post("/notify/_username/badmockuser")
+      .then().log().ifValidationFails()
+      .statusCode(400);
+
     String notify3Loc = given() // a good one
       .header(TEN).header(USER8).header(JSON)
       .body(notify3)
