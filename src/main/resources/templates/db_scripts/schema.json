@@ -5,7 +5,14 @@
       "generateId": true,
       "populateJsonWithId": true,
       "withMetadata": true,
-      "ginIndex": true
+      "ginIndex": [
+        {
+          "fieldName": "text",
+          "tOps": "ADD",
+          "caseSensitive": false,
+          "removeAccents": true
+        }
+      ]
     }
   ]
 }

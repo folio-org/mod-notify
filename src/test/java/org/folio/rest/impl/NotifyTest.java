@@ -426,7 +426,7 @@ public class NotifyTest {
 
     given() // get it via the link.
       .header(TEN).header(USER7)
-      .get("/notify?query=link=34567")
+      .get("/notify?query=link=*34567*")
       .then().log().all() // ifValidationFails()
       .statusCode(200)
       .body(containsString("id")) // auto-generated id field
