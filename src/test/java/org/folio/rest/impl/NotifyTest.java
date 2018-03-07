@@ -197,7 +197,7 @@ public class NotifyTest {
       .post("/notify")
       .then().log().ifValidationFails()
       .statusCode(400)
-      .body(containsString("invalid input syntax for uuid"));
+      .body(containsString("invalid input syntax for type uuid"));
 
     String bad5 = notify1.replaceAll("recipientId", "senderId"); // recip missing
     given()
