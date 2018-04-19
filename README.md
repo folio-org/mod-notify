@@ -50,13 +50,13 @@ may well add alternative ways to deliver notifications, for example by email.
 
 ### Other documentation
 
-Other [modules](http://dev.folio.org/source-code/#server-side) are described,
-with further FOLIO Developer documentation at [dev.folio.org](http://dev.folio.org/)
+Other [modules](https://dev.folio.org/source-code/#server-side) are described,
+with further FOLIO Developer documentation at [dev.folio.org](https://dev.folio.org/)
 
 ### Issue tracker
 
 See project [MODNOTIFY](https://issues.folio.org/browse/MODNOTIFY)
-at the [FOLIO issue tracker](http://dev.folio.org/community/guide-issues).
+at the [FOLIO issue tracker](https://dev.folio.org/guidelines/issue-tracker/).
 
 ### Quick start
 
@@ -74,7 +74,7 @@ See the `run.sh` script for some simple curl examples.
 
 ### API documentation
 
-This module's [API documentation](http://dev.folio.org/doc/api/#mod-notify).
+This module's [API documentation](https://dev.folio.org/reference/api/#mod-notify).
 
 The local API docs are available, for example:
 ```
@@ -86,6 +86,6 @@ etc.
 ### Download and configuration
 
 The built artifacts for this module are available.
-See [configuration](http://dev.folio.org/doc/artifacts) for repository access,
+See [configuration](https://dev.folio.org/download/artifacts) for repository access,
 and the [Docker image](https://hub.docker.com/r/folioorg/mod-notify/).
 
