@@ -103,7 +103,6 @@ public class NotifyTest {
    */
   @Test
   public void tests(TestContext context) {
-    async = context.async();
     logger.info("notifyTest starting");
 
     // Simple GET request to see the module is running and we can talk to it.
@@ -126,8 +125,7 @@ public class NotifyTest {
       .header(TEN)
       .get("/notify")
       .then().log().ifValidationFails()
-      .statusCode(400)
-      .body(containsString("\"testlib_mod_notify.notify_data\" does not exist"));
+      .statusCode(500);
 
     // Call the tenant interface to initialize the database
     String tenants = "{\"module_to\":\"" + moduleId + "\"}";
@@ -196,7 +194,7 @@ public class NotifyTest {
       .body(bad4)
       .post("/notify")
       .then().log().ifValidationFails()
-      .statusCode(400)
+      .statusCode(422)
       .body(containsString("invalid input syntax for type uuid"));
 
     String bad5 = notify1.replaceAll("recipientId", "senderId"); // recip missing
@@ -238,7 +236,7 @@ public class NotifyTest {
       .header(TEN)
       .get("/notify/777")
       .then().log().ifValidationFails()
-      .statusCode(400);
+      .statusCode(422);
 
     given()
       .header(TEN)
@@ -268,7 +266,7 @@ public class NotifyTest {
       .body(notify2)
       .post("/notify")
       .then().log().ifValidationFails()
-      .body(containsString("Duplicate id"))
+      .body(containsString("duplicate key"))
       .statusCode(422);
 
     // Get both notifications a few different ways
@@ -296,22 +294,22 @@ public class NotifyTest {
       .body(containsString("\"totalRecords\" : 0"));
 
     // bad queries
+    // Used to return 422, but the new helper in RMB says it is 400.
     given()
       .header(TEN)
       .get("/notify?query=BADQUERY")
       .then().log().ifValidationFails()
-      .statusCode(422);
-    logger.info("XXX The following two tests should return 422, but return 200");
+      .statusCode(400);
     given()
       .header(TEN)
       .get("/notify?query=BADFIELD=foo")
       .then().log().ifValidationFails()
-      .statusCode(200);
+      .statusCode(400);
     given()
       .header(TEN)
       .get("/notify?query=metadata.BADFIELD=foo")
       .then().log().ifValidationFails()
-      .statusCode(200);
+      .statusCode(400);
 
     // Update a notification
     String updated1 = "{"
@@ -336,6 +334,14 @@ public class NotifyTest {
       .then().log().ifValidationFails()
       .statusCode(422)
       .body(containsString("Can not change the id"));
+
+    String updated2 = updated1.replaceAll("1", "5");
+    given()
+      .header(TEN).header(USER8).header(JSON)
+      .body(updated2)
+      .put("/notify/55555555-5555-5555-5555-555555555555") // unknown one
+      .then().log().ifValidationFails()
+      .statusCode(404);
 
     given()
       .header(TEN).header(USER8).header(JSON)
@@ -434,14 +440,12 @@ public class NotifyTest {
 
     given() // get it via the createdBy in the metadata
       .header(TEN).header(USER7)
-      .get("/notify?query=metaData.createdByUserId='88888888-8888-8888-8888-888888888888'")
+      .get("/notify?query=metadata.createdByUserId=88888888-8888-8888-8888-888888888888")
       .then().log().ifValidationFails()
       .statusCode(200)
-      .body(containsString("\"totalRecords\" : 0"));
-      //.body(containsString("id")) // auto-generated id field
-    //.body(containsString("999999"));  // uuid of mockuser9
-    // This should work, once we get MODNOTIFY-5 fixed, and can
-    // uncomment the call to initCQLValidation()
+      .body(containsString("\"totalRecords\" : 2"))
+      .body(containsString("id")) // auto-generated id field
+      .body(containsString("999999"));  // uuid of mockuser9
 
     // _self
     given()
@@ -478,7 +482,7 @@ public class NotifyTest {
       .header(TEN)
       .delete("/notify/11111111-3-1111-333-111111111111") // Bad UUID
       .then().log().ifValidationFails()
-      .statusCode(400);
+      .statusCode(422);
 
     given()
       .header(TEN)
@@ -505,7 +509,6 @@ public class NotifyTest {
       .delete("/notify/_self?olderthan=2099-01-01")
       .then().log().ifValidationFails()
       .statusCode(204); // gone!
-
     given()
       .header(TEN).header(USER7)
       .delete("/notify/_self") // no query
@@ -541,7 +544,6 @@ public class NotifyTest {
 
     // All done
     logger.info("notifyTest done");
-    async.complete();
   }
 
 }
