@@ -357,10 +357,10 @@ public class NotificationsResourceImpl implements NotificationsResource {
       return;
     }
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
-      .delete(NOTIFY_TABLE, cql, reply -> {
+      .delete(NOTIFY_TABLE, cql,
+        reply -> asyncResultHandler.handle(succeededFuture())
       // Ignore all errors, we will catch old notifies the next time
-        asyncResultHandler.handle(succeededFuture());
-      });
+      );
   }
 
   private String selfDelQuery(String olderthan, Map<String, String> okapiHeaders,
@@ -531,10 +531,10 @@ public class NotificationsResourceImpl implements NotificationsResource {
               asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
                 .withPlainNotFound(id)));
             else { // all ok
-              deleteAllOldNotifications(tenantId, userId, dres -> {
-                asyncResultHandler.handle(succeededFuture(
-                  PutNotifyByIdResponse.withNoContent()));
-              }, vertxContext);
+              deleteAllOldNotifications(tenantId, userId,
+                dres -> asyncResultHandler.handle(succeededFuture(
+                  PutNotifyByIdResponse.withNoContent())),
+                 vertxContext);
             }
           } else {
             ValidationHelper.handleError(reply.cause(), asyncResultHandler);
