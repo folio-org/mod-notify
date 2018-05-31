@@ -50,7 +50,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
   private static final String LOCATION_PREFIX = "/notify/";
   private static final String IDFIELDNAME = "id";
   private String notifySchema = null;
-  private static final String NOTIFY_SCHEMA_NAME = "ramls/notify.json"; // "apidocs/raml/notify.json";
+  private static final String NOTIFY_SCHEMA_NAME = "ramls/notify.json";
   private static final int DAYS_TO_KEEP_SEEN_NOTIFICATIONS = 365;
 
   private void initCQLValidation() {
@@ -527,10 +527,10 @@ public class NotificationsResourceImpl implements NotificationsResource {
       .update(NOTIFY_TABLE, entity, id,
         reply -> {
           if (reply.succeeded()) {
-            if (reply.result().getUpdated() == 0) {
+            if (reply.result().getUpdated() == 0)
               asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
                 .withPlainNotFound(id)));
-            } else { // all ok
+            else { // all ok
               deleteAllOldNotifications(tenantId, userId, dres -> {
                 asyncResultHandler.handle(succeededFuture(
                   PutNotifyByIdResponse.withNoContent()));
