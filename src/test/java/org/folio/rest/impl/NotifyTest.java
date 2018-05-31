@@ -194,7 +194,7 @@ public class NotifyTest {
       .body(bad4)
       .post("/notify")
       .then().log().ifValidationFails()
-      .statusCode(400)
+      .statusCode(422)
       .body(containsString("invalid input syntax for type uuid"));
 
     String bad5 = notify1.replaceAll("recipientId", "senderId"); // recip missing
@@ -266,7 +266,7 @@ public class NotifyTest {
       .body(notify2)
       .post("/notify")
       .then().log().ifValidationFails()
-      .body(containsString("Duplicate id"))
+      .body(containsString("duplicate key"))
       .statusCode(422);
 
     // Get both notifications a few different ways
@@ -437,13 +437,6 @@ public class NotifyTest {
       .statusCode(200)
       .body(containsString("id")) // auto-generated id field
       .body(containsString("999999"));  // uuid of mockuser9
-
-    // List the one notify we have, while debugging
-    given() // get it via the createdBy in the metadata
-      .header(TEN).header(USER7)
-      .get("/notify")
-      .then().log().ifValidationFails()
-      .statusCode(200);
 
     given() // get it via the createdBy in the metadata
       .header(TEN).header(USER7)

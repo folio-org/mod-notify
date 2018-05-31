@@ -27,9 +27,7 @@ import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
 import org.folio.rest.persist.Criteria.Limit;
 import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PgExceptionUtil;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.persist.cql.CQLQueryValidationException;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.client.HttpClientFactory;
 import org.folio.rest.tools.client.interfaces.HttpClientInterface;
@@ -64,8 +62,8 @@ public class NotificationsResourceImpl implements NotificationsResource {
   }
 
   public NotificationsResourceImpl(Vertx vertx, String tenantId) {
-    if (notifySchema == null) { // Commented out, the validation fails a
-      initCQLValidation();   // prerfectly valid query=metaData.createdByUserId=e037b...
+    if (notifySchema == null) {
+      initCQLValidation();
     }
     PostgresClient.getInstance(vertx, tenantId).setIdField(IDFIELDNAME);
   }
@@ -117,7 +115,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    getNotifyBoth(false, query, offset, limit, lang, okapiHeaders,
+    getNotifyBoth(false, query, offset, limit, okapiHeaders,
       asyncResultHandler, vertxContext);
   }
 
@@ -128,7 +126,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    getNotifyBoth(true, query, offset, limit, lang,
+    getNotifyBoth(true, query, offset, limit,
       okapiHeaders, asyncResultHandler, vertxContext);
   }
 
@@ -141,8 +139,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
    * @return the modified query, or null, in which case the handler has been
    * called.
    */
-  private String selfGetQuery(String query,
-    Map<String, String> okapiHeaders,
+  private String selfGetQuery(String query, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler) {
     String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
     if (userId == null) {
@@ -166,7 +163,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
    */
   @java.lang.SuppressWarnings({"squid:S00107"}) // 8 parameters, I know
   private void getNotifyBoth(boolean self, String query, int offset, int limit,
-    String lang, Map<String, String> okapiHeaders,
+    Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
@@ -216,7 +213,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
           Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    logger.info("postNotifyUseridByUid starting userId='" + userName + "'");
+    logger.debug("postNotifyUseridByUid starting userId='" + userName + "'");
     String tenantId = TenantTool.calculateTenantId(
       okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
     String okapiURL = okapiHeaders.get("X-Okapi-Url");
@@ -240,42 +237,46 @@ public class NotificationsResourceImpl implements NotificationsResource {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     String userId, Context vertxContext, String lang) {
-    if (resp.getCode() == 200) {
-      logger.info("Received user " + resp.getBody());
-      JsonObject userResp = resp.getBody();
-      if (userResp.getInteger("totalRecords", 0) > 0) {
-        if (userResp.containsKey("users")
-          && !userResp.getJsonArray("users").isEmpty()
-          && userResp.getJsonArray("users").getJsonObject(0).containsKey("id")) {
-          String id = userResp.getJsonArray("users").getJsonObject(0).getString("id");
-          notification.setRecipientId(id);
-          postNotify(lang, notification, okapiHeaders, asyncResultHandler, vertxContext);
-        } else {
-          logger.error("User lookup failed for " + userId + ". Bad response");
+    switch (resp.getCode()) {
+      case 200:
+        logger.debug("Received user " + resp.getBody());
+        JsonObject userResp = resp.getBody();
+        if (userResp.getInteger("totalRecords", 0) > 0) {
+          if (userResp.containsKey("users")
+            && !userResp.getJsonArray("users").isEmpty()
+            && userResp.getJsonArray("users").getJsonObject(0).containsKey("id")) {
+            String id = userResp.getJsonArray("users").getJsonObject(0).getString("id");
+            notification.setRecipientId(id);
+            postNotify(lang, notification, okapiHeaders, asyncResultHandler, vertxContext);
+          } else {
+            logger.error("User lookup failed for " + userId + ". Bad response");
+            logger.error(Json.encodePrettily(resp));
+            asyncResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
+              .withPlainBadRequest("User lookup failed for " + userId + ". "
+                + "Bad response " + userResp)));
+          }
+        } else {  // Can not use ValidationHelper here, we have HTTP responses
+          logger.error("User lookup failed for " + userId);
           logger.error(Json.encodePrettily(resp));
           asyncResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
-            .withPlainBadRequest("User lookup failed for " + userId + ". "
-              + "Bad response " + userResp)));
+            .withPlainBadRequest("User lookup failed. "
+              + "Can not find user " + userId)));
         }
-      } else {
-        logger.error("User lookup failed for " + userId);
+        break;
+      case 403:
+        logger.error("Permission problem: User lookup failed for " + userId);
         logger.error(Json.encodePrettily(resp));
         asyncResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
-          .withPlainBadRequest("User lookup failed. "
-            + "Can not find user " + userId)));
-      }
-    } else if (resp.getCode() == 403) {
-      logger.error("Permission problem: User lookup failed for " + userId);
-      logger.error(Json.encodePrettily(resp));
-      asyncResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
-        .withPlainBadRequest("User lookup failed with 403. " + userId
-          + " " + Json.encode(resp.getError()))));
-    } else {
-      logger.error("User lookup failed with " + resp.getCode());
-      logger.error(Json.encodePrettily(resp));
-      asyncResultHandler.handle(
-        succeededFuture(PostNotifyUsernameByUsernameResponse.withPlainInternalServerError(
-          internalErrorMsg(null, lang))));
+          .withPlainBadRequest("User lookup failed with 403. " + userId
+            + " " + Json.encode(resp.getError()))));
+        break;
+      default:
+        logger.error("User lookup failed with " + resp.getCode());
+        logger.error(Json.encodePrettily(resp));
+        asyncResultHandler.handle(
+          succeededFuture(PostNotifyUsernameByUsernameResponse.withPlainInternalServerError(
+            internalErrorMsg(null, lang))));
+        break;
     }
   }
 
@@ -309,23 +310,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
           asyncResultHandler.handle(succeededFuture(PostNotifyResponse
             .withJsonCreated(LOCATION_PREFIX + ret, stream)));
         } else {
-          String msg = reply.cause().getMessage();
-          if (msg.contains("duplicate key value violates unique constraint")) {
-            Errors valErr = ValidationHelper.createValidationErrorMessage(
-              "id", id, "Duplicate id");
-            asyncResultHandler.handle(succeededFuture(PostNotifyResponse
-              .withJsonUnprocessableEntity(valErr)));
-          } else {
-            String error = PgExceptionUtil.badRequestMessage(reply.cause());
-            logger.error(msg, reply.cause());
-            if (error == null) {
-              asyncResultHandler.handle(succeededFuture(PostNotifyResponse
-                .withPlainInternalServerError(internalErrorMsg(null, lang))));
-            } else {
-              asyncResultHandler.handle(succeededFuture(PostNotifyResponse
-                .withPlainBadRequest(error)));
-            }
-          }
+          ValidationHelper.handleError(reply.cause(), asyncResultHandler);
         }
       });
   }
@@ -348,9 +333,6 @@ public class NotificationsResourceImpl implements NotificationsResource {
    * @param tenantId
    * @param userId
    */
-  // TODO - This FAILS with the query validation enabled
-  // org.z3950.zing.cql.cql2pgjson.QueryValidationException:
-  // Field name 'metadata.updatedDate' is not present in index
   private void deleteAllOldNotifications(String tenantId, String userId,
     Handler<AsyncResult<Void>> asyncResultHandler,
     Context vertxContext) {
@@ -364,7 +346,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
     // housekeeping jobs
     String olderthan = limit.format(DateTimeFormatter.ISO_DATE);
     query = selfQuery + " and (metadata.updatedDate<" + olderthan + ")";
-    logger.info(" deleteAllOldNotifications: new query:" + query);
+    logger.debug(" deleteAllOldNotifications: new query:" + query);
     CQLWrapper cql = null;
     try {
       cql = getCQL(query, -1, -1);
@@ -374,25 +356,11 @@ public class NotificationsResourceImpl implements NotificationsResource {
       asyncResultHandler.handle(succeededFuture());
       return;
     }
-    //try {
-    logger.warn("XXXX DeleteAllOld about to make db delete call " + query);
     PostgresClient.getInstance(vertxContext.owner(), tenantId)
       .delete(NOTIFY_TABLE, cql, reply -> {
-      logger.warn("XXXX DeleteAllOld db callback. succeeded = " + reply.succeeded());
-        if (reply.succeeded()) {
-          logger.info("deleteAllOldNotifications ok. Deleted " + reply.result().getUpdated() + " records");
-        } else {
-          logger.error("deleteAllOldNotifications failure " + reply.cause());
-        }
-        // Ignore all errors, we will catch old notifies the next time
+      // Ignore all errors, we will catch old notifies the next time
         asyncResultHandler.handle(succeededFuture());
       });
-    /*
-    } catch (Exception e) {
-      // This should never happen! Workaround to RMB-168
-      logger.error("XXXX DeleteAllOld exception in PgClient", e);
-      asyncResultHandler.handle(succeededFuture());
-    }*/
   }
 
   private String selfDelQuery(String olderthan, Map<String, String> okapiHeaders,
@@ -428,7 +396,7 @@ public class NotificationsResourceImpl implements NotificationsResource {
       if (query == null) {
         return; // error has been handled already
       }
-      logger.info("Deleting self notifications. new query:" + query);
+    logger.debug("Deleting self notifications. new query:" + query);
     CQLWrapper cql;
     try {
       cql = getCQL(query, -1, -1);
@@ -532,60 +500,46 @@ public class NotificationsResourceImpl implements NotificationsResource {
     Notification entity,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    Context vertxContext) throws Exception {
-    try {
-      logger.info("PUT notify " + id + " " + Json.encode(entity));
-      String noteId = entity.getId();
-      if (noteId != null && !noteId.equals(id)) {
-        logger.error("Trying to change note Id from " + id + " to " + noteId);
-        Errors valErr = ValidationHelper.createValidationErrorMessage("id", noteId,
-          "Can not change the id");
-        asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
-          .withJsonUnprocessableEntity(valErr)));
-        return;
-      }
-      String recip = entity.getRecipientId();
-      if (recip == null || recip.isEmpty()) {
-        Errors valErr = ValidationHelper.createValidationErrorMessage(
-          "recipientId", "", "Required");
-        asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
-          .withJsonUnprocessableEntity(valErr)));
-        return;
-      }
-      String tenantId = TenantTool.calculateTenantId(
-        okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-      String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
-      logger.warn("XXXX About to PUT notify " + id);
-      PostgresClient.getInstance(vertxContext.owner(), tenantId)
-        .update(NOTIFY_TABLE, entity, id,
-          reply -> {
-            logger.warn("XXXX PUT db call returned with succeeded: " + reply.succeeded());
-            if (reply.succeeded()) {
-              if (reply.result().getUpdated() == 0) {
-                logger.warn("XXXX PUT failed  with no records updated");
-                asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
-                  .withPlainNotFound(id)));
-              } else { // all ok
-                logger.warn("XXXX PUT OK, will delete old stuff");
-                deleteAllOldNotifications(tenantId, userId, dres -> {
-                  logger.warn("XXXX DeleteAllOld callback " + dres.succeeded());
-                  asyncResultHandler.handle(succeededFuture(
-                    PutNotifyByIdResponse.withNoContent()));
-                }, vertxContext);
-              }
-            } else {
-              logger.warn("XXXX PUT failed with db error");
-              logger.error(reply.cause().getMessage());
-              asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
-                .withPlainInternalServerError(internalErrorMsg(null, lang))));
-            }
-            logger.warn("XXXX PUT db callback done. succeeded: " + reply.succeeded());
-        });
-    } catch (Exception e) {
-      logger.warn("XXXX PUT caught an exception");
+    Context vertxContext) {
+
+    logger.debug("PUT notify " + id + " " + Json.encode(entity));
+    String noteId = entity.getId();
+    if (noteId != null && !noteId.equals(id)) {
+      logger.error("Trying to change note Id from " + id + " to " + noteId);
+      Errors valErr = ValidationHelper.createValidationErrorMessage("id", noteId,
+        "Can not change the id");
       asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
-        .withPlainInternalServerError(internalErrorMsg(e, lang))));
+        .withJsonUnprocessableEntity(valErr)));
+      return;
     }
+    String recip = entity.getRecipientId();
+    if (recip == null || recip.isEmpty()) {
+      Errors valErr = ValidationHelper.createValidationErrorMessage(
+        "recipientId", "", "Required");
+      asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
+        .withJsonUnprocessableEntity(valErr)));
+      return;
+    }
+    String tenantId = TenantTool.calculateTenantId(
+      okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
+    String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
+    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+      .update(NOTIFY_TABLE, entity, id,
+        reply -> {
+          if (reply.succeeded()) {
+            if (reply.result().getUpdated() == 0) {
+              asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
+                .withPlainNotFound(id)));
+            } else { // all ok
+              deleteAllOldNotifications(tenantId, userId, dres -> {
+                asyncResultHandler.handle(succeededFuture(
+                  PutNotifyByIdResponse.withNoContent()));
+              }, vertxContext);
+            }
+          } else {
+            ValidationHelper.handleError(reply.cause(), asyncResultHandler);
+          }
+        });
   }
 
 }
