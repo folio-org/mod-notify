@@ -447,6 +447,91 @@ public class NotifyTest {
       .body(containsString("id")) // auto-generated id field
       .body(containsString("999999"));  // uuid of mockuser9
 
+    // TEMPORARY - list them all
+    given()
+      .header(TEN).header(USER7)
+      .get("/notify")
+      .then().log().all()
+      .statusCode(200);
+
+    // offsets and limits
+    given()
+      .header(TEN).header(USER7)
+      .get("/notify?offset=0&limit=2")
+      .then().log().ifValidationFails()
+      .statusCode(200)
+      .body(containsString("things/23456"))
+      .body(containsString("users/1234"));
+    given()
+      .header(TEN).header(USER7)
+      .get("/notify?offset=1&limit=2")
+      .then().log().ifValidationFails()
+      .statusCode(200)
+      .body(containsString("First notification"))
+      .body(containsString("mockuser9"));
+    given()
+      .header(TEN).header(USER7)
+      .get("/notify?offset=2&limit=0")
+      .then().log().ifValidationFails()
+      .statusCode(400)
+      .body(containsString("must be greater than or equal to 1"));
+    given()
+      .header(TEN).header(USER7)
+      .get("/notify?limit=0")
+      .then().log().ifValidationFails()
+      .statusCode(400)
+      .body(containsString("must be greater than or equal to 1"));
+
+    // bad offsets
+    given()
+      .header(TEN).header(USER7)
+      .get("/notify?offset=999&limit=1")
+      .then().log().ifValidationFails()
+      .statusCode(200)
+      .body(containsString("\"totalRecords\" : 0"));
+    given()
+      .header(TEN).header(USER7)
+      .get("/notify?offset=-99&limit=1")
+      .then().log().ifValidationFails()
+      .statusCode(400)
+      .body(containsString("must be greater than or equal to 0"));
+    given()
+      .header(TEN).header(USER7)
+      .get("/notify?offset=2147483647&limit=1")
+      .then().log().ifValidationFails()
+      .statusCode(400)
+      .body(containsString("must be less than or equal to 1000"));
+
+    // bad limits
+    given()
+      .header(TEN).header(USER7)
+      .get("/notify?offset=1&limit=-1")
+      .then().log().ifValidationFails()
+      .statusCode(400)
+      .body(containsString("must be greater than or equal to 1"));
+    given()
+      .header(TEN).header(USER7)
+      .get("/notify?limit=2147483647")
+      .then().log().ifValidationFails()
+      .statusCode(400)
+      .body(containsString("must be less than or equal to 100"));
+
+    // lang
+    given()
+      .header(TEN).header(USER7)
+      .get("/notify?limit=1&lang=UNKNOWNLANG")
+      .then().log().ifValidationFails()
+      .statusCode(400)
+      .body(containsString("parameter is incorrect"));
+    // RMB validates lang to match [A-Za-z]{2}, but does not know individual codes
+    given()
+      .header(TEN).header(USER7)
+      .get("/notify?limit=1&lang=ZZ")
+      .then().log().ifValidationFails()
+      .statusCode(200)
+      .body(containsString("\"totalRecords\" : 3"));
+
+
     // _self
     given()
       .header(TEN)
