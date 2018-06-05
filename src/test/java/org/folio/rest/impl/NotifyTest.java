@@ -299,17 +299,17 @@ public class NotifyTest {
       .header(TEN)
       .get("/notify?query=BADQUERY")
       .then().log().ifValidationFails()
-      .statusCode(400);
+      .statusCode(422);
     given()
       .header(TEN)
       .get("/notify?query=BADFIELD=foo")
       .then().log().ifValidationFails()
-      .statusCode(400);
+      .statusCode(422);
     given()
       .header(TEN)
       .get("/notify?query=metadata.BADFIELD=foo")
       .then().log().ifValidationFails()
-      .statusCode(400);
+      .statusCode(422);
 
     // Update a notification
     String updated1 = "{"
