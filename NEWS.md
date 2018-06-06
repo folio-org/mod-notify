@@ -1,3 +1,12 @@
+## 1.1.6 2018-06-06
+ * MODNOTIFY-5 Query validation
+ * MODNOTIFY-25 GET /notify limit doesn't seem to be implemented
+ * MODNOTIFY-26 GET /notify offset when outside the boundaries is being ignored
+￼* MODNOTIFY-27 GET /notify - when invalid lang value provided - returns all rows and status 200
+ * MODNOTIFY-29 PUT /notify/{non-existing-id} returns 500
+ * MODNOTIFY-32 Use RMB 19.1.2
+ * General code cleaning, using RMB's error helpers
+
 ## 1.1.5 2017-11-10
  * modnotify-15: Id is not returned with queries
  * modnotify-12: Upgrade to RMB 15
