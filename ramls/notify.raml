@@ -1,4 +1,4 @@
-#%RAML 0.8
+#%RAML 1.0
 
 title: Notifications API
 baseUri: https://github.com/folio-org/mod-notify
@@ -8,24 +8,20 @@ documentation:
   - title: mod-notify API
     content: This documents the API calls that can be made to post notifications for users, and to get them
 
-schemas:
-  - notify.json: !include notify.json
-  - notifyCollection: !include notifyCollection.json
-  - errors: !include raml-util/schemas/errors.schema
-  - error.schema: !include raml-util/schemas/error.schema
-  - parameters.schema: !include raml-util/schemas/parameters.schema
-  - raml-util/schemas/metadata.schema: !include raml-util/schemas/metadata.schema
+types:
+  notification: !include notify.json
+  notifyCollection: !include notifyCollection.json
+  errors: !include raml-util/schemas/errors.schema
 
 traits:
-  - validate: !include raml-util/traits/validation.raml
-  - secured: !include raml-util/traits/auth.raml
-  - language: !include raml-util/traits/language.raml
-  - pageable:  !include raml-util/traits/pageable.raml
-  - searchable: !include raml-util/traits/searchable.raml
+  validate: !include raml-util/traits/validation.raml
+  language: !include raml-util/traits/language.raml
+  pageable:  !include raml-util/traits/pageable.raml
+  searchable: !include raml-util/traits/searchable.raml
 
 resourceTypes:
-  - collection: !include raml-util/rtypes/collection.raml
-  - collection-item: !include raml-util/rtypes/item-collection.raml
+  collection: !include raml-util/rtypes/collection.raml
+  collection-item: !include raml-util/rtypes/item-collection.raml
 
 /notify:
   displayName: Notifications
@@ -33,7 +29,7 @@ resourceTypes:
   type:
     collection:
       schemaCollection: notifyCollection
-      schemaItem: notify.json
+      schemaItem: notification
       exampleCollection: !include examples/notifyCollection.sample
       exampleItem: !include examples/notify.sample
 
@@ -51,7 +47,7 @@ resourceTypes:
       is: [ validate, language ]
       body:
         application/json:
-          schema: notify.json
+          schema: notification
       responses:
         201:
           description: Created
@@ -62,7 +58,7 @@ resourceTypes:
               description: Okapi trace and timing
           body:
             application/json:
-              schema: notify.json
+              schema: notification
         400:
           description: Bad Request
           body:
@@ -77,7 +73,7 @@ resourceTypes:
     type:
       collection:
         schemaCollection: notifyCollection
-        schemaItem: notify.json
+        schemaItem: notification
         exampleCollection: !include examples/notifyCollection.sample
         exampleItem: !include examples/notify.sample
     get:
@@ -88,7 +84,7 @@ resourceTypes:
       ]
     delete:
       is : [
-        validate
+        validate, language
       ]
       queryParameters:
         olderthan:
@@ -117,7 +113,7 @@ resourceTypes:
     description: Get, Delete or Update a specific notification
     type:
       collection-item:
-        schema: notify.json
+        schema: notification
         exampleItem: !include examples/notify.sample
     put:
       is: [validate]

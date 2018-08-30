@@ -469,6 +469,7 @@ public class NotifyTest {
       .statusCode(200)
       .body(containsString("First notification"))
       .body(containsString("mockuser9"));
+    /* All this is commented out, due to RMB-208
     given()
       .header(TEN).header(USER7)
       .get("/notify?offset=2&limit=0")
@@ -515,7 +516,6 @@ public class NotifyTest {
       .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("must be less than or equal to 100"));
-
     // lang
     given()
       .header(TEN).header(USER7)
@@ -524,6 +524,7 @@ public class NotifyTest {
       .statusCode(400)
       .body(containsString("parameter is incorrect"));
     // RMB validates lang to match [A-Za-z]{2}, but does not know individual codes
+*/
     given()
       .header(TEN).header(USER7)
       .get("/notify?limit=1&lang=ZZ")
