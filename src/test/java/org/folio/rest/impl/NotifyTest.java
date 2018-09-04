@@ -515,7 +515,6 @@ public class NotifyTest {
       .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("must be less than or equal to 100"));
-
     // lang
     given()
       .header(TEN).header(USER7)
