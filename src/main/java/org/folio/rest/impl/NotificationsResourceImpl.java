@@ -33,7 +33,6 @@ import org.folio.rest.tools.client.HttpClientFactory;
 import org.folio.rest.tools.client.interfaces.HttpClientInterface;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
@@ -193,7 +192,7 @@ public class NotificationsResourceImpl implements Notify {
             NotifyCollection notes = new NotifyCollection();
             @SuppressWarnings("unchecked")
             List<Notification> notifylist
-              = (List<Notification>) reply.result().getResults();
+              = reply.result().getResults();
             notes.setNotifications(notifylist);
             Integer totalRecords = reply.result().getResultInfo().getTotalRecords();
             notes.setTotalRecords(totalRecords);
