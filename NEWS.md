@@ -1,3 +1,6 @@
+## 1.1.7 2018-09-06
+ * MODNOTIFY-34 Update to RAML 1.0 / RMB 21
+
 ## 1.1.6 2018-06-06
  * MODNOTIFY-5 Query validation
  * MODNOTIFY-25 GET /notify limit doesn't seem to be implemented
