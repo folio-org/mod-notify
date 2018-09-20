@@ -471,16 +471,16 @@ public class NotifyTest {
       .body(containsString("mockuser9"));
     given()
       .header(TEN).header(USER7)
-      .get("/notify?offset=2&limit=0")
+      .get("/notify?offset=2&limit=-1")
       .then().log().ifValidationFails()
       .statusCode(400)
-      .body(containsString("must be greater than or equal to 1"));
+      .body(containsString("must be greater than or equal to 0"));
     given()
       .header(TEN).header(USER7)
-      .get("/notify?limit=0")
+      .get("/notify?limit=-1")
       .then().log().ifValidationFails()
       .statusCode(400)
-      .body(containsString("must be greater than or equal to 1"));
+      .body(containsString("must be greater than or equal to 0"));
 
     // bad offsets
     given()
@@ -499,8 +499,7 @@ public class NotifyTest {
       .header(TEN).header(USER7)
       .get("/notify?offset=2147483647&limit=1")
       .then().log().ifValidationFails()
-      .statusCode(400)
-      .body(containsString("must be less than or equal to 1000"));
+      .statusCode(200);
 
     // bad limits
     given()
@@ -508,13 +507,13 @@ public class NotifyTest {
       .get("/notify?offset=1&limit=-1")
       .then().log().ifValidationFails()
       .statusCode(400)
-      .body(containsString("must be greater than or equal to 1"));
+      .body(containsString("must be greater than or equal to 0"));
     given()
       .header(TEN).header(USER7)
       .get("/notify?limit=2147483647")
       .then().log().ifValidationFails()
-      .statusCode(400)
-      .body(containsString("must be less than or equal to 100"));
+      .statusCode(200);
+
     // lang
     given()
       .header(TEN).header(USER7)
