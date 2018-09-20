@@ -1,3 +1,6 @@
+## 1.1.8 2018-09-20
+ * MODNOTIFY-36 Fix bad pageable
+
 ## 1.1.7 2018-09-06
  * MODNOTIFY-34 Update to RAML 1.0 / RMB 21
 
