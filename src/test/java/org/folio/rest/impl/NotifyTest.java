@@ -485,12 +485,6 @@ public class NotifyTest {
     // bad offsets
     given()
       .header(TEN).header(USER7)
-      .get("/notify?offset=999&limit=1")
-      .then().log().ifValidationFails()
-      .statusCode(200)
-      .body(containsString("\"totalRecords\" : 0"));
-    given()
-      .header(TEN).header(USER7)
       .get("/notify?offset=-99&limit=1")
       .then().log().ifValidationFails()
       .statusCode(400)
