@@ -14,6 +14,7 @@
   </licenses>
 
   <properties>
+    <argLine />
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
@@ -222,6 +223,17 @@
             <version>1.8.9</version>
           </dependency>
         </dependencies>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.22.0</version>
+        <configuration>
+          <!-- en.US required because some unit tests rely on English error messages.
+               @{argLine} required for sonarqube jacoco -->
+          <argLine>-Duser.language=en -Duser.region=US @{argLine}</argLine>
+        </configuration>
       </plugin>
 
       <plugin>
