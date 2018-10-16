@@ -21,6 +21,7 @@ import org.junit.runner.RunWith;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.client.test.HttpClientMock2;
+import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.After;
 
 /**
@@ -35,7 +36,6 @@ import org.junit.After;
 public class NotifyTest {
 
   private final Logger logger = LoggerFactory.getLogger("notifytest");
-  private final int port = Integer.parseInt(System.getProperty("port", "8081"));
   private static final String LS = System.lineSeparator();
   private final Header TEN = new Header("X-Okapi-Tenant", "testlib");
   private final Header USER7 = new Header("X-Okapi-User-Id",
@@ -44,13 +44,14 @@ public class NotifyTest {
     "88888888-8888-8888-8888-888888888888");
   private final Header USER9 = new Header("X-Okapi-User-Id",
     "99999999-9999-9999-9999-999999999999");
-
   private final Header JSON = new Header("Content-Type", "application/json");
   private String moduleName; // "mod-notify";
   private String moduleVersion; // "0.2.0-SNAPSHOT";
   private String moduleId; // "mod-notify-0.2.0-SNAPSHOT"
   Vertx vertx;
   Async async;
+
+  private static int port;
 
   @Before
   public void setUp(TestContext context) {
@@ -69,6 +70,8 @@ public class NotifyTest {
       context.fail(e);
       return;
     }
+
+    port = NetworkUtils.nextFreePort();
 
     JsonObject conf = new JsonObject()
       .put(HttpClientMock2.MOCK_MODE, "true")
