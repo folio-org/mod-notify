@@ -4,6 +4,7 @@
   "description": "Collection of notifications",
   "properties": {
     "notifications": {
+      "description": "List of notifications",
       "type": "array",
       "items": {
         "type": "object",
