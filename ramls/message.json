@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "Delivery channel",
+  "additionalProperties": false,
+  "properties": {
+    "channelType": {
+      "type": "string",
+      "description": "Type of channel"
+    },
+    "from": {
+      "type": "string",
+      "description": "Message sender"
+    },
+    "to": {
+      "type": "string",
+      "description": "Message receiver"
+    },
+    "header": {
+      "type": "string",
+      "description": "Message header"
+    },
+    "body": {
+      "type": "string",
+      "description": "Message body"
+    }
+  },
+  "required": [
+    "type",
+    "to"
+  ]
+}

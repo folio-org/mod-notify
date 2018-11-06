@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "description": "Notification",
+  "additionalProperties": false,
+  "properties": {
+    "notificationId": {
+      "type": "string",
+      "description": "Notification id"
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "message.json"
+      },
+      "description": "List of messages prepared for sending"
+    },
+    "metadata": {
+      "type": "object",
+      "$ref": "raml-util/schemas/metadata.schema"
+    }
+  },
+  "required": [
+    "notificationId",
+    "channels"
+  ]
+}
