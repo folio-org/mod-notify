@@ -234,6 +234,11 @@
           <!-- en.US required because some unit tests rely on English error messages.
                @{argLine} required for sonarqube jacoco -->
           <argLine>-Duser.language=en -Duser.region=US @{argLine}</argLine>
+          <!-- TODO: update to version 3.0.0 and remove useSystemClassLoader
+               https://issues.folio.org/browse/FOLIO-1609
+               https://issues.apache.org/jira/browse/SUREFIRE-1588
+          -->
+          <useSystemClassLoader>false</useSystemClassLoader>
         </configuration>
       </plugin>
 
