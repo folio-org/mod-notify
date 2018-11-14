@@ -16,8 +16,12 @@ import java.time.temporal.*;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
+
+import io.vertx.ext.web.client.WebClient;
 import org.apache.commons.io.IOUtils;
+import org.folio.helper.NotificationsHelper;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Notification;
@@ -52,6 +56,8 @@ public class NotificationsResourceImpl implements Notify {
   private static final String NOTIFY_SCHEMA_NAME = "ramls/notify.json";
   private static final int DAYS_TO_KEEP_SEEN_NOTIFICATIONS = 365;
 
+  private NotificationsHelper notificationsHelper;
+
   private void initCQLValidation() {
     try {
       notifySchema = IOUtils.toString(getClass().getClassLoader().getResourceAsStream(NOTIFY_SCHEMA_NAME), "UTF-8");
@@ -65,6 +71,7 @@ public class NotificationsResourceImpl implements Notify {
       initCQLValidation();
     }
     PostgresClient.getInstance(vertx, tenantId).setIdField(IDFIELDNAME);
+    notificationsHelper = new NotificationsHelper(WebClient.create(vertx));
   }
 
   private CQLWrapper getCQL(String query, int limit, int offset)
@@ -280,6 +287,7 @@ public class NotificationsResourceImpl implements Notify {
 
   @Override
   @Validate
+  @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
   public void postNotify(String lang,
     Notification entity,
     Map<String, String> okapiHeaders,
@@ -301,11 +309,25 @@ public class NotificationsResourceImpl implements Notify {
       id, entity,
       reply -> {
         if (reply.succeeded()) {
-          String ret = reply.result();
-          entity.setId(ret);
-          asyncResultHandler.handle(succeededFuture(PostNotifyResponse
-            .respond201WithApplicationJson(entity, PostNotifyResponse.
-              headersFor201().withLocation(LOCATION_PREFIX + ret))));
+          if (entity.getEventConfigId() == null) {
+            String ret = reply.result();
+            entity.setId(ret);
+            asyncResultHandler.handle(succeededFuture(PostNotifyResponse
+              .respond201WithApplicationJson(entity, PostNotifyResponse.
+                headersFor201().withLocation(LOCATION_PREFIX + ret))));
+          } else {
+            notificationsHelper.postNotify(entity, okapiHeaders).setHandler(event -> {
+              if (event.succeeded()) {
+                asyncResultHandler.handle(succeededFuture(PostNotifyResponse.respond201WithApplicationJson(
+                  entity, PostNotifyResponse.headersFor201())));
+              } else if (event.cause().getClass().equals(BadRequestException.class)) {
+                asyncResultHandler.handle(succeededFuture(
+                  PostNotifyResponse.respond400WithTextPlain(event.cause().getMessage())));
+              } else {
+                asyncResultHandler.handle(succeededFuture(PostNotifyResponse.respond500WithTextPlain(event.cause())));
+              }
+            });
+          }
         } else {
           ValidationHelper.handleError(reply.cause(), asyncResultHandler);
         }
