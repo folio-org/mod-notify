@@ -10,7 +10,7 @@
   "provides": [
     {
       "id": "notify",
-      "version": "1.1",
+      "version": "1.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -20,7 +20,12 @@
         {
           "methods": ["POST"],
           "pathPattern": "/notify",
-          "permissionsRequired": ["notify.item.post"]
+          "permissionsRequired": ["notify.item.post"],
+          "modulePermissions" : [
+            "event.config.item.get",
+            "template-request.post",
+            "sender.message-delivery"
+          ]
         },
         {
           "methods": ["POST"],

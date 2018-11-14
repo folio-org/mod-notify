@@ -24,6 +24,18 @@
       "description": "Link to the relevant item for this notification",
       "type": "string"
     },
+    "eventConfigId": {
+      "description": "Event config id",
+      "type": "string"
+    },
+    "lang": {
+      "description": "Notification language",
+      "type": "string"
+    },
+    "context": {
+      "type": "object",
+      "description": "Context object"
+    },
     "seen": {
       "description": "Whether the user has seen this notification",
       "type": "boolean",
