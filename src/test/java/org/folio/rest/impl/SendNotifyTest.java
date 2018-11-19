@@ -104,6 +104,7 @@ public class SendNotifyTest {
 
   @AfterClass
   public static void tearDown(TestContext context) {
+    PostgresClient.stopEmbeddedPostgres();
     vertx.close(context.asyncAssertSuccess());
   }
 
