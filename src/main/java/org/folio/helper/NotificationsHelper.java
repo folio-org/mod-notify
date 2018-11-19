@@ -118,7 +118,7 @@ public class NotificationsHelper {
         if (resp.succeeded()) {
           if (resp.result().statusCode() == HttpStatus.SC_OK) {
             Result result = resp.result().bodyAsJson(TemplateProcessingResult.class).getResult();
-            message.setChannelType(deliveryChannel);
+            message.setDeliveryChannel(deliveryChannel);
             message.setHeader(result.getHeader());
             message.setBody(result.getBody());
             future.complete(message);
