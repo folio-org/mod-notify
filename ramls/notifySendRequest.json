@@ -8,6 +8,10 @@
       "type": "string",
       "description": "Notification id"
     },
+    "recipientUserId": {
+      "type": "string",
+      "description": "Recipient user id; Is used to get contact information to deliver messages"
+    },
     "messages": {
       "type": "array",
       "items": {
