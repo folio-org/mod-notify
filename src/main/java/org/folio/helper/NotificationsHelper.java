@@ -69,7 +69,8 @@ public class NotificationsHelper {
       return CompositeFuture.all(templateProcessingResults);
     });
 
-    return templateEngineFuture.compose(messages -> sendNotification(okapiUrl, okapiHeaders, messages));
+    return templateEngineFuture.compose(
+      messages -> sendNotification(okapiUrl, okapiHeaders, messages, entity.getRecipientId()));
   }
 
   private Future<EventEntity> getEventConfig(String okapiUrl, String eventConfigId, Map<String, String> okapiHeaders) {
@@ -134,11 +135,13 @@ public class NotificationsHelper {
     return future;
   }
 
-  private Future<Void> sendNotification(String okapiUrl, Map<String, String> okapiHeaders, CompositeFuture messages) {
+  private Future<Void> sendNotification(String okapiUrl, Map<String, String> okapiHeaders,
+                                        CompositeFuture messages, String recipientId) {
     Future<Void> future = Future.future();
     NotifySendRequest notifySendRequest = new NotifySendRequest();
     notifySendRequest.setNotificationId(UUID.randomUUID().toString());
     notifySendRequest.setMessages(messages.list());
+    notifySendRequest.setRecipientUserId(recipientId);
 
     webClient.postAbs(okapiUrl + SEND_NOTIFICATION_PATH)
       .putHeader(RestVerticle.OKAPI_HEADER_TENANT, okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT))
