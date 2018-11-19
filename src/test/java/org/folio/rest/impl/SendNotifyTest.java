@@ -12,6 +12,7 @@ import com.jayway.restassured.specification.RequestSpecification;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.http.HttpStatus;
@@ -72,6 +73,7 @@ public class SendNotifyTest {
 
   @BeforeClass
   public static void setUp(TestContext context) {
+    Async async = context.async();
     vertx = Vertx.vertx();
     int port = NetworkUtils.nextFreePort();
 
@@ -86,9 +88,10 @@ public class SendNotifyTest {
     DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put(HTTP_PORT_JSON_PATH, port));
     vertx.deployVerticle(RestVerticle.class.getName(), options, result -> {
       try {
-        tenantClient.postTenant(null, resp -> {});
+        tenantClient.postTenant(null, x -> async.complete());
       } catch (Exception e) {
         context.fail(e);
+        async.complete();
       }
     });
 
