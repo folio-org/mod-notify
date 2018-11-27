@@ -9,10 +9,10 @@ import org.apache.http.HttpStatus;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.Context;
 import org.folio.rest.jaxrs.model.EventEntity;
+import org.folio.rest.jaxrs.model.EventEntityCollection;
 import org.folio.rest.jaxrs.model.Message;
 import org.folio.rest.jaxrs.model.Notification;
 import org.folio.rest.jaxrs.model.NotifySendRequest;
-import org.folio.rest.jaxrs.model.Result;
 import org.folio.rest.jaxrs.model.TemplateProcessingRequest;
 import org.folio.rest.jaxrs.model.TemplateProcessingResult;
 
@@ -35,7 +35,7 @@ public class NotificationsHelper {
   private WebClient webClient;
 
   private static final String OKAPI_HEADER_URL = "x-okapi-url";
-  private static final String EVENT_CONFIG_PATH = "/eventConfig/";
+  private static final String EVENT_CONFIG_PATH = "/eventConfig";
   private static final String PROCESS_TEMPLATE_PATH = "/template-request";
   private static final String SEND_NOTIFICATION_PATH = "/message-delivery";
   private static final String CANNOT_FETCH_EVENT_ENTITY = "Cannot fetch event entity. ";
@@ -51,7 +51,7 @@ public class NotificationsHelper {
    * the succeeded {@code Future} if notification sending flow was completed successfully,
    * otherwise returns failed {@code Future} with {@code Throwable} cause.
    *
-   * @param entity containing necessary info to send notification
+   * @param entity       containing necessary info to send notification
    * @param okapiHeaders okapi http headers
    * @return the {@code Future} object
    */
@@ -59,7 +59,7 @@ public class NotificationsHelper {
 
     String okapiUrl = okapiHeaders.get(OKAPI_HEADER_URL);
 
-    Future<EventEntity> eventConfigFuture = getEventConfig(okapiUrl, entity.getEventConfigId(), okapiHeaders);
+    Future<EventEntity> eventConfigFuture = getEventConfig(okapiUrl, entity.getEventConfigName(), okapiHeaders);
 
     Future<CompositeFuture> templateEngineFuture = eventConfigFuture.compose(eventEntity -> {
       List<Future> templateProcessingResults = eventEntity.getTemplates().stream()
@@ -73,16 +73,23 @@ public class NotificationsHelper {
       messages -> sendNotification(okapiUrl, okapiHeaders, messages, entity.getRecipientId()));
   }
 
-  private Future<EventEntity> getEventConfig(String okapiUrl, String eventConfigId, Map<String, String> okapiHeaders) {
+  private Future<EventEntity> getEventConfig(String okapiUrl, String eventConfigName, Map<String, String> okapiHeaders) {
     Future<EventEntity> future = Future.future();
-    webClient.getAbs(okapiUrl + EVENT_CONFIG_PATH + eventConfigId)
+    webClient.getAbs(okapiUrl + EVENT_CONFIG_PATH)
+      .addQueryParam("query", "name==" + eventConfigName)
       .putHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
       .putHeader(RestVerticle.OKAPI_HEADER_TENANT, okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT))
       .putHeader(RestVerticle.OKAPI_HEADER_TOKEN, okapiHeaders.get(RestVerticle.OKAPI_HEADER_TOKEN))
       .send(resp -> {
         if (resp.succeeded()) {
           if (resp.result().statusCode() == HttpStatus.SC_OK) {
-            future.complete(resp.result().bodyAsJson(EventEntity.class));
+            EventEntityCollection eventConfig = resp.result().bodyAsJson(EventEntityCollection.class);
+            if (eventConfig.getEventEntity().size() != 1) {
+              logger.error(String.format(CANNOT_FETCH_EVENT_ENTITY + "Body: %s", resp.result().bodyAsString()));
+              future.fail(new InternalServerErrorException());
+              return;
+            }
+            future.complete(eventConfig.getEventEntity().get(0));
           } else if (resp.result().statusCode() == HttpStatus.SC_NOT_FOUND) {
             logger.error(CANNOT_FETCH_EVENT_ENTITY + resp.result().statusMessage());
             future.fail(new BadRequestException(resp.result().statusMessage()));
@@ -117,10 +124,11 @@ public class NotificationsHelper {
       .sendJson(templateProcessingRequest, resp -> {
         if (resp.succeeded()) {
           if (resp.result().statusCode() == HttpStatus.SC_OK) {
-            Result result = resp.result().bodyAsJson(TemplateProcessingResult.class).getResult();
+            TemplateProcessingResult result = resp.result().bodyAsJson(TemplateProcessingResult.class);
             message.setDeliveryChannel(deliveryChannel);
-            message.setHeader(result.getHeader());
-            message.setBody(result.getBody());
+            message.setHeader(result.getResult().getHeader());
+            message.setBody(result.getResult().getBody());
+            message.setOutputFormat(result.getMeta().getOutputFormat());
             future.complete(message);
           } else {
             logger.error(CANNOT_PROCESS_TEMPLATE + resp.result().statusMessage());

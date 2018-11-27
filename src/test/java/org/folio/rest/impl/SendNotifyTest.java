@@ -19,6 +19,8 @@ import org.apache.http.HttpStatus;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.EventEntity;
+import org.folio.rest.jaxrs.model.EventEntityCollection;
+import org.folio.rest.jaxrs.model.Meta;
 import org.folio.rest.jaxrs.model.Notification;
 import org.folio.rest.jaxrs.model.Result;
 import org.folio.rest.jaxrs.model.Template;
@@ -44,14 +46,14 @@ public class SendNotifyTest {
   private static RequestSpecification spec;
 
   private static final String OKAPI_HEADER_URL = "x-okapi-url";
-  private static final String EVENT_CONFIG_PATH = "/eventConfig/";
+  private static final String EVENT_CONFIG_PATH_PATTERN = "/eventConfig.*";
   private static final String SEND_NOTIFICATION_PATH = "/message-delivery";
   private static final String PROCESS_TEMPLATE_PATH = "/template-request";
   private static final String POST_NOTIFICATION_PATH = "/notify";
   private static final String LOCALHOST = "http://localhost:";
   private static final String HTTP_PORT_JSON_PATH = "http.port";
-  private static final String EXISTENT_EVENT_ENTITY_ID = "d191d212-8f95-496a-9a45-2f2c22812535";
-  private static final String NONEXISTENT_EVENT_ENTITY_ID = "28b9c330-01c4-45d3-82a1-2d247b6cb71c";
+  private static final String EXISTENT_EVENT_ENTITY_NAME = "EXISTENT_EVENT_ENTITY";
+  private static final String NONEXISTENT_EVENT_ENTITY_NAME = "NONEXISTENT_EVENT_ENTITY";
   private static final String TEMPLATE_ID = "d7de69f8-c5b4-4425-8ad1-c7511166ff63";
   private static final String RECIPIENT_ID = "a049c22f-694b-41cf-a3b4-8eefd3685cdd";
   private static final String EMAIL_DELIVERY_CHANNEL = "email";
@@ -121,7 +123,7 @@ public class SendNotifyTest {
       .header(new Header(RestVerticle.OKAPI_HEADER_TOKEN, TOKEN_STUB))
       .header(mockUrlHeader)
       .when()
-      .body(buildNotificationEntity(EXISTENT_EVENT_ENTITY_ID).toString())
+      .body(buildNotificationEntity(EXISTENT_EVENT_ENTITY_NAME).toString())
       .post(POST_NOTIFICATION_PATH)
       .then()
       .statusCode(HttpStatus.SC_CREATED);
@@ -134,7 +136,7 @@ public class SendNotifyTest {
       .header(OKAPI_HEADER_TOKEN)
       .header(mockUrlHeader)
       .when()
-      .body(buildNotificationEntity(NONEXISTENT_EVENT_ENTITY_ID).toString())
+      .body(buildNotificationEntity(NONEXISTENT_EVENT_ENTITY_NAME).toString())
       .post(POST_NOTIFICATION_PATH)
       .then()
       .statusCode(HttpStatus.SC_BAD_REQUEST);
@@ -142,19 +144,21 @@ public class SendNotifyTest {
 
   private void mockHttpCalls() {
     WireMock.stubFor(
-      WireMock.get(EVENT_CONFIG_PATH + EXISTENT_EVENT_ENTITY_ID)
+      WireMock.get(WireMock.urlMatching(EVENT_CONFIG_PATH_PATTERN))
+        .withQueryParam("query", WireMock.equalTo("name==" + EXISTENT_EVENT_ENTITY_NAME))
         .withHeader(RestVerticle.OKAPI_HEADER_TENANT, WireMock.equalTo(TENANT))
         .withHeader(RestVerticle.OKAPI_HEADER_TOKEN, WireMock.equalTo(TOKEN_STUB))
         .withHeader(HttpHeaders.ACCEPT, WireMock.equalTo(MediaType.APPLICATION_JSON))
-        .willReturn(WireMock.okJson(buildEventEntity().toString()).withStatus(HttpStatus.SC_OK))
+        .willReturn(WireMock.okJson(buildEventConfigListEntity().toString()).withStatus(HttpStatus.SC_OK))
     );
 
     WireMock.stubFor(
-      WireMock.get(EVENT_CONFIG_PATH + NONEXISTENT_EVENT_ENTITY_ID)
+      WireMock.get(WireMock.urlMatching(EVENT_CONFIG_PATH_PATTERN))
+        .withQueryParam("query", WireMock.equalTo("name==" + NONEXISTENT_EVENT_ENTITY_NAME))
         .withHeader(RestVerticle.OKAPI_HEADER_TENANT, WireMock.equalTo(TENANT))
         .withHeader(RestVerticle.OKAPI_HEADER_TOKEN, WireMock.equalTo(TOKEN_STUB))
         .withHeader(HttpHeaders.ACCEPT, WireMock.equalTo(MediaType.APPLICATION_JSON))
-        .willReturn(WireMock.okJson(buildEventEntity().toString()).withStatus(HttpStatus.SC_NOT_FOUND))
+        .willReturn(WireMock.okJson(buildEventConfigListEntity().toString()).withStatus(HttpStatus.SC_NOT_FOUND))
     );
 
     WireMock.stubFor(
@@ -175,24 +179,27 @@ public class SendNotifyTest {
     );
   }
 
-  private JsonObject buildNotificationEntity(String eventConfigId) {
+  private JsonObject buildNotificationEntity(String eventConfigName) {
     Notification notification = new Notification();
     notification.setId(UUID.randomUUID().toString());
     notification.setRecipientId(RECIPIENT_ID);
-    notification.setEventConfigId(eventConfigId);
+    notification.setEventConfigName(eventConfigName);
     notification.setLang(ENGLISH_LANGUAGE_CODE);
     notification.setText("");
     return JsonObject.mapFrom(notification);
   }
 
-  private JsonObject buildEventEntity() {
+  private JsonObject buildEventConfigListEntity() {
     Template template = new Template();
     template.setTemplateId(TEMPLATE_ID);
     template.setDeliveryChannel(EMAIL_DELIVERY_CHANNEL);
     template.setOutputFormat(PLAIN_TEXT_OUTPUT_FORMAT);
     EventEntity entity = new EventEntity();
     entity.setTemplates(Collections.singletonList(template));
-    return JsonObject.mapFrom(entity);
+    EventEntityCollection collection = new EventEntityCollection()
+      .withEventEntity(Collections.singletonList(entity))
+      .withTotalRecords(1);
+    return JsonObject.mapFrom(collection);
   }
 
   private JsonObject buildTemplateProcessingResult() {
@@ -201,6 +208,7 @@ public class SendNotifyTest {
     result.setBody(PROCESSING_RESULT_BODY);
     TemplateProcessingResult templateProcessingResult = new TemplateProcessingResult();
     templateProcessingResult.setResult(result);
+    templateProcessingResult.setMeta(new Meta().withOutputFormat(PLAIN_TEXT_OUTPUT_FORMAT));
     return JsonObject.mapFrom(templateProcessingResult);
   }
 }

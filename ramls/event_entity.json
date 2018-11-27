@@ -4,11 +4,11 @@
   "type": "object",
   "properties": {
     "id": {
-      "description": "identifier",
+      "description": "unique identifier of event",
       "type": "string"
     },
     "name": {
-      "description": "configuration name",
+      "description": "unique configuration name for module configuration: RESET_PASSWORD, CREATE_PASSWORD and etc.",
       "type": "string"
     },
     "active": {
