@@ -52,8 +52,8 @@ public class SendNotifyTest {
   private static final String POST_NOTIFICATION_PATH = "/notify";
   private static final String LOCALHOST = "http://localhost:";
   private static final String HTTP_PORT_JSON_PATH = "http.port";
-  private static final String EXISTENT_EVENT_ENTITY_NAME = "EXISTENT_EVENT_ENTITY";
-  private static final String NONEXISTENT_EVENT_ENTITY_NAME = "NONEXISTENT_EVENT_ENTITY";
+  private static final String RESET_PASSWORD_EVENT_NAME = "RESET_PASSWORD_EVENT_NAME";
+  private static final String NONEXISTENT_EVENT_NAME = "NONEXISTENT_EVENT_NAME";
   private static final String TEMPLATE_ID = "d7de69f8-c5b4-4425-8ad1-c7511166ff63";
   private static final String RECIPIENT_ID = "a049c22f-694b-41cf-a3b4-8eefd3685cdd";
   private static final String EMAIL_DELIVERY_CHANNEL = "email";
@@ -123,7 +123,7 @@ public class SendNotifyTest {
       .header(new Header(RestVerticle.OKAPI_HEADER_TOKEN, TOKEN_STUB))
       .header(mockUrlHeader)
       .when()
-      .body(buildNotificationEntity(EXISTENT_EVENT_ENTITY_NAME).toString())
+      .body(buildNotificationEntity(RESET_PASSWORD_EVENT_NAME).toString())
       .post(POST_NOTIFICATION_PATH)
       .then()
       .statusCode(HttpStatus.SC_CREATED);
@@ -136,7 +136,7 @@ public class SendNotifyTest {
       .header(OKAPI_HEADER_TOKEN)
       .header(mockUrlHeader)
       .when()
-      .body(buildNotificationEntity(NONEXISTENT_EVENT_ENTITY_NAME).toString())
+      .body(buildNotificationEntity(NONEXISTENT_EVENT_NAME).toString())
       .post(POST_NOTIFICATION_PATH)
       .then()
       .statusCode(HttpStatus.SC_BAD_REQUEST);
@@ -145,7 +145,7 @@ public class SendNotifyTest {
   private void mockHttpCalls() {
     WireMock.stubFor(
       WireMock.get(WireMock.urlMatching(EVENT_CONFIG_PATH_PATTERN))
-        .withQueryParam("query", WireMock.equalTo("name==" + EXISTENT_EVENT_ENTITY_NAME))
+        .withQueryParam("query", WireMock.equalTo("name==" + RESET_PASSWORD_EVENT_NAME))
         .withHeader(RestVerticle.OKAPI_HEADER_TENANT, WireMock.equalTo(TENANT))
         .withHeader(RestVerticle.OKAPI_HEADER_TOKEN, WireMock.equalTo(TOKEN_STUB))
         .withHeader(HttpHeaders.ACCEPT, WireMock.equalTo(MediaType.APPLICATION_JSON))
@@ -154,7 +154,7 @@ public class SendNotifyTest {
 
     WireMock.stubFor(
       WireMock.get(WireMock.urlMatching(EVENT_CONFIG_PATH_PATTERN))
-        .withQueryParam("query", WireMock.equalTo("name==" + NONEXISTENT_EVENT_ENTITY_NAME))
+        .withQueryParam("query", WireMock.equalTo("name==" + NONEXISTENT_EVENT_NAME))
         .withHeader(RestVerticle.OKAPI_HEADER_TENANT, WireMock.equalTo(TENANT))
         .withHeader(RestVerticle.OKAPI_HEADER_TOKEN, WireMock.equalTo(TOKEN_STUB))
         .withHeader(HttpHeaders.ACCEPT, WireMock.equalTo(MediaType.APPLICATION_JSON))
