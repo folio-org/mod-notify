@@ -24,8 +24,8 @@
       "description": "Link to the relevant item for this notification",
       "type": "string"
     },
-    "eventConfigId": {
-      "description": "Event config id",
+    "eventConfigName": {
+      "description": "Unique event config name",
       "type": "string"
     },
     "lang": {

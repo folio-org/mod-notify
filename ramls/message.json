@@ -23,6 +23,10 @@
     "body": {
       "type": "string",
       "description": "Message body"
+    },
+    "outputFormat": {
+      "type": "string",
+      "description": "Media type of message body"
     }
   },
   "required": [

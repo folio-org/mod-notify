@@ -2,27 +2,17 @@ package org.folio.rest.impl;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
-import static io.vertx.core.Future.succeededFuture;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.*;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.core.Response;
-
 import io.vertx.ext.web.client.WebClient;
 import org.apache.commons.io.IOUtils;
 import org.folio.helper.NotificationsHelper;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Notification;
 import org.folio.rest.jaxrs.model.NotifyCollection;
@@ -42,7 +32,18 @@ import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
 import org.z3950.zing.cql.cql2pgjson.SchemaException;
-import org.folio.rest.annotations.Validate;
+
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
+import static io.vertx.core.Future.succeededFuture;
 
 // We have a few repeated strings, which SQ complains about.
 @java.lang.SuppressWarnings({"squid:S1192"})
@@ -309,7 +310,7 @@ public class NotificationsResourceImpl implements Notify {
       id, entity,
       reply -> {
         if (reply.succeeded()) {
-          if (entity.getEventConfigId() == null) {
+          if (entity.getEventConfigName() == null) {
             String ret = reply.result();
             entity.setId(ret);
             asyncResultHandler.handle(succeededFuture(PostNotifyResponse
