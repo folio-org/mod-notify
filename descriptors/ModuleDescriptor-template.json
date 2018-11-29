@@ -22,7 +22,7 @@
           "pathPattern": "/notify",
           "permissionsRequired": ["notify.item.post"],
           "modulePermissions" : [
-            "event.config.item.get",
+            "event.config.collection.get",
             "template-request.post",
             "sender.message-delivery"
           ]
