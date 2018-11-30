@@ -1,3 +1,17 @@
+## 2.0.0 2018-11-30
+
+ * MODNOTIFY-36	Bad pageable
+ * MODNOTIFY-37 Remove test relying on bad behavior of RMB
+ * MODNOTIFY-38	Set en.US for unit tests
+ * MODNOTIFY-39	Unit tests fail if port 8081 is already in use
+ * MODNOTIFY-40	Use description fields in RAML JSON schemas
+ * MODNOTIFY-41	Change "mod-notify" for preparing and sending email messages
+ * MODNOTIFY-43	Inconsistent field name
+ * MODNOTIFY-44	Missing recepientUserId field in notifySendRequest
+ * MODNOTIFY-45	Unit test failure for SendNotifyTest
+ * MODNOTIFY-46	Unit test failure for NotifyTest
+ * MODNOTIFY-47	Upgrade to RMB 23.1.0
+
 ## 1.1.7 2018-09-06
  * MODNOTIFY-34 Update to RAML 1.0 / RMB 21
 
