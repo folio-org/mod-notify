@@ -128,7 +128,7 @@ public class NotifyTest {
       .header(TEN)
       .get("/notify")
       .then().log().ifValidationFails()
-      .statusCode(500);
+      .statusCode(401);
 
     // Call the tenant interface to initialize the database
     String tenants = "{\"module_to\":\"" + moduleId + "\"}";
