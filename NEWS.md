@@ -1,3 +1,8 @@
+## 2.1.0 2018-12-18
+ * MODNOTIFY-48	NotifyTest fails on Windows
+ * MODNOTIFY-49	Upgrade to RMB 23.3.0
+ * Add _jsonSchemas and _ramls interfaces to the module descriptor
+
 ## 2.0.0 2018-11-30
 
  * MODNOTIFY-36	Bad pageable
