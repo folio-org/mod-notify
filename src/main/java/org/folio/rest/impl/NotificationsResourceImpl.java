@@ -14,10 +14,12 @@ import org.folio.client.OkapiModulesClient;
 import org.folio.client.impl.OkapiModulesClientImpl;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.Message;
 import org.folio.rest.jaxrs.model.Notification;
 import org.folio.rest.jaxrs.model.NotifyCollection;
+import org.folio.rest.jaxrs.model.PatronNoticeEntity;
 import org.folio.rest.jaxrs.resource.Notify;
 import org.folio.rest.persist.Criteria.Criteria;
 import org.folio.rest.persist.Criteria.Criterion;
@@ -47,6 +49,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.util.Collections.singletonList;
 import static org.folio.helper.OkapiModulesClientHelper.buildNotifySendRequest;
 import static org.folio.helper.OkapiModulesClientHelper.buildTemplateProcessingRequest;
 
@@ -530,6 +533,34 @@ public class NotificationsResourceImpl implements Notify {
             ValidationHelper.handleError(reply.cause(), asyncResultHandler);
           }
         });
+  }
+
+  @Override
+  public void postNotifyPatronNotice(PatronNoticeEntity entity,
+                                     Map<String, String> okapiHeaders,
+                                     Handler<AsyncResult<Response>> asyncResultHandler,
+                                     Context vertxContext) {
+
+    OkapiModulesClient okapiModuleClient = new OkapiModulesClientImpl(vertxContext.owner(), okapiHeaders);
+
+    okapiModuleClient.postTemplateRequest(buildTemplateProcessingRequest(entity))
+      .map(result -> buildNotifySendRequest(result, entity))
+      .compose(okapiModuleClient::postMessageDelivery)
+      .setHandler(res -> {
+        if (res.failed()) {
+          if (res.cause().getClass() == BadRequestException.class) {
+            Error error = new Error().withMessage(res.cause().getMessage());
+            Errors errors = new Errors().withErrors(singletonList(error));
+            asyncResultHandler.handle(succeededFuture(PostNotifyPatronNoticeResponse
+              .respond422WithApplicationJson(errors)));
+            return;
+          }
+          asyncResultHandler.handle(succeededFuture(PostNotifyPatronNoticeResponse
+            .respond500WithTextPlain("Internal Server Error")));
+        } else {
+          asyncResultHandler.handle(succeededFuture(PostNotifyPatronNoticeResponse.respond200()));
+        }
+      });
   }
 
   @Override
