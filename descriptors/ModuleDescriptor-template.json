@@ -5,12 +5,24 @@
     {
       "id": "users",
       "version": "15.0"
+    },
+    {
+      "id": "mod-event",
+      "version": "1.0"
+    },
+    {
+      "id": "template-engine",
+      "version": "1.0"
+    },
+    {
+      "id": "message-delivery",
+      "version": "1.0"
     }
   ],
   "provides": [
     {
       "id": "notify",
-      "version": "2.0",
+      "version": "3.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -46,6 +58,11 @@
           "methods": ["DELETE"],
           "pathPattern": "/notify/{id}",
           "permissionsRequired": ["notify.item.delete"]
+        },
+        {
+          "methods": ["POST"],
+          "pathPattern": "/notify/patron-notice",
+          "permissionsRequired": ["notify.patron-notice.post"]
         }
       ]
     },
@@ -118,6 +135,11 @@
       "description": "Delete notification"
     },
     {
+      "permissionName": "notify.patron-notice.post",
+      "displayName": "Patron Notice",
+      "description": "Post Patron Notice"
+    },
+    {
       "permissionName": "notify.all",
       "displayName": "Notifications module - all permissions",
       "description": "Entire set of permissions needed to use the notify modules",
@@ -126,7 +148,8 @@
         "notify.item.get",
         "notify.item.post",
         "notify.item.put",
-        "notify.item.delete"
+        "notify.item.delete",
+        "notify.patron-notice.post"
       ],
       "visible": false
     }
