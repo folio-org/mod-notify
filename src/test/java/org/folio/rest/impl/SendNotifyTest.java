@@ -15,7 +15,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.apache.http.HttpStatus;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.EventEntity;
@@ -38,6 +38,9 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import java.util.Collections;
 import java.util.UUID;
+
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
 
 @RunWith(VertxUnitRunner.class)
 public class SendNotifyTest {
@@ -86,7 +89,7 @@ public class SendNotifyTest {
       context.fail(e);
     }
 
-    TenantClient tenantClient = new TenantClient("localhost", port, TENANT, "diku");
+    TenantClient tenantClient = new TenantClient("http://localhost:" + port, TENANT, "diku");
     DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put(HTTP_PORT_JSON_PATH, port));
     vertx.deployVerticle(RestVerticle.class.getName(), options, result -> {
       try {
@@ -126,7 +129,7 @@ public class SendNotifyTest {
       .body(buildNotificationEntity(RESET_PASSWORD_EVENT_NAME).toString())
       .post(POST_NOTIFICATION_PATH)
       .then()
-      .statusCode(HttpStatus.SC_CREATED);
+      .statusCode(201);
   }
 
   @Test
@@ -139,7 +142,7 @@ public class SendNotifyTest {
       .body(buildNotificationEntity(NONEXISTENT_EVENT_NAME).toString())
       .post(POST_NOTIFICATION_PATH)
       .then()
-      .statusCode(HttpStatus.SC_BAD_REQUEST);
+      .statusCode(400);
   }
 
   private void mockHttpCalls() {
@@ -149,7 +152,7 @@ public class SendNotifyTest {
         .withHeader(RestVerticle.OKAPI_HEADER_TENANT, WireMock.equalTo(TENANT))
         .withHeader(RestVerticle.OKAPI_HEADER_TOKEN, WireMock.equalTo(TOKEN_STUB))
         .withHeader(HttpHeaders.ACCEPT, WireMock.equalTo(MediaType.APPLICATION_JSON))
-        .willReturn(WireMock.okJson(buildEventConfigListEntity().toString()).withStatus(HttpStatus.SC_OK))
+        .willReturn(okJson(buildEventConfigListEntity().toString()).withStatus(200))
     );
 
     WireMock.stubFor(
@@ -158,7 +161,8 @@ public class SendNotifyTest {
         .withHeader(RestVerticle.OKAPI_HEADER_TENANT, WireMock.equalTo(TENANT))
         .withHeader(RestVerticle.OKAPI_HEADER_TOKEN, WireMock.equalTo(TOKEN_STUB))
         .withHeader(HttpHeaders.ACCEPT, WireMock.equalTo(MediaType.APPLICATION_JSON))
-        .willReturn(WireMock.okJson(buildEventConfigListEntity().toString()).withStatus(HttpStatus.SC_NOT_FOUND))
+        .willReturn(okJson(JsonObject.mapFrom(new EventEntityCollection().withTotalRecords(0)).encode())
+          .withStatus(200))
     );
 
     WireMock.stubFor(
@@ -167,7 +171,7 @@ public class SendNotifyTest {
         .withHeader(RestVerticle.OKAPI_HEADER_TOKEN, WireMock.equalTo(TOKEN_STUB))
         .withHeader(HttpHeaders.ACCEPT, WireMock.equalTo(MediaType.APPLICATION_JSON))
         .withHeader(HttpHeaders.CONTENT_TYPE, WireMock.equalTo(MediaType.APPLICATION_JSON))
-        .willReturn(WireMock.okJson(buildTemplateProcessingResult().toString()).withStatus(HttpStatus.SC_OK))
+        .willReturn(okJson(buildTemplateProcessingResult().toString()).withStatus(200))
     );
 
     WireMock.stubFor(
@@ -175,7 +179,7 @@ public class SendNotifyTest {
         .withHeader(RestVerticle.OKAPI_HEADER_TENANT, WireMock.equalTo(TENANT))
         .withHeader(RestVerticle.OKAPI_HEADER_TOKEN, WireMock.equalTo(TOKEN_STUB))
         .withHeader(HttpHeaders.ACCEPT, WireMock.equalTo(MediaType.TEXT_PLAIN))
-        .willReturn(WireMock.noContent())
+        .willReturn(ok().withStatus(204))
     );
   }
 
@@ -185,7 +189,7 @@ public class SendNotifyTest {
     notification.setRecipientId(RECIPIENT_ID);
     notification.setEventConfigName(eventConfigName);
     notification.setLang(ENGLISH_LANGUAGE_CODE);
-    notification.setText("");
+    notification.setText(StringUtils.EMPTY);
     return JsonObject.mapFrom(notification);
   }
 
