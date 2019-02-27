@@ -1,6 +1,7 @@
 package org.folio.rest.impl;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -8,12 +9,13 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.web.client.WebClient;
 import org.apache.commons.io.IOUtils;
-import org.folio.helper.NotificationsHelper;
+import org.folio.client.OkapiModulesClient;
+import org.folio.client.impl.OkapiModulesClientImpl;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Message;
 import org.folio.rest.jaxrs.model.Notification;
 import org.folio.rest.jaxrs.model.NotifyCollection;
 import org.folio.rest.jaxrs.resource.Notify;
@@ -42,8 +44,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static io.vertx.core.Future.succeededFuture;
+import static org.folio.helper.OkapiModulesClientHelper.buildNotifySendRequest;
+import static org.folio.helper.OkapiModulesClientHelper.buildTemplateProcessingRequest;
 
 // We have a few repeated strings, which SQ complains about.
 @java.lang.SuppressWarnings({"squid:S1192"})
@@ -56,8 +61,6 @@ public class NotificationsResourceImpl implements Notify {
   private String notifySchema = null;
   private static final String NOTIFY_SCHEMA_NAME = "ramls/notify.json";
   private static final int DAYS_TO_KEEP_SEEN_NOTIFICATIONS = 365;
-
-  private NotificationsHelper notificationsHelper;
 
   private void initCQLValidation() {
     try {
@@ -72,7 +75,6 @@ public class NotificationsResourceImpl implements Notify {
       initCQLValidation();
     }
     PostgresClient.getInstance(vertx, tenantId).setIdField(IDFIELDNAME);
-    notificationsHelper = new NotificationsHelper(WebClient.create(vertx));
   }
 
   private CQLWrapper getCQL(String query, int limit, int offset)
@@ -288,7 +290,6 @@ public class NotificationsResourceImpl implements Notify {
 
   @Override
   @Validate
-  @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
   public void postNotify(String lang,
     Notification entity,
     Map<String, String> okapiHeaders,
@@ -317,17 +318,34 @@ public class NotificationsResourceImpl implements Notify {
               .respond201WithApplicationJson(entity, PostNotifyResponse.
                 headersFor201().withLocation(LOCATION_PREFIX + ret))));
           } else {
-            notificationsHelper.postNotify(entity, okapiHeaders).setHandler(event -> {
-              if (event.succeeded()) {
-                asyncResultHandler.handle(succeededFuture(PostNotifyResponse.respond201WithApplicationJson(
-                  entity, PostNotifyResponse.headersFor201())));
-              } else if (event.cause().getClass().equals(BadRequestException.class)) {
-                asyncResultHandler.handle(succeededFuture(
-                  PostNotifyResponse.respond400WithTextPlain(event.cause().getMessage())));
-              } else {
-                asyncResultHandler.handle(succeededFuture(PostNotifyResponse.respond500WithTextPlain(event.cause())));
-              }
-            });
+            OkapiModulesClient client = new OkapiModulesClientImpl(context.owner(), okapiHeaders);
+
+            client.getEventConfig(entity.getEventConfigName())
+              .compose(eventEntity -> CompositeFuture.all(eventEntity.getTemplates()
+                .stream()
+                .map(template -> client.postTemplateRequest(buildTemplateProcessingRequest(template, entity))
+                  .map(result -> new Message()
+                    .withHeader(result.getResult().getHeader())
+                    .withBody(result.getResult().getBody())
+                    .withDeliveryChannel(template.getDeliveryChannel())
+                    .withOutputFormat(template.getOutputFormat())))
+                .collect(Collectors.toList())))
+              .map(results -> buildNotifySendRequest(results.list()
+                .stream()
+                .map(o -> (Message) o)
+                .collect(Collectors.toList()), entity))
+              .compose(client::postMessageDelivery)
+              .setHandler(event -> {
+                if (event.succeeded()) {
+                  asyncResultHandler.handle(succeededFuture(PostNotifyResponse.respond201WithApplicationJson(
+                    entity, PostNotifyResponse.headersFor201())));
+                } else if (event.cause().getClass() == BadRequestException.class) {
+                  asyncResultHandler.handle(succeededFuture(
+                    PostNotifyResponse.respond400WithTextPlain(event.cause().getMessage())));
+                } else {
+                  asyncResultHandler.handle(succeededFuture(PostNotifyResponse.respond500WithTextPlain(event.cause())));
+                }
+              });
           }
         } else {
           ValidationHelper.handleError(reply.cause(), asyncResultHandler);
