@@ -42,6 +42,7 @@ public class PatronNoticeTest {
 
   private static final String TEMPLATE_ID_JSON_PATH = "templateId";
   private static final String RECIPIENT_ID_JSON_PATH = "recipientUserId";
+  private static final String DELIVERY_CHANNEL = "email";
 
   private static Vertx vertx;
   private static int port;
@@ -76,6 +77,7 @@ public class PatronNoticeTest {
     PatronNoticeEntity entity = new PatronNoticeEntity()
       .withRecipientId(RECIPIENT_ID)
       .withTemplateId(TEMPLATE_ID)
+      .withDeliveryChannel(DELIVERY_CHANNEL)
       .withOutputFormat(TEXT_HTML);
 
     RestAssured.given()
@@ -97,6 +99,7 @@ public class PatronNoticeTest {
     PatronNoticeEntity entity = new PatronNoticeEntity()
       .withRecipientId(RECIPIENT_ID)
       .withTemplateId(INCORRECT_TEMPLATE_ID)
+      .withDeliveryChannel(DELIVERY_CHANNEL)
       .withOutputFormat(TEXT_HTML);
 
     RestAssured.given()
@@ -118,6 +121,7 @@ public class PatronNoticeTest {
     PatronNoticeEntity entity = new PatronNoticeEntity()
       .withRecipientId(INCORRECT_RECIPIENT_ID)
       .withTemplateId(TEMPLATE_ID)
+      .withDeliveryChannel(DELIVERY_CHANNEL)
       .withOutputFormat(TEXT_HTML);
 
     RestAssured.given()
