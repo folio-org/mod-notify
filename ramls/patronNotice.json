@@ -32,6 +32,9 @@
     }
   },
   "required": [
-    "recipientId"
+    "recipientId",
+    "templateId",
+    "deliveryChannel",
+    "outputFormat"
   ]
 }
