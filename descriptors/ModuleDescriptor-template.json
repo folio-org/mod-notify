@@ -22,7 +22,7 @@
   "provides": [
     {
       "id": "notify",
-      "version": "3.0",
+      "version": "2.0",
       "handlers": [
         {
           "methods": ["GET"],
@@ -58,11 +58,17 @@
           "methods": ["DELETE"],
           "pathPattern": "/notify/{id}",
           "permissionsRequired": ["notify.item.delete"]
-        },
+        }
+      ]
+    },
+    {
+      "id": "patron-notice",
+      "version": "1.0",
+      "handlers": [
         {
           "methods": ["POST"],
-          "pathPattern": "/notify/patron-notice",
-          "permissionsRequired": ["notify.patron-notice.post"]
+          "pathPattern": "/patron-notice",
+          "permissionsRequired": ["patron-notice.post"]
         }
       ]
     },
@@ -135,7 +141,7 @@
       "description": "Delete notification"
     },
     {
-      "permissionName": "notify.patron-notice.post",
+      "permissionName": "patron-notice.post",
       "displayName": "Patron Notice",
       "description": "Post Patron Notice"
     },
@@ -148,8 +154,7 @@
         "notify.item.get",
         "notify.item.post",
         "notify.item.put",
-        "notify.item.delete",
-        "notify.patron-notice.post"
+        "notify.item.delete"
       ],
       "visible": false
     }
