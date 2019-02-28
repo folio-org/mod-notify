@@ -94,7 +94,7 @@ public class OkapiModulesClientImpl implements OkapiModulesClient {
 
     return resp -> {
       if (resp.statusCode() == SC_BAD_REQUEST) {
-        throw new BadRequestException(resp.statusMessage());
+        throw new BadRequestException(resp.bodyAsString());
       }
       if (resp.statusCode() == SC_INTERNAL_SERVER_ERROR) {
         throw new InternalServerErrorException();
