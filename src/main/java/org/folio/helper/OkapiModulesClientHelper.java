@@ -15,6 +15,10 @@ import static java.util.Collections.singletonList;
 
 public class OkapiModulesClientHelper {
 
+  private OkapiModulesClientHelper() {
+    throw new IllegalStateException("Utility class");
+  }
+
   public static NotifySendRequest buildNotifySendRequest(TemplateProcessingResult result, PatronNoticeEntity entity) {
 
     Message message = new Message()
