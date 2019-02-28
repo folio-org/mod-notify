@@ -58,7 +58,7 @@ public class OkapiModulesClientImpl implements OkapiModulesClient {
       .map(collection -> collection.getEventEntity()
         .stream()
         .findAny()
-        .orElseThrow(() -> new BadRequestException("Cannot fetch event entity.")));
+        .orElseThrow(() -> new BadRequestException("Cannot fetch event entity")));
   }
 
   @Override
