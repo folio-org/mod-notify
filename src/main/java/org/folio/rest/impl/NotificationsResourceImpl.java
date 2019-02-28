@@ -47,6 +47,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static io.vertx.core.Future.succeededFuture;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.folio.helper.OkapiModulesClientHelper.buildNotifySendRequest;
 import static org.folio.helper.OkapiModulesClientHelper.buildTemplateProcessingRequest;
 
@@ -64,7 +65,7 @@ public class NotificationsResourceImpl implements Notify {
 
   private void initCQLValidation() {
     try {
-      notifySchema = IOUtils.toString(getClass().getClassLoader().getResourceAsStream(NOTIFY_SCHEMA_NAME), "UTF-8");
+      notifySchema = IOUtils.toString(getClass().getClassLoader().getResourceAsStream(NOTIFY_SCHEMA_NAME), UTF_8);
     } catch (Exception e) {
       logger.error("unable to load schema - " + NOTIFY_SCHEMA_NAME + ", validation of query fields will not be active");
     }
