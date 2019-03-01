@@ -16,7 +16,6 @@ types:
   templateProcessingRequest: !include templateProcessingRequest.json
   templateProcessingResult: !include templateProcessingResult.json
   errors: !include raml-util/schemas/errors.schema
-  patronNoticeEntity: !include patronNotice.json
 
 traits:
   validate: !include raml-util/traits/validation.raml
@@ -122,28 +121,3 @@ resourceTypes:
         exampleItem: !include examples/notify.sample
     put:
       is: [validate]
-
-/patron-notice:
-  displayName: Patron Notice
-  description: API for sendig Patron Notices
-  post:
-    is: [language]
-    body:
-      application/json:
-        schema: patronNoticeEntity
-    responses:
-      200:
-        description: Successfull request
-      422:
-        description: Unprocessable entity, e.g. incorrect template id
-        body:
-          application/json:
-            type: errors
-      500:
-        description: Internal Server Error
-        body:
-          text/plain:
-
-
-
-
