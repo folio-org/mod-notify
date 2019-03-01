@@ -4,6 +4,8 @@ import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.specification.RequestSpecification;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -45,7 +47,7 @@ public class PatronNoticeTest {
   private static final String DELIVERY_CHANNEL = "email";
 
   private static Vertx vertx;
-  private static int port;
+  private static RequestSpecification spec;
 
   @ClassRule
   public static WireMockRule mockServer = new WireMockRule(
@@ -57,9 +59,17 @@ public class PatronNoticeTest {
   public static void setUp(TestContext context) {
 
     vertx = Vertx.vertx();
-    port = NetworkUtils.nextFreePort();
+    int port = NetworkUtils.nextFreePort();
 
     mockOkapiModules();
+
+    spec = new RequestSpecBuilder()
+      .setBaseUri("http://localhost:" + port)
+      .addHeader(RestVerticle.OKAPI_HEADER_TENANT, "test")
+      .addHeader(RestVerticle.OKAPI_HEADER_TOKEN, "test")
+      .addHeader("x-okapi-url", "http://localhost:" + mockServer.port())
+      .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+      .build();
 
     DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
     vertx.deployVerticle(RestVerticle.class, options, context.asyncAssertSuccess());
@@ -81,11 +91,7 @@ public class PatronNoticeTest {
       .withOutputFormat(TEXT_HTML);
 
     RestAssured.given()
-      .baseUri("http://localhost:" + port)
-      .header(RestVerticle.OKAPI_HEADER_TENANT, "test")
-      .header(RestVerticle.OKAPI_HEADER_TOKEN, "test")
-      .header("x-okapi-url", "http://localhost:" + mockServer.port())
-      .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+      .spec(spec)
       .body(mapFrom(entity).encode())
       .when()
       .post("/patron-notice")
@@ -103,11 +109,7 @@ public class PatronNoticeTest {
       .withOutputFormat(TEXT_HTML);
 
     RestAssured.given()
-      .baseUri("http://localhost:" + port)
-      .header(RestVerticle.OKAPI_HEADER_TENANT, "test")
-      .header(RestVerticle.OKAPI_HEADER_TOKEN, "test")
-      .header("x-okapi-url", "http://localhost:" + mockServer.port())
-      .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+      .spec(spec)
       .body(mapFrom(entity).encode())
       .when()
       .post("/patron-notice")
@@ -125,11 +127,7 @@ public class PatronNoticeTest {
       .withOutputFormat(TEXT_HTML);
 
     RestAssured.given()
-      .baseUri("http://localhost:" + port)
-      .header(RestVerticle.OKAPI_HEADER_TENANT, "test")
-      .header(RestVerticle.OKAPI_HEADER_TOKEN, "test")
-      .header("x-okapi-url", "http://localhost:" + mockServer.port())
-      .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+      .spec(spec)
       .body(mapFrom(entity).encode())
       .when()
       .post("/patron-notice")
