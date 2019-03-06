@@ -18,7 +18,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
-    <raml-module-builder.version>23.3.0</raml-module-builder.version>
+    <raml-module-builder.version>23.8.0</raml-module-builder.version>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <vertx-version>3.5.4</vertx-version>
   </properties>
@@ -70,18 +70,10 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.jayway.restassured</groupId>
-      <artifactId>rest-assured-common</artifactId>
-      <version>2.8.0</version>
-      <scope>test</scope>
-      <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>com.jayway.restassured</groupId>
+      <groupId>io.rest-assured</groupId>
       <artifactId>rest-assured</artifactId>
-      <version>2.8.0</version>
+      <version>3.3.0</version>
       <scope>test</scope>
-      <type>jar</type>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
@@ -193,7 +185,6 @@
             </goals>
             <configuration>
               <mainClass>org.folio.rest.tools.GenerateRunner</mainClass>
-              <!-- <executable>java</executable> -->
               <cleanupDaemonThreads>false</cleanupDaemonThreads>
               <systemProperties>
                 <systemProperty>
@@ -255,7 +246,7 @@
           <!-- en.US required because some unit tests rely on English error messages.
                @{argLine} required for sonarqube jacoco -->
           <argLine>-Duser.language=en -Duser.region=US @{argLine}</argLine>
-          <!-- TODO: update to version 3.0.0 and remove useSystemClassLoader
+          <!-- update to version 3.0.0 and remove useSystemClassLoader
                https://issues.folio.org/browse/FOLIO-1609
                https://issues.apache.org/jira/browse/SUREFIRE-1588
           -->

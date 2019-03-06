@@ -5,6 +5,18 @@
     {
       "id": "users",
       "version": "15.0"
+    },
+    {
+      "id": "mod-event",
+      "version": "1.0"
+    },
+    {
+      "id": "template-engine",
+      "version": "1.0"
+    },
+    {
+      "id": "message-delivery",
+      "version": "1.0"
     }
   ],
   "provides": [
@@ -46,6 +58,17 @@
           "methods": ["DELETE"],
           "pathPattern": "/notify/{id}",
           "permissionsRequired": ["notify.item.delete"]
+        }
+      ]
+    },
+    {
+      "id": "patron-notice",
+      "version": "1.0",
+      "handlers": [
+        {
+          "methods": ["POST"],
+          "pathPattern": "/patron-notice",
+          "permissionsRequired": ["patron-notice.post"]
         }
       ]
     },
@@ -116,6 +139,11 @@
       "permissionName": "notify.item.delete",
       "displayName": "Notifications - delete notification",
       "description": "Delete notification"
+    },
+    {
+      "permissionName": "patron-notice.post",
+      "displayName": "Patron Notice",
+      "description": "Post Patron Notice"
     },
     {
       "permissionName": "notify.all",
