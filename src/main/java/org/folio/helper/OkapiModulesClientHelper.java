@@ -25,8 +25,7 @@ public class OkapiModulesClientHelper {
       .withHeader(result.getResult().getHeader())
       .withBody(result.getResult().getBody())
       .withDeliveryChannel(entity.getDeliveryChannel())
-      .withOutputFormat(entity.getOutputFormat())
-      .withTo(entity.getRecipientId());
+      .withOutputFormat(entity.getOutputFormat());
 
     return new NotifySendRequest()
       .withNotificationId(UUID.randomUUID().toString())
