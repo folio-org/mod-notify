@@ -21,7 +21,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_INTERNAL_SERVER_ERROR;
+import static org.apache.http.HttpStatus.SC_NO_CONTENT;
+import static org.apache.http.HttpStatus.SC_OK;
 
 public class OkapiModulesClientImpl implements OkapiModulesClient {
 
@@ -96,7 +97,7 @@ public class OkapiModulesClientImpl implements OkapiModulesClient {
       if (resp.statusCode() == SC_BAD_REQUEST) {
         throw new BadRequestException(resp.bodyAsString());
       }
-      if (resp.statusCode() == SC_INTERNAL_SERVER_ERROR) {
+      if (resp.statusCode() != SC_OK && resp.statusCode() != SC_NO_CONTENT) {
         throw new InternalServerErrorException();
       }
       return type == Void.class ? null : resp.bodyAsJson(type);
