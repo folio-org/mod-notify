@@ -68,7 +68,11 @@
         {
           "methods": ["POST"],
           "pathPattern": "/patron-notice",
-          "permissionsRequired": ["patron-notice.post"]
+          "permissionsRequired": ["patron-notice.post"],
+          "modulePermissions" : [
+            "template-request.post",
+            "sender.message-delivery"
+          ]
         }
       ]
     },
