@@ -1,3 +1,6 @@
+## 2.2.0 2019-03-15
+ * MODNOTIFY-50 Implement API for sending patron notices
+
 ## 2.1.0 2018-12-18
  * MODNOTIFY-48	NotifyTest fails on Windows
  * MODNOTIFY-49	Upgrade to RMB 23.3.0
