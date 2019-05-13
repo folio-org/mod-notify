@@ -1,6 +1,6 @@
 ## 2.3.0 2019-05-13
  * MODNOTIFY-52 Update to RMB 24 / CQLPG 4.0.0
- * MODNOITFY-51 Require template-engine 2.0
+ * MODNOTIFY-51 Require template-engine 2.0
 
 ## 2.2.0 2019-03-15
  * MODNOTIFY-50 Implement API for sending patron notices
