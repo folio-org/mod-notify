@@ -63,9 +63,8 @@ public class NotificationsResourceImpl implements Notify {
   }
 
   private CQLWrapper getCQL(String query, int limit, int offset)
-    throws FieldException, IOException {
-    CQL2PgJSON cql2pgJson;
-    cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb");
+    throws FieldException {
+    CQL2PgJSON cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb");
     CQLWrapper wrap = new CQLWrapper(cql2pgJson, query);
     if (limit >= 0) {
       wrap.setLimit(new Limit(limit));
