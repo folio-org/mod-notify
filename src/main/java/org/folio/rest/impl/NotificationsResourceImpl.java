@@ -9,7 +9,6 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.apache.commons.io.IOUtils;
 import org.folio.client.OkapiModulesClient;
 import org.folio.client.impl.OkapiModulesClientImpl;
 import org.folio.rest.RestVerticle;
@@ -33,7 +32,6 @@ import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
 import org.z3950.zing.cql.cql2pgjson.FieldException;
-import org.z3950.zing.cql.cql2pgjson.SchemaException;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
@@ -47,7 +45,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static io.vertx.core.Future.succeededFuture;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.folio.helper.OkapiModulesClientHelper.buildNotifySendRequest;
 import static org.folio.helper.OkapiModulesClientHelper.buildTemplateProcessingRequest;
 
@@ -59,33 +56,16 @@ public class NotificationsResourceImpl implements Notify {
   private static final String NOTIFY_TABLE = "notify_data";
   private static final String LOCATION_PREFIX = "/notify/";
   private static final String IDFIELDNAME = "id";
-  private String notifySchema = null;
-  private static final String NOTIFY_SCHEMA_NAME = "ramls/notify.json";
   private static final int DAYS_TO_KEEP_SEEN_NOTIFICATIONS = 365;
 
-  private void initCQLValidation() {
-    try {
-      notifySchema = IOUtils.toString(getClass().getClassLoader().getResourceAsStream(NOTIFY_SCHEMA_NAME), UTF_8);
-    } catch (Exception e) {
-      logger.error("unable to load schema - " + NOTIFY_SCHEMA_NAME + ", validation of query fields will not be active");
-    }
-  }
-
   public NotificationsResourceImpl(Vertx vertx, String tenantId) {
-    if (notifySchema == null) {
-      initCQLValidation();
-    }
     PostgresClient.getInstance(vertx, tenantId).setIdField(IDFIELDNAME);
   }
 
   private CQLWrapper getCQL(String query, int limit, int offset)
-    throws FieldException, IOException, SchemaException {
+    throws FieldException, IOException {
     CQL2PgJSON cql2pgJson;
-    if (notifySchema != null) {
-      cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb", notifySchema);
-    } else {
-      cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb");
-    }
+    cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb");
     CQLWrapper wrap = new CQLWrapper(cql2pgJson, query);
     if (limit >= 0) {
       wrap.setLimit(new Limit(limit));
