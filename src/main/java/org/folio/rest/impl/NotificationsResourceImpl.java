@@ -35,7 +35,6 @@ import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
