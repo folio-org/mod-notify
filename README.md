@@ -71,6 +71,10 @@ java -jar target/mod-notify-fat.jar \
 
 See the `run.sh` script for some simple curl examples.
 
+### ModuleDescriptor
+
+See the built `target/ModuleDescriptor.json` for the interfaces that this module
+requires and provides, the permissions, and the additional module metadata.
 
 ### API documentation
 
