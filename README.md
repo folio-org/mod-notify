@@ -87,6 +87,10 @@ http://localhost:8085/apidocs/?raml=raml/admin.raml
 etc.
 ```
 
+### Code analysis
+
+[SonarQube analysis](https://sonarcloud.io/dashboard?id=org.folio%3Amod-notify).
+
 ### Download and configuration
 
 The built artifacts for this module are available.
