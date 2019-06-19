@@ -4,13 +4,14 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.folio.client.OkapiModulesClient;
 import org.folio.client.impl.OkapiModulesClientImpl;
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.annotations.Validate;
 import org.folio.rest.jaxrs.model.Errors;
@@ -18,11 +19,7 @@ import org.folio.rest.jaxrs.model.Message;
 import org.folio.rest.jaxrs.model.Notification;
 import org.folio.rest.jaxrs.model.NotifyCollection;
 import org.folio.rest.jaxrs.resource.Notify;
-import org.folio.rest.persist.Criteria.Criteria;
-import org.folio.rest.persist.Criteria.Criterion;
-import org.folio.rest.persist.Criteria.Limit;
-import org.folio.rest.persist.Criteria.Offset;
-import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.PgUtil;
 import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.tools.client.HttpClientFactory;
 import org.folio.rest.tools.client.interfaces.HttpClientInterface;
@@ -30,8 +27,6 @@ import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
-import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
-import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
@@ -40,6 +35,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -54,24 +50,10 @@ public class NotificationsResourceImpl implements Notify {
   private final Messages messages = Messages.getInstance();
   private static final String NOTIFY_TABLE = "notify_data";
   private static final String LOCATION_PREFIX = "/notify/";
-  private static final String IDFIELDNAME = "id";
   private static final int DAYS_TO_KEEP_SEEN_NOTIFICATIONS = 365;
 
-  public NotificationsResourceImpl(Vertx vertx, String tenantId) {
-    PostgresClient.getInstance(vertx, tenantId).setIdField(IDFIELDNAME);
-  }
-
-  private CQLWrapper getCQL(String query, int limit, int offset)
-    throws FieldException {
-    CQL2PgJSON cql2pgJson = new CQL2PgJSON(NOTIFY_TABLE + ".jsonb");
-    CQLWrapper wrap = new CQLWrapper(cql2pgJson, query);
-    if (limit >= 0) {
-      wrap.setLimit(new Limit(limit));
-    }
-    if (offset >= 0) {
-      wrap.setOffset(new Offset(offset));
-    }
-    return wrap;
+  private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
+    return new CQLWrapper(new CQL2PgJSON(NOTIFY_TABLE + ".jsonb"), query, limit, offset);
   }
 
   /**
@@ -155,11 +137,7 @@ public class NotificationsResourceImpl implements Notify {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    String tenantId = TenantTool.calculateTenantId(
-      okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-
     CQLWrapper cql = null;
-
     try {
       logger.debug("Getting notes. self=" + self + " "
         + offset + "+" + limit + " q=" + query);
@@ -173,7 +151,7 @@ public class NotificationsResourceImpl implements Notify {
     } catch (Exception e) {
       ValidationHelper.handleError(e, asyncResultHandler);
     }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+    PgUtil.postgresClient(vertxContext, okapiHeaders)
       .get(NOTIFY_TABLE, Notification.class, new String[]{"*"}, cql,
         true /*get count too*/, false /* set id */,
         reply -> {
@@ -283,10 +261,11 @@ public class NotificationsResourceImpl implements Notify {
         .respond422WithApplicationJson(valErr)));
       return;
     }
-    String tenantId = TenantTool.calculateTenantId(
-      okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
     String id = entity.getId();
-    PostgresClient.getInstance(context.owner(), tenantId).save(NOTIFY_TABLE,
+    if (id == null || id.trim().isEmpty()) {
+      id = UUID.randomUUID().toString();
+    }
+    PgUtil.postgresClient(context, okapiHeaders).save(NOTIFY_TABLE,
       id, entity,
       reply -> {
         if (reply.succeeded()) {
@@ -346,11 +325,8 @@ public class NotificationsResourceImpl implements Notify {
 
   /**
    * Helper to delete old, seen notifications.
-   *
-   * @param tenantId
-   * @param userId
    */
-  private void deleteAllOldNotifications(String tenantId, String userId,
+  private void deleteAllOldNotifications(String userId, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Void>> asyncResultHandler,
     Context vertxContext) {
     String query;
@@ -373,7 +349,7 @@ public class NotificationsResourceImpl implements Notify {
       asyncResultHandler.handle(succeededFuture());
       return;
     }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+    PgUtil.postgresClient(vertxContext, okapiHeaders)
       .delete(NOTIFY_TABLE, cql,
         reply -> asyncResultHandler.handle(succeededFuture())
       // Ignore all errors, we will catch old notifies the next time
@@ -408,11 +384,10 @@ public class NotificationsResourceImpl implements Notify {
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
-    String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-      String query = selfDelQuery(olderthan, okapiHeaders, asyncResultHandler);
-      if (query == null) {
-        return; // error has been handled already
-      }
+    String query = selfDelQuery(olderthan, okapiHeaders, asyncResultHandler);
+    if (query == null) {
+      return; // error has been handled already
+    }
     logger.debug("Deleting self notifications. new query:" + query);
     CQLWrapper cql;
     try {
@@ -421,7 +396,7 @@ public class NotificationsResourceImpl implements Notify {
       ValidationHelper.handleError(e, asyncResultHandler);
       return;
     }
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+    PgUtil.postgresClient(vertxContext, okapiHeaders)
       .delete(NOTIFY_TABLE, cql,
         reply -> {
           if (reply.succeeded()) {
@@ -443,55 +418,38 @@ public class NotificationsResourceImpl implements Notify {
         });
   }
 
-
   @Override
   @Validate
-  public void getNotifyById(String id,
-    String lang, Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
-    Context context) {
+  public void getNotifyById(String id, String lang, Map<String, String> okapiHeaders,
+      Handler<AsyncResult<Response>> asyncResultHandler, Context context) {
     if (id.equals("_self")) {
-        // The _self endpoint has already handled this request
+      // The _self endpoint has already handled this request
+      return;
+    }
+    PgUtil.postgresClient(context, okapiHeaders).getById(NOTIFY_TABLE, id, Notification.class, reply -> {
+      if (reply.failed()) {
+        ValidationHelper.handleError(reply.cause(), asyncResultHandler);
         return;
       }
-    String tenantId = TenantTool.calculateTenantId(
-      okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
-    Criterion c = new Criterion(
-      new Criteria().addField(IDFIELDNAME).setJSONB(false)
-        .setOperation("=").setValue("'" + id + "'"));
-
-    PostgresClient.getInstance(context.owner(), tenantId)
-      .get(NOTIFY_TABLE, Notification.class, c, true,
-        reply -> {
-          if (reply.succeeded()) {
-            @SuppressWarnings("unchecked")
-            List<Notification> notifylist
-            = (List<Notification>) reply.result().getResults();
-            if (notifylist.isEmpty()) {
-              asyncResultHandler.handle(succeededFuture(GetNotifyByIdResponse
-                .respond404WithTextPlain(id)));
-            } else {
-              asyncResultHandler.handle(succeededFuture(GetNotifyByIdResponse
-                .respond200WithApplicationJson(notifylist.get(0))));
-            }
-          } else {
-            ValidationHelper.handleError(reply.cause(), asyncResultHandler);
-          }
-        });
+      if (reply.result() == null) {
+        asyncResultHandler.handle(succeededFuture(GetNotifyByIdResponse.respond404WithTextPlain(id)));
+        return;
+      }
+      asyncResultHandler.handle(succeededFuture(GetNotifyByIdResponse.respond200WithApplicationJson(reply.result())));
+    });
   }
 
   @Override
   @Validate
   public void deleteNotifyById(String id, String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
-    String tenantId = TenantTool.calculateTenantId(
-      okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
+
     if (id.equals("_self")) {
       // The _self endpoint has already handled this request
       return;
     }
 
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+    PgUtil.postgresClient(vertxContext, okapiHeaders)
       .delete(NOTIFY_TABLE, id,
         reply -> {
           if (reply.succeeded()) {
@@ -537,10 +495,8 @@ public class NotificationsResourceImpl implements Notify {
         .respond422WithApplicationJson(valErr)));
       return;
     }
-    String tenantId = TenantTool.calculateTenantId(
-      okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
     String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
-    PostgresClient.getInstance(vertxContext.owner(), tenantId)
+    PgUtil.postgresClient(vertxContext, okapiHeaders)
       .update(NOTIFY_TABLE, entity, id,
         reply -> {
           if (reply.succeeded()) {
@@ -548,7 +504,7 @@ public class NotificationsResourceImpl implements Notify {
               asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
                 .respond404WithTextPlain(id)));
             else { // all ok
-              deleteAllOldNotifications(tenantId, userId,
+              deleteAllOldNotifications(userId, okapiHeaders,
                 dres -> asyncResultHandler.handle(succeededFuture(
                   PutNotifyByIdResponse.respond204())),
                  vertxContext);
