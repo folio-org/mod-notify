@@ -1,3 +1,6 @@
+## 2.3.1 2019-07-23
+ * MODNOTIFY-53 Upgrade to RMB 26
+
 ## 2.3.0 2019-05-13
  * MODNOTIFY-52 Update to RMB 24 / CQLPG 4.0.0
  * MODNOTIFY-51 Require template-engine 2.0
