@@ -1,4 +1,10 @@
-## 2.3.1 2019-07-23
+## 2.4.0 2019-12-03
+ * MODNOTIFY-57 Use JVM features to manage container memory
+ * FOLIO-2256 Enable kube-deploy pipeline for platform-core modules
+ * FOLIO-2234 Add LaunchDescriptor settings to each backend core module repository
+ * FOLIO-2321 Remove old ModuleDescriptor "metadata" section for each back-end module
+ 
+ ## 2.3.1 2019-07-23
  * MODNOTIFY-53 Upgrade to RMB 26
 
 ## 2.3.0 2019-05-13
