@@ -12,6 +12,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.jaxrs.model.Attachment;
 import org.folio.rest.jaxrs.model.PatronNoticeEntity;
 import org.folio.rest.jaxrs.model.Result;
 import org.folio.rest.jaxrs.model.TemplateProcessingResult;
@@ -24,6 +25,9 @@ import org.junit.runner.RunWith;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+
+import java.util.Collections;
+import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath;
@@ -141,7 +145,8 @@ public class PatronNoticeTest {
       .withTemplateId(TEMPLATE_ID)
       .withResult(new Result()
         .withHeader("header")
-        .withBody("body"));
+        .withBody("body")
+        .withAttachments(buildAttachments()));
 
     mockServer.stubFor(post(urlMatching("/template-request"))
       .withRequestBody(matchingJsonPath(TEMPLATE_ID_JSON_PATH, equalTo(TEMPLATE_ID)))
@@ -158,5 +163,15 @@ public class PatronNoticeTest {
     mockServer.stubFor(post(urlMatching("/message-delivery"))
       .withRequestBody(matchingJsonPath(RECIPIENT_ID_JSON_PATH, equalTo(INCORRECT_RECIPIENT_ID)))
       .willReturn(ok().withStatus(400)));
+  }
+
+  private static List<Attachment> buildAttachments() {
+    Attachment attachment = new Attachment()
+        .withData("ABCDEFG")
+        .withContentType("image/png")
+        .withDisposition("inline")
+        .withName("test")
+        .withContentId("<test>");
+    return Collections.singletonList(attachment);
   }
 }

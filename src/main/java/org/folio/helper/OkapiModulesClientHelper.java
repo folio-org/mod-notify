@@ -22,10 +22,11 @@ public class OkapiModulesClientHelper {
   public static NotifySendRequest buildNotifySendRequest(TemplateProcessingResult result, PatronNoticeEntity entity) {
 
     Message message = new Message()
-      .withHeader(result.getResult().getHeader())
-      .withBody(result.getResult().getBody())
-      .withDeliveryChannel(entity.getDeliveryChannel())
-      .withOutputFormat(entity.getOutputFormat());
+        .withHeader(result.getResult().getHeader())
+        .withBody(result.getResult().getBody())
+        .withAttachments(result.getResult().getAttachments())
+        .withDeliveryChannel(entity.getDeliveryChannel())
+        .withOutputFormat(entity.getOutputFormat());
 
     return new NotifySendRequest()
       .withNotificationId(UUID.randomUUID().toString())

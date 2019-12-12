@@ -27,6 +27,15 @@
     "outputFormat": {
       "type": "string",
       "description": "Media type of message body"
+    },
+    "attachments": {
+      "description": "List of attachments",
+      "id": "attachments",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "$ref": "attachment.json"
+      }
     }
   },
   "required": [
