@@ -25,7 +25,9 @@ import org.folio.rest.jaxrs.model.Notification;
 import org.folio.rest.jaxrs.model.Result;
 import org.folio.rest.jaxrs.model.Template;
 import org.folio.rest.jaxrs.model.TemplateProcessingResult;
+import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.tools.PomReader;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -93,7 +95,9 @@ public class SendNotifyTest {
     DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put(HTTP_PORT_JSON_PATH, port));
     vertx.deployVerticle(RestVerticle.class.getName(), options, result -> {
       try {
-        tenantClient.postTenant(null, x -> async.complete());
+        TenantAttributes attributes = new TenantAttributes()
+          .withModuleTo(String.format("mod-notify-%s", PomReader.INSTANCE.getVersion()));
+        tenantClient.postTenant(attributes, x -> async.complete());
       } catch (Exception e) {
         context.fail(e);
         async.complete();
