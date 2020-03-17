@@ -1,3 +1,6 @@
+## 2.5.0 2020-03-12
+ * MODNOTIFY-60 Provide ability to handle attachments
+
 ## 2.4.1 2019-12-03
  * MODNOTIFY-57 Use JVM features to manage container memory
  * FOLIO-2256 Enable kube-deploy pipeline for platform-core modules
