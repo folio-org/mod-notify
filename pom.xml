@@ -18,9 +18,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
-    <raml-module-builder.version>26.2.2</raml-module-builder.version>
+    <raml-module-builder.version>29.3.0</raml-module-builder.version>
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
-    <vertx-version>3.5.4</vertx-version>
+    <vertx-version>3.8.5</vertx-version>
   </properties>
 
   <repositories>
@@ -228,12 +228,12 @@
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjrt</artifactId>
-            <version>1.8.9</version>
+            <version>1.9.4</version>
           </dependency>
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjtools</artifactId>
-            <version>1.8.9</version>
+            <version>1.9.4</version>
           </dependency>
         </dependencies>
       </plugin>

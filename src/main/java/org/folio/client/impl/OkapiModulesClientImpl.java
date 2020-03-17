@@ -1,6 +1,7 @@
 package org.folio.client.impl;
 
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
@@ -45,16 +46,16 @@ public class OkapiModulesClientImpl implements OkapiModulesClient {
   @Override
   public Future<EventEntity> getEventConfig(String name) {
 
-    Future<HttpResponse<Buffer>> future = Future.future();
+    Promise<HttpResponse<Buffer>> promise = Promise.promise();
 
     webClient.getAbs(okapiUrl + "/eventConfig")
       .addQueryParam("query", "name==" + name)
       .putHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
       .putHeader(RestVerticle.OKAPI_HEADER_TENANT, tenant)
       .putHeader(RestVerticle.OKAPI_HEADER_TOKEN, token)
-      .send(future.completer());
+      .send(promise);
 
-    return future
+    return promise.future()
       .map(responseMapper(EventEntityCollection.class))
       .map(collection -> collection.getEventEntity()
         .stream()
@@ -65,30 +66,30 @@ public class OkapiModulesClientImpl implements OkapiModulesClient {
   @Override
   public Future<TemplateProcessingResult> postTemplateRequest(TemplateProcessingRequest request) {
 
-    Future<HttpResponse<Buffer>> future = Future.future();
+    Promise<HttpResponse<Buffer>> promise = Promise.promise();
 
     webClient.postAbs(okapiUrl + "/template-request")
       .putHeader(RestVerticle.OKAPI_HEADER_TENANT, tenant)
       .putHeader(RestVerticle.OKAPI_HEADER_TOKEN, token)
       .putHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
       .putHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-      .sendJson(request, future.completer());
+      .sendJson(request, promise);
 
-    return future.map(responseMapper(TemplateProcessingResult.class));
+    return promise.future().map(responseMapper(TemplateProcessingResult.class));
   }
 
   @Override
   public Future<Void> postMessageDelivery(NotifySendRequest request) {
 
-    Future<HttpResponse<Buffer>> future = Future.future();
+    Promise<HttpResponse<Buffer>> promise = Promise.promise();
 
     webClient.postAbs(okapiUrl + "/message-delivery")
       .putHeader(RestVerticle.OKAPI_HEADER_TENANT, tenant)
       .putHeader(RestVerticle.OKAPI_HEADER_TOKEN, token)
       .putHeader(HttpHeaders.ACCEPT, MediaType.TEXT_PLAIN)
-      .sendJson(request, future.completer());
+      .sendJson(request, promise);
 
-    return future.map(responseMapper(Void.class));
+    return promise.future().map(responseMapper(Void.class));
   }
 
   private static <T> Function<HttpResponse<Buffer>, T> responseMapper(Class<T> type) {
