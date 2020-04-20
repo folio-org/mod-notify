@@ -15,11 +15,9 @@ import static java.util.Collections.singletonList;
 
 public class OkapiModulesClientHelper {
 
-  private OkapiModulesClientHelper() {
-    throw new IllegalStateException("Utility class");
-  }
+  public OkapiModulesClientHelper() { }
 
-  public static NotifySendRequest buildNotifySendRequest(TemplateProcessingResult result, PatronNoticeEntity entity) {
+  public NotifySendRequest buildNotifySendRequest(TemplateProcessingResult result, PatronNoticeEntity entity) {
 
     Message message = new Message()
         .withHeader(result.getResult().getHeader())
@@ -34,7 +32,7 @@ public class OkapiModulesClientHelper {
       .withRecipientUserId(entity.getRecipientId());
   }
 
-  public static NotifySendRequest buildNotifySendRequest(List<Message> messages, Notification entity) {
+  public NotifySendRequest buildNotifySendRequest(List<Message> messages, Notification entity) {
 
     return new NotifySendRequest()
       .withNotificationId(UUID.randomUUID().toString())
@@ -42,7 +40,7 @@ public class OkapiModulesClientHelper {
       .withRecipientUserId(entity.getRecipientId());
   }
 
-  public static TemplateProcessingRequest buildTemplateProcessingRequest(PatronNoticeEntity entity) {
+  public TemplateProcessingRequest buildTemplateProcessingRequest(PatronNoticeEntity entity) {
 
     return new TemplateProcessingRequest()
       .withTemplateId(entity.getTemplateId())
@@ -51,7 +49,7 @@ public class OkapiModulesClientHelper {
       .withContext(entity.getContext());
   }
 
-  public static TemplateProcessingRequest buildTemplateProcessingRequest(Template template, Notification notification) {
+  public TemplateProcessingRequest buildTemplateProcessingRequest(Template template, Notification notification) {
 
     return new TemplateProcessingRequest()
       .withTemplateId(template.getTemplateId())

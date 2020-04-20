@@ -1,35 +1,7 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Context;
-import io.vertx.core.Handler;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import org.folio.client.OkapiModulesClient;
-import org.folio.client.impl.OkapiModulesClientImpl;
-import org.folio.cql2pgjson.CQL2PgJSON;
-import org.folio.cql2pgjson.exception.FieldException;
-import org.folio.rest.RestVerticle;
-import org.folio.rest.annotations.Validate;
-import org.folio.rest.jaxrs.model.Errors;
-import org.folio.rest.jaxrs.model.Message;
-import org.folio.rest.jaxrs.model.Notification;
-import org.folio.rest.jaxrs.model.NotifyCollection;
-import org.folio.rest.jaxrs.resource.Notify;
-import org.folio.rest.persist.PgUtil;
-import org.folio.rest.persist.cql.CQLWrapper;
-import org.folio.rest.tools.client.HttpClientFactory;
-import org.folio.rest.tools.client.interfaces.HttpClientInterface;
-import org.folio.rest.tools.messages.MessageConsts;
-import org.folio.rest.tools.messages.Messages;
-import org.folio.rest.tools.utils.TenantTool;
-import org.folio.rest.tools.utils.ValidationHelper;
+import static io.vertx.core.Future.succeededFuture;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.core.Response;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -39,9 +11,39 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static io.vertx.core.Future.succeededFuture;
-import static org.folio.helper.OkapiModulesClientHelper.buildNotifySendRequest;
-import static org.folio.helper.OkapiModulesClientHelper.buildTemplateProcessingRequest;
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.core.Response;
+
+import org.folio.client.OkapiModulesClient;
+import org.folio.client.impl.OkapiModulesClientImpl;
+import org.folio.cql2pgjson.CQL2PgJSON;
+import org.folio.cql2pgjson.exception.FieldException;
+import org.folio.helper.OkapiModulesClientHelper;
+import org.folio.rest.RestVerticle;
+import org.folio.rest.annotations.Validate;
+import org.folio.rest.jaxrs.model.Errors;
+import org.folio.rest.jaxrs.model.Message;
+import org.folio.rest.jaxrs.model.Notification;
+import org.folio.rest.jaxrs.model.NotifyCollection;
+import org.folio.rest.jaxrs.resource.Notify;
+import org.folio.rest.persist.PgUtil;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.tools.client.HttpClientFactory;
+import org.folio.rest.tools.client.interfaces.HttpClientInterface;
+import org.folio.rest.tools.messages.MessageConsts;
+import org.folio.rest.tools.messages.Messages;
+import org.folio.rest.tools.utils.TenantTool;
+import org.folio.rest.tools.utils.ValidationHelper;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Context;
+import io.vertx.core.Handler;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 // We have a few repeated strings, which SQ complains about.
 @java.lang.SuppressWarnings({"squid:S1192"})
@@ -51,6 +53,8 @@ public class NotificationsResourceImpl implements Notify {
   private static final String NOTIFY_TABLE = "notify_data";
   private static final String LOCATION_PREFIX = "/notify/";
   private static final int DAYS_TO_KEEP_SEEN_NOTIFICATIONS = 365;
+
+  private final OkapiModulesClientHelper okapiModulesClientHelper = new OkapiModulesClientHelper();
 
   private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException {
     return new CQLWrapper(new CQL2PgJSON(NOTIFY_TABLE + ".jsonb"), query, limit, offset);
@@ -151,7 +155,7 @@ public class NotificationsResourceImpl implements Notify {
     } catch (Exception e) {
       ValidationHelper.handleError(e, asyncResultHandler);
     }
-    PgUtil.postgresClient(vertxContext, okapiHeaders)
+    getPostgresClient(vertxContext, okapiHeaders)
       .get(NOTIFY_TABLE, Notification.class, new String[]{"*"}, cql,
         true /*get count too*/, false /* set id */,
         reply -> {
@@ -171,6 +175,18 @@ public class NotificationsResourceImpl implements Notify {
         });
   }
 
+  HttpClientInterface getHttpClient(String okapiURL, String tenantId) {
+    return HttpClientFactory.getHttpClient(okapiURL, tenantId);
+  }
+
+  PostgresClient getPostgresClient(Context context, Map<String, String> okapiHeaders) {
+    return PgUtil.postgresClient(context, okapiHeaders);
+  }
+
+  OkapiModulesClient getOkapiModulesClient(Context context, Map<String, String> okapiHeaders) {
+    return new OkapiModulesClientImpl(context.owner(), okapiHeaders);
+  }
+
   @Override
   @Validate
   public void postNotifyUsernameByUsername(String userName, String lang,
@@ -182,7 +198,7 @@ public class NotificationsResourceImpl implements Notify {
     String tenantId = TenantTool.calculateTenantId(
       okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
     String okapiURL = okapiHeaders.get("X-Okapi-Url");
-    HttpClientInterface client = HttpClientFactory.getHttpClient(okapiURL, tenantId);
+    HttpClientInterface client = getHttpClient(okapiURL, tenantId);
     String url = "/users?query=username=" + userName;
     try {
       logger.debug("Looking up user " + url);
@@ -265,7 +281,7 @@ public class NotificationsResourceImpl implements Notify {
     if (id == null || id.trim().isEmpty()) {
       id = UUID.randomUUID().toString();
     }
-    PgUtil.postgresClient(context, okapiHeaders).save(NOTIFY_TABLE,
+    getPostgresClient(context, okapiHeaders).save(NOTIFY_TABLE,
       id, entity,
       reply -> {
         if (reply.succeeded()) {
@@ -276,19 +292,20 @@ public class NotificationsResourceImpl implements Notify {
               .respond201WithApplicationJson(entity, PostNotifyResponse.
                 headersFor201().withLocation(LOCATION_PREFIX + ret))));
           } else {
-            OkapiModulesClient client = new OkapiModulesClientImpl(context.owner(), okapiHeaders);
+            OkapiModulesClient client = getOkapiModulesClient(context, okapiHeaders);
 
             client.getEventConfig(entity.getEventConfigName())
               .compose(eventEntity -> CompositeFuture.all(eventEntity.getTemplates()
                 .stream()
-                .map(template -> client.postTemplateRequest(buildTemplateProcessingRequest(template, entity))
+                .map(template -> client.postTemplateRequest(
+                  okapiModulesClientHelper.buildTemplateProcessingRequest(template, entity))
                   .map(result -> new Message()
                     .withHeader(result.getResult().getHeader())
                     .withBody(result.getResult().getBody())
                     .withDeliveryChannel(template.getDeliveryChannel())
                     .withOutputFormat(template.getOutputFormat())))
                 .collect(Collectors.toList())))
-              .map(results -> buildNotifySendRequest(results.list()
+              .map(results -> okapiModulesClientHelper.buildNotifySendRequest(results.list()
                 .stream()
                 .map(o -> (Message) o)
                 .collect(Collectors.toList()), entity))
@@ -349,7 +366,7 @@ public class NotificationsResourceImpl implements Notify {
       asyncResultHandler.handle(succeededFuture());
       return;
     }
-    PgUtil.postgresClient(vertxContext, okapiHeaders)
+    getPostgresClient(vertxContext, okapiHeaders)
       .delete(NOTIFY_TABLE, cql,
         reply -> asyncResultHandler.handle(succeededFuture())
       // Ignore all errors, we will catch old notifies the next time
@@ -396,7 +413,7 @@ public class NotificationsResourceImpl implements Notify {
       ValidationHelper.handleError(e, asyncResultHandler);
       return;
     }
-    PgUtil.postgresClient(vertxContext, okapiHeaders)
+    getPostgresClient(vertxContext, okapiHeaders)
       .delete(NOTIFY_TABLE, cql,
         reply -> {
           if (reply.succeeded()) {
@@ -426,7 +443,7 @@ public class NotificationsResourceImpl implements Notify {
       // The _self endpoint has already handled this request
       return;
     }
-    PgUtil.postgresClient(context, okapiHeaders).getById(NOTIFY_TABLE, id, Notification.class, reply -> {
+    getPostgresClient(context, okapiHeaders).getById(NOTIFY_TABLE, id, Notification.class, reply -> {
       if (reply.failed()) {
         ValidationHelper.handleError(reply.cause(), asyncResultHandler);
         return;
@@ -449,7 +466,7 @@ public class NotificationsResourceImpl implements Notify {
       return;
     }
 
-    PgUtil.postgresClient(vertxContext, okapiHeaders)
+    getPostgresClient(vertxContext, okapiHeaders)
       .delete(NOTIFY_TABLE, id,
         reply -> {
           if (reply.succeeded()) {
@@ -496,7 +513,7 @@ public class NotificationsResourceImpl implements Notify {
       return;
     }
     String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
-    PgUtil.postgresClient(vertxContext, okapiHeaders)
+    getPostgresClient(vertxContext, okapiHeaders)
       .update(NOTIFY_TABLE, entity, id,
         reply -> {
           if (reply.succeeded()) {
