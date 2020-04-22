@@ -127,9 +127,8 @@ public class PatronNoticeResourceImplTest {
       handlerIsCalled = true;
 
       assertTrue(responseAsyncResult.succeeded());
-      assertEquals(responseAsyncResult.result().getStatus(), 422);
-      assertEquals(responseAsyncResult.result().getHeaderString(HttpHeaders.CONTENT_TYPE),
-        MediaType.APPLICATION_JSON);
+      assertEquals(422, responseAsyncResult.result().getStatus());
+      assertEquals(MediaType.APPLICATION_JSON, responseAsyncResult.result().getHeaderString(HttpHeaders.CONTENT_TYPE));
       assertThat(responseAsyncResult.result().getEntity(), instanceOf(Errors.class));
 
       Errors errors = (Errors) responseAsyncResult.result().getEntity();

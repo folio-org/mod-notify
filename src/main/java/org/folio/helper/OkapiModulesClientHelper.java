@@ -15,8 +15,6 @@ import static java.util.Collections.singletonList;
 
 public class OkapiModulesClientHelper {
 
-  public OkapiModulesClientHelper() { }
-
   public NotifySendRequest buildNotifySendRequest(TemplateProcessingResult result, PatronNoticeEntity entity) {
 
     Message message = new Message()
