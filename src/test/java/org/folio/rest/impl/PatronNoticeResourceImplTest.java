@@ -84,7 +84,7 @@ public class PatronNoticeResourceImplTest {
       handlerIsCalled = true;
 
       assertTrue(responseAsyncResult.succeeded());
-      assertEquals(responseAsyncResult.result().getStatus(), 200);
+      assertEquals(200, responseAsyncResult.result().getStatus());
 
       verify(okapiModulesClientHelper, times(1)).buildTemplateProcessingRequest(entity);
       verify(okapiModulesClientHelper, times(1)).buildNotifySendRequest(
@@ -106,11 +106,10 @@ public class PatronNoticeResourceImplTest {
       handlerIsCalled = true;
 
       assertTrue(responseAsyncResult.succeeded());
-      assertEquals(responseAsyncResult.result().getStatus(), 500);
-      assertEquals(responseAsyncResult.result().getHeaderString(HttpHeaders.CONTENT_TYPE),
-        MediaType.TEXT_PLAIN);
-      assertEquals(responseAsyncResult.result().getEntity(),
-        "Internal Server Error, Please contact System Administrator or try again");
+      assertEquals(500, responseAsyncResult.result().getStatus());
+      assertEquals(MediaType.TEXT_PLAIN, responseAsyncResult.result().getHeaderString(HttpHeaders.CONTENT_TYPE));
+      assertEquals("Internal Server Error, Please contact System Administrator or try again",
+        responseAsyncResult.result().getEntity());
     };
 
     doReturn(failedFuture(new Exception())).when(client).postMessageDelivery(any());
@@ -135,8 +134,8 @@ public class PatronNoticeResourceImplTest {
 
       Errors errors = (Errors) responseAsyncResult.result().getEntity();
 
-      assertEquals(errors.getErrors().size(), 1);
-      assertEquals(errors.getErrors().get(0).getMessage(), "HTTP 400 Bad Request");
+      assertEquals(1, errors.getErrors().size());
+      assertEquals("HTTP 400 Bad Request", errors.getErrors().get(0).getMessage());
     };
 
     doReturn(failedFuture(new BadRequestException())).when(client).postMessageDelivery(any());

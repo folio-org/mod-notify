@@ -109,7 +109,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 200);
+    assertEquals(200, status);
   }
 
   @Test
@@ -133,7 +133,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 500);
+    assertEquals(500, status);
   }
 
   @Test
@@ -162,7 +162,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 200);
+    assertEquals(200, status);
   }
 
   @Test
@@ -178,7 +178,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 400);
+    assertEquals(400, status);
   }
 
   @Test
@@ -213,7 +213,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 201);
+    assertEquals(201, status);
   }
 
   @Test
@@ -236,7 +236,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 201);
+    assertEquals(201, status);
   }
 
   @Test
@@ -260,7 +260,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 400);
+    assertEquals(400, status);
   }
 
   @Test
@@ -284,7 +284,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 500);
+    assertEquals(500, status);
   }
 
   @Test
@@ -308,7 +308,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 400);
+    assertEquals(400, status);
   }
 
   @Test
@@ -335,7 +335,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 400);
+    assertEquals(400, status);
   }
 
   @Test
@@ -359,7 +359,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 400);
+    assertEquals(400, status);
   }
 
   @Test
@@ -383,7 +383,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 500);
+    assertEquals(500, status);
   }
 
   @Test
@@ -399,7 +399,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 400);
+    assertEquals(400, status);
   }
 
   @Test
@@ -422,7 +422,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 204);
+    assertEquals(204, status);
   }
 
   @Test
@@ -445,7 +445,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 404);
+    assertEquals(404, status);
   }
 
   @Test
@@ -468,7 +468,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 500);
+    assertEquals(500, status);
   }
 
   @Test
@@ -491,7 +491,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 200);
+    assertEquals(200, status);
   }
 
   @Test
@@ -514,7 +514,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 500);
+    assertEquals(500, status);
   }
 
   @Test
@@ -536,7 +536,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 404);
+    assertEquals(404, status);
   }
 
   @Test
@@ -558,7 +558,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 204);
+    assertEquals(204, status);
   }
 
   @Test
@@ -580,7 +580,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 500);
+    assertEquals(500, status);
   }
 
   @Test
@@ -602,7 +602,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 404);
+    assertEquals(404, status);
   }
 
   @Test
@@ -637,7 +637,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 204);
+    assertEquals(204, status);
   }
 
   @Test
@@ -660,7 +660,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 422);
+    assertEquals(422, status);
   }
 
   @Test
@@ -682,7 +682,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 422);
+    assertEquals(422, status);
   }
 
   @Test
@@ -711,7 +711,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 404);
+    assertEquals(404, status);
   }
 
   @Test
@@ -740,7 +740,7 @@ public class NotificationsResourceImplTest {
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
 
-    assertEquals(status, 500);
+    assertEquals(500, status);
   }
 
   private <T> AsyncResult<T> makeAsyncResult(T result, boolean succeeded) {
