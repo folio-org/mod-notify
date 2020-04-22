@@ -44,9 +44,7 @@ public class PatronNoticeResourceImpl implements PatronNotice {
           logger.error(res.cause());
           if (res.cause().getClass() == BadRequestException.class) {
             Error error = new Error().withMessage(res.cause().getMessage());
-            Errors errors = new Errors()
-              .withErrors(singletonList(error))
-              .withTotalRecords(1);
+            Errors errors = new Errors().withErrors(singletonList(error));
             asyncResultHandler.handle(succeededFuture(PostPatronNoticeResponse.respond422WithApplicationJson(errors)));
             return;
           }
