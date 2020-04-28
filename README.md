@@ -41,18 +41,17 @@ There is also an endpoint to post a notification with the userId in the URL.
 This gets looked up in mod-users, and the recipient UUID is inserted in the
 notification.
 
-At this point the UI will have to check for available notifications. Later we
-may well add alternative ways to deliver notifications, for example by email.
+`POST /patron-notice` allows to send notices to patrons.
 
-
-
-## Additional information
+All messages are sent to mod-sender with `POST /message-delivery-notice`.
+mod-sender then decides which delivery channel should be used (e.g. email).
 
 ### Other documentation
 
 Other [modules](https://dev.folio.org/source-code/#server-side) are described,
 with further FOLIO Developer documentation at [dev.folio.org](https://dev.folio.org/)
 
+[Patron notices documentation](https://wiki.folio.org/pages/viewpage.action?pageId=36575353).
 ### Issue tracker
 
 See project [MODNOTIFY](https://issues.folio.org/browse/MODNOTIFY)
@@ -96,4 +95,3 @@ etc.
 The built artifacts for this module are available.
 See [configuration](https://dev.folio.org/download/artifacts) for repository access,
 and the [Docker image](https://hub.docker.com/r/folioorg/mod-notify/).
-
