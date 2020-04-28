@@ -41,7 +41,7 @@ There is also an endpoint to post a notification with the userId in the URL.
 This gets looked up in mod-users, and the recipient UUID is inserted in the
 notification.
 
-```POST /patron-notice``` allows to send notices to patrons.
+`POST /patron-notice` allows to send notices to patrons.
 
 All messages are sent to mod-sender with `POST /message-delivery-notice`.
 mod-sender then decides which delivery channel should be used (e.g. email).
