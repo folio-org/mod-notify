@@ -46,12 +46,14 @@ resourceTypes:
       validate
     ]
   /_username/{username}:
-    description: "Post a notification to the user behind the given username"
+    description: "Send notification to the user by user name"
     post:
+      description: "Send notification to the user by user name"
       is: [ validate, language ]
       body:
         application/json:
-          schema: notification
+          type: notification
+          example: !include examples/notify.sample
       responses:
         201:
           description: Created
