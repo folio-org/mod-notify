@@ -44,7 +44,7 @@ notification.
 ```POST /patron-notice``` allows to send notices to patrons.
 
 All messages are sent to mod-sender with ```POST /message-delivery-notice```.
-mod-sender then decides which delivery channel should be used (f.e. email).
+mod-sender then decides which delivery channel should be used (e.g. email).
 
 ### Other documentation
 
@@ -95,4 +95,3 @@ etc.
 The built artifacts for this module are available.
 See [configuration](https://dev.folio.org/download/artifacts) for repository access,
 and the [Docker image](https://hub.docker.com/r/folioorg/mod-notify/).
-
