@@ -43,7 +43,7 @@ notification.
 
 ```POST /patron-notice``` allows to send notices to patrons.
 
-All messages are sent to mod-sender with ```POST /message-delivery-notice```.
+All messages are sent to mod-sender with `POST /message-delivery-notice`.
 mod-sender then decides which delivery channel should be used (e.g. email).
 
 ### Other documentation
