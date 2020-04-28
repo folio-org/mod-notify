@@ -21,13 +21,15 @@ traits:
   displayName: Patron Notice
   description: API for sendig Patron Notices
   post:
+    description: Send patron notice
     is: [language]
     body:
       application/json:
-        schema: patronNoticeEntity
+        type: patronNoticeEntity
+        example: !include examples/patronNotice.sample
     responses:
       200:
-        description: Successfull request
+        description: Patron notice successfully sent
       422:
         description: Unprocessable entity, e.g. incorrect template id or recipient id
         body:
@@ -37,7 +39,7 @@ traits:
         description: Internal Server Error
         body:
           text/plain:
-
+            example: "Internal server error"
 
 
 
