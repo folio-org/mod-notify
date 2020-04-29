@@ -7,6 +7,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.folio.client.OkapiModulesClient;
 import org.folio.client.impl.OkapiModulesClientImpl;
+import org.folio.helper.OkapiModulesClientHelper;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
 import org.folio.rest.jaxrs.model.PatronNoticeEntity;
@@ -20,26 +21,23 @@ import java.util.Map;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.Collections.singletonList;
-import static org.folio.helper.OkapiModulesClientHelper.buildNotifySendRequest;
-import static org.folio.helper.OkapiModulesClientHelper.buildTemplateProcessingRequest;
 
 public class PatronNoticeResourceImpl implements PatronNotice {
 
   private static final Logger logger = LoggerFactory.getLogger(PatronNoticeResourceImpl.class);
 
   private final Messages messages = Messages.getInstance();
+  private final OkapiModulesClientHelper okapiModulesClientHelper = new OkapiModulesClientHelper();
 
   @Override
-  public void postPatronNotice(String lang,
-                               PatronNoticeEntity entity,
-                               Map<String, String> okapiHeaders,
-                               Handler<AsyncResult<Response>> asyncResultHandler,
-                               Context vertxContext) {
+  public void postPatronNotice(String lang, PatronNoticeEntity entity,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
+    Context vertxContext) {
 
-    OkapiModulesClient client = new OkapiModulesClientImpl(vertxContext.owner(), okapiHeaders);
+    OkapiModulesClient client = makeOkapiModulesClient(vertxContext, okapiHeaders);
 
-    client.postTemplateRequest(buildTemplateProcessingRequest(entity))
-      .map(result -> buildNotifySendRequest(result, entity))
+    client.postTemplateRequest(getOkapiModulesClientHelper().buildTemplateProcessingRequest(entity))
+      .map(result -> getOkapiModulesClientHelper().buildNotifySendRequest(result, entity))
       .compose(client::postMessageDelivery)
       .setHandler(res -> {
         if (res.failed()) {
@@ -56,5 +54,15 @@ public class PatronNoticeResourceImpl implements PatronNotice {
           asyncResultHandler.handle(succeededFuture(PostPatronNoticeResponse.respond200()));
         }
       });
+  }
+
+  OkapiModulesClient makeOkapiModulesClient(Context vertxContext, Map<String,
+    String> okapiHeaders) {
+
+    return new OkapiModulesClientImpl(vertxContext.owner(), okapiHeaders);
+  }
+
+  OkapiModulesClientHelper getOkapiModulesClientHelper() {
+    return okapiModulesClientHelper;
   }
 }
