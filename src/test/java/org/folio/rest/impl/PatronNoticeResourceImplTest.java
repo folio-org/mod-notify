@@ -53,10 +53,11 @@ public class PatronNoticeResourceImplTest {
   @Spy
   private OkapiModulesClientHelper okapiModulesClientHelper;
 
-  private Map<String, String> okapiHeaders = new HashMap<>();
-  private PatronNoticeEntity entity = makeEntity();
-  private TemplateProcessingResult templateProcessingResult = new TemplateProcessingResult();
-  private TemplateProcessingRequest templateProcessingRequest = new TemplateProcessingRequest();
+  private final Map<String, String> okapiHeaders = new HashMap<>();
+  private final PatronNoticeEntity entity = makeEntity();
+  private final TemplateProcessingResult templateProcessingResult = new TemplateProcessingResult();
+  private final TemplateProcessingRequest templateProcessingRequest =
+    new TemplateProcessingRequest();
 
   private boolean handlerIsCalled;
 
