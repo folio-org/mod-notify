@@ -29,6 +29,7 @@ import org.folio.rest.jaxrs.model.Notification;
 import org.folio.rest.jaxrs.model.ResultInfo;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.persist.cql.CQLWrapper;
+import org.folio.rest.persist.helpers.LocalRowSet;
 import org.folio.rest.persist.interfaces.Results;
 import org.folio.rest.tools.client.interfaces.HttpClientInterface;
 import org.folio.rest.tools.utils.ObjectMapperTool;
@@ -47,7 +48,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.sql.UpdateResult;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.RowSet;
 
 @RunWith(MockitoJUnitRunner.class)
 public class NotificationsResourceImplTest {
@@ -411,8 +413,8 @@ public class NotificationsResourceImplTest {
 
     okapiHeaders.put(RestVerticle.OKAPI_USERID_HEADER, "user-id");
     doAnswer(invocationOnMock -> {
-      ((Handler<AsyncResult<UpdateResult>>) invocationOnMock.getArgument(2))
-        .handle(makeAsyncResult(new UpdateResult(1, null), true));
+      ((Handler<AsyncResult<RowSet<Row>>>) invocationOnMock.getArgument(2))
+        .handle(makeAsyncResult(new LocalRowSet(1), true));
       return null;
     }).when(postgresClient).delete(any(String.class), any(CQLWrapper.class), any());
 
@@ -434,8 +436,8 @@ public class NotificationsResourceImplTest {
 
     okapiHeaders.put(RestVerticle.OKAPI_USERID_HEADER, "user-id");
     doAnswer(invocationOnMock -> {
-      ((Handler<AsyncResult<UpdateResult>>) invocationOnMock.getArgument(2))
-        .handle(makeAsyncResult(new UpdateResult(0, null), true));
+      ((Handler<AsyncResult<RowSet<Row>>>) invocationOnMock.getArgument(2))
+        .handle(makeAsyncResult(new LocalRowSet(0), true));
       return null;
     }).when(postgresClient).delete(any(String.class), any(CQLWrapper.class), any());
 
@@ -457,8 +459,8 @@ public class NotificationsResourceImplTest {
 
     okapiHeaders.put(RestVerticle.OKAPI_USERID_HEADER, "user-id");
     doAnswer(invocationOnMock -> {
-      ((Handler<AsyncResult<UpdateResult>>) invocationOnMock.getArgument(2))
-        .handle(makeAsyncResult(new UpdateResult(0, null), false));
+      ((Handler<AsyncResult<RowSet<Row>>>) invocationOnMock.getArgument(2))
+        .handle(makeAsyncResult(new LocalRowSet(0), false));
       return null;
     }).when(postgresClient).delete(any(String.class), any(CQLWrapper.class), any());
 
@@ -485,7 +487,8 @@ public class NotificationsResourceImplTest {
       return null;
     }).when(postgresClient).getById(any(String.class), any(String.class), any(Class.class), any());
 
-    notificationsResource.getNotifyById("id", LANG, okapiHeaders, handler, null);
+    notificationsResource.getNotifyById(UUID.randomUUID().toString(),
+      LANG, okapiHeaders, handler, null);
 
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)
@@ -508,7 +511,8 @@ public class NotificationsResourceImplTest {
       return null;
     }).when(postgresClient).getById(any(String.class), any(String.class), any(Class.class), any());
 
-    notificationsResource.getNotifyById("id", LANG, okapiHeaders, handler, null);
+    notificationsResource.getNotifyById(UUID.randomUUID().toString(),
+      LANG, okapiHeaders, handler, null);
 
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)
@@ -530,7 +534,8 @@ public class NotificationsResourceImplTest {
       return null;
     }).when(postgresClient).getById(any(String.class), any(String.class), any(Class.class), any());
 
-    notificationsResource.getNotifyById("id", LANG, okapiHeaders, handler, null);
+    notificationsResource.getNotifyById(UUID.randomUUID().toString(),
+      LANG, okapiHeaders, handler, null);
 
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)
@@ -547,12 +552,13 @@ public class NotificationsResourceImplTest {
     };
 
     doAnswer(invocationOnMock -> {
-      ((Handler<AsyncResult<UpdateResult>>) invocationOnMock.getArgument(2))
-        .handle(makeAsyncResult(new UpdateResult(1, null), true));
+      ((Handler<AsyncResult<RowSet<Row>>>) invocationOnMock.getArgument(2))
+        .handle(makeAsyncResult(new LocalRowSet(1), true));
       return null;
     }).when(postgresClient).delete(any(String.class), any(String.class), any());
 
-    notificationsResource.deleteNotifyById("id", LANG, okapiHeaders, handler, null);
+    notificationsResource.deleteNotifyById(UUID.randomUUID().toString(),
+      LANG, okapiHeaders, handler, null);
 
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)
@@ -569,12 +575,13 @@ public class NotificationsResourceImplTest {
     };
 
     doAnswer(invocationOnMock -> {
-      ((Handler<AsyncResult<UpdateResult>>) invocationOnMock.getArgument(2))
-        .handle(makeAsyncResult(new UpdateResult(1, null), false));
+      ((Handler<AsyncResult<RowSet<Row>>>) invocationOnMock.getArgument(2))
+        .handle(makeAsyncResult(new LocalRowSet(1), false));
       return null;
     }).when(postgresClient).delete(any(String.class), any(String.class), any());
 
-    notificationsResource.deleteNotifyById("id", LANG, okapiHeaders, handler, null);
+    notificationsResource.deleteNotifyById(UUID.randomUUID().toString(),
+      LANG, okapiHeaders, handler, null);
 
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)
@@ -591,12 +598,12 @@ public class NotificationsResourceImplTest {
     };
 
     doAnswer(invocationOnMock -> {
-      ((Handler<AsyncResult<UpdateResult>>) invocationOnMock.getArgument(2))
-        .handle(makeAsyncResult(new UpdateResult(0, null), true));
+      ((Handler<AsyncResult<RowSet<Row>>>) invocationOnMock.getArgument(2))
+        .handle(makeAsyncResult(new LocalRowSet(0), true));
       return null;
     }).when(postgresClient).delete(any(String.class), any(String.class), any());
 
-    notificationsResource.deleteNotifyById("id", LANG, okapiHeaders, handler, null);
+    notificationsResource.deleteNotifyById(UUID.randomUUID().toString(), LANG, okapiHeaders, handler, null);
 
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)
@@ -613,25 +620,26 @@ public class NotificationsResourceImplTest {
     };
 
     doAnswer(invocationOnMock -> {
-      ((Handler<AsyncResult<UpdateResult>>) invocationOnMock.getArgument(3))
-        .handle(makeAsyncResult(new UpdateResult(1, null), true));
+      ((Handler<AsyncResult<RowSet<Row>>>) invocationOnMock.getArgument(3))
+        .handle(makeAsyncResult(new LocalRowSet(1), true));
       return null;
     }).when(postgresClient).update(any(String.class), any(), any(String.class), any());
 
     doAnswer(invocationOnMock -> {
-      ((Handler<AsyncResult<UpdateResult>>) invocationOnMock.getArgument(2))
-        .handle(makeAsyncResult(new UpdateResult(1, null), true));
+      ((Handler<AsyncResult<RowSet<Row>>>) invocationOnMock.getArgument(2))
+        .handle(makeAsyncResult(new LocalRowSet(1), true));
       return null;
     }).when(postgresClient).delete(any(String.class), any(CQLWrapper.class), any());
 
+    String id = UUID.randomUUID().toString();
     ObjectMapper mapper = ObjectMapperTool.getMapper();
     Notification notification = mapper.readValue(new JsonObject()
-        .put("id", "id")
+        .put("id", id)
         .put("recipientId", "recipient-id")
         .encode(),
       Notification.class);
 
-    notificationsResource.putNotifyById("id", LANG, notification, okapiHeaders, handler, null);
+    notificationsResource.putNotifyById(id, LANG, notification, okapiHeaders, handler, null);
 
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)
@@ -693,19 +701,20 @@ public class NotificationsResourceImplTest {
     };
 
     doAnswer(invocationOnMock -> {
-      ((Handler<AsyncResult<UpdateResult>>) invocationOnMock.getArgument(3))
-        .handle(makeAsyncResult(new UpdateResult(0, null), true));
+      ((Handler<AsyncResult<RowSet<Row>>>) invocationOnMock.getArgument(3))
+        .handle(makeAsyncResult(new LocalRowSet(0), true));
       return null;
     }).when(postgresClient).update(any(String.class), any(), any(String.class), any());
 
+    String id = UUID.randomUUID().toString();
     ObjectMapper mapper = ObjectMapperTool.getMapper();
     Notification notification = mapper.readValue(new JsonObject()
-        .put("id", "id")
+        .put("id", id)
         .put("recipientId", "recipient-id")
         .encode(),
       Notification.class);
 
-    notificationsResource.putNotifyById("id", LANG, notification, okapiHeaders, handler, null);
+    notificationsResource.putNotifyById(id, LANG, notification, okapiHeaders, handler, null);
 
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)
@@ -722,19 +731,20 @@ public class NotificationsResourceImplTest {
     };
 
     doAnswer(invocationOnMock -> {
-      ((Handler<AsyncResult<UpdateResult>>) invocationOnMock.getArgument(3))
-        .handle(makeAsyncResult(new UpdateResult(0, null), false));
+      ((Handler<AsyncResult<RowSet<Row>>>) invocationOnMock.getArgument(3))
+        .handle(makeAsyncResult(new LocalRowSet(0), false));
       return null;
     }).when(postgresClient).update(any(String.class), any(), any(String.class), any());
 
+    String id = UUID.randomUUID().toString();
     ObjectMapper mapper = ObjectMapperTool.getMapper();
     Notification notification = mapper.readValue(new JsonObject()
-        .put("id", "id")
+        .put("id", id)
         .put("recipientId", "recipient-id")
         .encode(),
       Notification.class);
 
-    notificationsResource.putNotifyById("id", LANG, notification, okapiHeaders, handler, null);
+    notificationsResource.putNotifyById(id, LANG, notification, okapiHeaders, handler, null);
 
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)

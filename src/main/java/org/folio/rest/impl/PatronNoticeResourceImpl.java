@@ -39,7 +39,7 @@ public class PatronNoticeResourceImpl implements PatronNotice {
     client.postTemplateRequest(getOkapiModulesClientHelper().buildTemplateProcessingRequest(entity))
       .map(result -> getOkapiModulesClientHelper().buildNotifySendRequest(result, entity))
       .compose(client::postMessageDelivery)
-      .setHandler(res -> {
+      .onComplete(res -> {
         if (res.failed()) {
           logger.error(res.cause());
           if (res.cause().getClass() == BadRequestException.class) {

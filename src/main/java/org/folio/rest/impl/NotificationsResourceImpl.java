@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.BadRequestException;
@@ -281,6 +283,13 @@ public class NotificationsResourceImpl implements Notify {
     if (id == null || id.trim().isEmpty()) {
       id = UUID.randomUUID().toString();
     }
+    if (isIdNotValid(id)) {
+      Errors valErr = ValidationHelper.createValidationErrorMessage(
+        "id", id, "invalid input syntax for type uuid");
+      asyncResultHandler.handle(succeededFuture(PostNotifyResponse
+        .respond422WithApplicationJson(valErr)));
+      return;
+    }
     getPostgresClient(context, okapiHeaders).save(NOTIFY_TABLE,
       id, entity,
       reply -> {
@@ -310,7 +319,7 @@ public class NotificationsResourceImpl implements Notify {
                 .map(o -> (Message) o)
                 .collect(Collectors.toList()), entity))
               .compose(client::postMessageDelivery)
-              .setHandler(event -> {
+              .onComplete(event -> {
                 if (event.succeeded()) {
                   asyncResultHandler.handle(succeededFuture(PostNotifyResponse.respond201WithApplicationJson(
                     entity, PostNotifyResponse.headersFor201())));
@@ -417,17 +426,17 @@ public class NotificationsResourceImpl implements Notify {
       .delete(NOTIFY_TABLE, cql,
         reply -> {
           if (reply.succeeded()) {
-            if (reply.result().getUpdated() > 0) {
-              logger.info("Deleted " + reply.result().getUpdated() + " notifies");
+            if (reply.result().rowCount() > 0) {
+              logger.info("Deleted " + reply.result().rowCount() + " notifies");
               asyncResultHandler.handle(succeededFuture(
                 DeleteNotifySelfResponse.respond204()));
             } else {
               logger.info("Deleted no notifications");
               logger.error(messages.getMessage(lang,
-                MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
+                MessageConsts.DeletedCountError, 1, reply.result().rowCount()));
               asyncResultHandler.handle(succeededFuture(DeleteNotifySelfResponse
                 .respond404WithTextPlain(messages.getMessage(lang,
-                  MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
+                  MessageConsts.DeletedCountError, 1, reply.result().rowCount()))));
             }
           } else {
             ValidationHelper.handleError(reply.cause(), asyncResultHandler);
@@ -441,6 +450,13 @@ public class NotificationsResourceImpl implements Notify {
       Handler<AsyncResult<Response>> asyncResultHandler, Context context) {
     if (id.equals("_self")) {
       // The _self endpoint has already handled this request
+      return;
+    }
+    if (isIdNotValid(id)) {
+      Errors valErr = ValidationHelper.createValidationErrorMessage(
+        "id", id, "invalid input syntax for type uuid");
+      asyncResultHandler.handle(succeededFuture(PostNotifyResponse
+        .respond422WithApplicationJson(valErr)));
       return;
     }
     getPostgresClient(context, okapiHeaders).getById(NOTIFY_TABLE, id, Notification.class, reply -> {
@@ -465,20 +481,26 @@ public class NotificationsResourceImpl implements Notify {
       // The _self endpoint has already handled this request
       return;
     }
-
+    if (isIdNotValid(id)) {
+      Errors valErr = ValidationHelper.createValidationErrorMessage(
+        "id", id, "invalid input syntax for type uuid");
+      asyncResultHandler.handle(succeededFuture(PostNotifyResponse
+        .respond422WithApplicationJson(valErr)));
+      return;
+    }
     getPostgresClient(vertxContext, okapiHeaders)
       .delete(NOTIFY_TABLE, id,
         reply -> {
           if (reply.succeeded()) {
-            if (reply.result().getUpdated() == 1) {
+            if (reply.result().rowCount() == 1) {
               asyncResultHandler.handle(succeededFuture(
                 DeleteNotifyByIdResponse.respond204()));
             } else {
               logger.error(messages.getMessage(lang,
-                MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
+                MessageConsts.DeletedCountError, 1, reply.result().rowCount()));
               asyncResultHandler.handle(succeededFuture(DeleteNotifyByIdResponse
                 .respond404WithTextPlain(messages.getMessage(lang,
-                  MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
+                  MessageConsts.DeletedCountError, 1, reply.result().rowCount()))));
             }
           } else {
             ValidationHelper.handleError(reply.cause(), asyncResultHandler);
@@ -495,6 +517,13 @@ public class NotificationsResourceImpl implements Notify {
     Context vertxContext) {
 
     logger.debug("PUT notify " + id + " " + Json.encode(entity));
+    if (isIdNotValid(id)) {
+      Errors valErr = ValidationHelper.createValidationErrorMessage(
+        "id", id, "invalid input syntax for type uuid");
+      asyncResultHandler.handle(succeededFuture(PostNotifyResponse
+        .respond422WithApplicationJson(valErr)));
+      return;
+    }
     String noteId = entity.getId();
     if (noteId != null && !noteId.equals(id)) {
       logger.error("Trying to change note Id from " + id + " to " + noteId);
@@ -517,7 +546,7 @@ public class NotificationsResourceImpl implements Notify {
       .update(NOTIFY_TABLE, entity, id,
         reply -> {
           if (reply.succeeded()) {
-            if (reply.result().getUpdated() == 0)
+            if (reply.result().rowCount() == 0)
               asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
                 .respond404WithTextPlain(id)));
             else { // all ok
@@ -532,4 +561,9 @@ public class NotificationsResourceImpl implements Notify {
         });
   }
 
+  private boolean isIdNotValid(String id) {
+    Pattern pattern = Pattern.compile("[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}");
+    Matcher matcher = pattern.matcher(id);
+    return !matcher.matches();
+  }
 }
