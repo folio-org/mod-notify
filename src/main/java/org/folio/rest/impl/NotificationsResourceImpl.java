@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.BadRequestException;
@@ -37,6 +35,7 @@ import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
+import org.folio.util.UuidUtil;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
@@ -283,7 +282,7 @@ public class NotificationsResourceImpl implements Notify {
     if (id == null || id.trim().isEmpty()) {
       id = UUID.randomUUID().toString();
     }
-    if (isIdNotValid(id)) {
+    if (!UuidUtil.isUuid(id)) {
       Errors valErr = ValidationHelper.createValidationErrorMessage(
         "id", id, "invalid input syntax for type uuid");
       asyncResultHandler.handle(succeededFuture(PostNotifyResponse
@@ -452,7 +451,7 @@ public class NotificationsResourceImpl implements Notify {
       // The _self endpoint has already handled this request
       return;
     }
-    if (isIdNotValid(id)) {
+    if (!UuidUtil.isUuid(id)) {
       Errors valErr = ValidationHelper.createValidationErrorMessage(
         "id", id, "invalid input syntax for type uuid");
       asyncResultHandler.handle(succeededFuture(PostNotifyResponse
@@ -481,7 +480,7 @@ public class NotificationsResourceImpl implements Notify {
       // The _self endpoint has already handled this request
       return;
     }
-    if (isIdNotValid(id)) {
+    if (!UuidUtil.isUuid(id)) {
       Errors valErr = ValidationHelper.createValidationErrorMessage(
         "id", id, "invalid input syntax for type uuid");
       asyncResultHandler.handle(succeededFuture(PostNotifyResponse
@@ -517,7 +516,7 @@ public class NotificationsResourceImpl implements Notify {
     Context vertxContext) {
 
     logger.debug("PUT notify " + id + " " + Json.encode(entity));
-    if (isIdNotValid(id)) {
+    if (!UuidUtil.isUuid(id)) {
       Errors valErr = ValidationHelper.createValidationErrorMessage(
         "id", id, "invalid input syntax for type uuid");
       asyncResultHandler.handle(succeededFuture(PostNotifyResponse
@@ -559,11 +558,5 @@ public class NotificationsResourceImpl implements Notify {
             ValidationHelper.handleError(reply.cause(), asyncResultHandler);
           }
         });
-  }
-
-  private boolean isIdNotValid(String id) {
-    Pattern pattern = Pattern.compile("[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}");
-    Matcher matcher = pattern.matcher(id);
-    return !matcher.matches();
   }
 }
