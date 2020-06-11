@@ -282,11 +282,7 @@ public class NotificationsResourceImpl implements Notify {
     if (id == null || id.trim().isEmpty()) {
       id = UUID.randomUUID().toString();
     }
-    if (!UuidUtil.isUuid(id)) {
-      Errors valErr = ValidationHelper.createValidationErrorMessage(
-        "id", id, "invalid input syntax for type uuid");
-      asyncResultHandler.handle(succeededFuture(PostNotifyResponse
-        .respond422WithApplicationJson(valErr)));
+    if (respond422IfIdIsNotValid(id, asyncResultHandler)) {
       return;
     }
     getPostgresClient(context, okapiHeaders).save(NOTIFY_TABLE,
@@ -451,11 +447,7 @@ public class NotificationsResourceImpl implements Notify {
       // The _self endpoint has already handled this request
       return;
     }
-    if (!UuidUtil.isUuid(id)) {
-      Errors valErr = ValidationHelper.createValidationErrorMessage(
-        "id", id, "invalid input syntax for type uuid");
-      asyncResultHandler.handle(succeededFuture(PostNotifyResponse
-        .respond422WithApplicationJson(valErr)));
+    if (respond422IfIdIsNotValid(id, asyncResultHandler)) {
       return;
     }
     getPostgresClient(context, okapiHeaders).getById(NOTIFY_TABLE, id, Notification.class, reply -> {
@@ -480,11 +472,7 @@ public class NotificationsResourceImpl implements Notify {
       // The _self endpoint has already handled this request
       return;
     }
-    if (!UuidUtil.isUuid(id)) {
-      Errors valErr = ValidationHelper.createValidationErrorMessage(
-        "id", id, "invalid input syntax for type uuid");
-      asyncResultHandler.handle(succeededFuture(PostNotifyResponse
-        .respond422WithApplicationJson(valErr)));
+    if (respond422IfIdIsNotValid(id, asyncResultHandler)) {
       return;
     }
     getPostgresClient(vertxContext, okapiHeaders)
@@ -516,11 +504,7 @@ public class NotificationsResourceImpl implements Notify {
     Context vertxContext) {
 
     logger.debug("PUT notify " + id + " " + Json.encode(entity));
-    if (!UuidUtil.isUuid(id)) {
-      Errors valErr = ValidationHelper.createValidationErrorMessage(
-        "id", id, "invalid input syntax for type uuid");
-      asyncResultHandler.handle(succeededFuture(PostNotifyResponse
-        .respond422WithApplicationJson(valErr)));
+    if (respond422IfIdIsNotValid(id, asyncResultHandler)) {
       return;
     }
     String noteId = entity.getId();
@@ -558,5 +542,18 @@ public class NotificationsResourceImpl implements Notify {
             ValidationHelper.handleError(reply.cause(), asyncResultHandler);
           }
         });
+  }
+
+  private boolean respond422IfIdIsNotValid(
+    String id, Handler<AsyncResult<Response>> asyncResultHandler) {
+
+    if (!UuidUtil.isUuid(id)) {
+      Errors valErr = ValidationHelper.createValidationErrorMessage(
+        "id", id, "invalid input syntax for type uuid");
+      asyncResultHandler.handle(succeededFuture(PostNotifyResponse
+        .respond422WithApplicationJson(valErr)));
+      return true;
+    }
+    return false;
   }
 }
