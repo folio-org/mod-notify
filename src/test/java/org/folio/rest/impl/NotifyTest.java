@@ -1,5 +1,18 @@
 package org.folio.rest.impl;
 
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.containsString;
+
+import org.folio.rest.RestVerticle;
+import org.folio.rest.persist.PostgresClient;
+import org.folio.rest.tools.PomReader;
+import org.folio.rest.tools.client.test.HttpClientMock2;
+import org.folio.rest.tools.utils.NetworkUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import io.restassured.RestAssured;
 import io.restassured.http.Header;
 import io.vertx.core.DeploymentOptions;
@@ -11,18 +24,6 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.folio.rest.RestVerticle;
-import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.PomReader;
-import org.folio.rest.tools.client.test.HttpClientMock2;
-import org.folio.rest.tools.utils.NetworkUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.containsString;
 
 /**
  * Interface test for mod-notify. Tests the API with restAssured, directly
@@ -167,7 +168,7 @@ public class NotifyTest {
       .body(containsString("Json content error"));
 
     String notify1 = "{"
-      + "\"id\" : \"11111111-1111-1111-1111-111111111111\"," + LS
+      + "\"id\" : \"0e910843-e948-455c-ace3-7cb276f61897\"," + LS
       + "\"recipientId\" : \"77777777-7777-7777-7777-777777777777\"," + LS
       + "\"link\" : \"users/1234\"," + LS
       + "\"text\" : \"First notification\"}" + LS;
@@ -191,7 +192,7 @@ public class NotifyTest {
       .body(containsString("Unrecognized field"))
       .body(containsString("badFieldName"));
 
-    String bad4 = notify1.replaceAll("-1111-", "-2-");  // make bad UUID
+    String bad4 = notify1.replaceAll("-ace3-", "-2-");  // make bad UUID
     given()
       .header(TEN).header(JSON)
       .body(bad4)
@@ -230,7 +231,7 @@ public class NotifyTest {
 
     given()
       .header(TEN)
-      .get("/notify/11111111-1111-1111-1111-111111111111")
+      .get("/notify/0e910843-e948-455c-ace3-7cb276f61897")
       .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("First notification"));
@@ -249,7 +250,7 @@ public class NotifyTest {
       .body(containsString("First notification"));
 
     String notify2 = "{"
-      + "\"id\" : \"22222222-2222-2222-2222-222222222222\"," + LS
+      + "\"id\" : \"3a0b15f1-bcfe-4476-93c7-f7f8c239ca5f\"," + LS
       + "\"recipientId\" : \"77777777-7777-7777-7777-777777777777\"," + LS
       + "\"link\" : \"things/23456\"," + LS
       + "\"seen\" : false,"
@@ -306,7 +307,7 @@ public class NotifyTest {
 
     // Update a notification
     String updated1 = "{"
-      + "\"id\" : \"11111111-1111-1111-1111-111111111111\"," + LS
+      + "\"id\" : \"0e910843-e948-455c-ace3-7cb276f61897\"," + LS
       + "\"recipientId\" : \"77777777-7777-7777-7777-777777777777\"," + LS
       + "\"link\" : \"users/1234\"," + LS
       + "\"seen\" : true," + LS
@@ -315,7 +316,7 @@ public class NotifyTest {
     given()
       .header(TEN).header(USER8).header(JSON)
       .body(updated1)
-      .put("/notify/22222222-2222-2222-2222-222222222222") // wrong one
+      .put("/notify/b7d8a74b-df03-4d60-847c-bc61aea59fb4") // wrong one
       .then().log().ifValidationFails()
       .statusCode(422)
       .body(containsString("Can not change the id"));
@@ -326,15 +327,16 @@ public class NotifyTest {
       .put("/notify/55555555-5555-5555-5555-555555555555") // bad one
       .then().log().ifValidationFails()
       .statusCode(422)
-      .body(containsString("Can not change the id"));
+      .body(containsString("invalid input syntax for type uuid"));
 
     String updated2 = updated1.replaceAll("1", "5");
     given()
       .header(TEN).header(USER8).header(JSON)
       .body(updated2)
-      .put("/notify/55555555-5555-5555-5555-555555555555") // unknown one
+      .put("/notify/52336865-6398-4010-8279-0cf4b9dccdbd") // unknown one
       .then().log().ifValidationFails()
-      .statusCode(404);
+      .statusCode(422)
+      .body(containsString("Can not change the id"));;
 
     given()
       .header(TEN).header(USER8).header(JSON)
@@ -360,13 +362,13 @@ public class NotifyTest {
     given() // This should work
       .header(TEN).header(USER8).header(JSON)
       .body(updated1)
-      .put("/notify/11111111-1111-1111-1111-111111111111")
+      .put("/notify/0e910843-e948-455c-ace3-7cb276f61897")
       .then().log().ifValidationFails()
       .statusCode(204);
 
     given()
       .header(TEN)
-      .get("/notify/11111111-1111-1111-1111-111111111111")
+      .get("/notify/0e910843-e948-455c-ace3-7cb276f61897")
       .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("\"seen\" : true"))
@@ -556,7 +558,7 @@ public class NotifyTest {
 
     given()
       .header(TEN)
-      .delete("/notify/11111111-2222-3333-4444-555555555555") // not found
+      .delete("/notify/72f656b7-3ca1-4a8f-89b1-212ce9227090") // not found
       .then().log().ifValidationFails()
       .statusCode(404);
 
@@ -592,16 +594,15 @@ public class NotifyTest {
       .then().log().ifValidationFails()
       .statusCode(204);
 
-    // delete 2222
     given()
       .header(TEN)
-      .delete("/notify/22222222-2222-2222-2222-222222222222")
+      .delete("/notify/3a0b15f1-bcfe-4476-93c7-f7f8c239ca5f")
       .then().log().ifValidationFails()
       .statusCode(204);
 
     given() // delete again, not found
       .header(TEN)
-      .delete("/notify/22222222-2222-2222-2222-222222222222")
+      .delete("/notify/3a0b15f1-bcfe-4476-93c7-f7f8c239ca5f")
       .then().log().ifValidationFails()
       .statusCode(404);
 

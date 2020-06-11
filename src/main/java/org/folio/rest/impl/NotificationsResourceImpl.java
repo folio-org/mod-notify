@@ -35,6 +35,7 @@ import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
+import org.folio.util.UuidUtil;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
@@ -281,6 +282,9 @@ public class NotificationsResourceImpl implements Notify {
     if (id == null || id.trim().isEmpty()) {
       id = UUID.randomUUID().toString();
     }
+    if (respond422IfIdIsNotValid(id, asyncResultHandler)) {
+      return;
+    }
     getPostgresClient(context, okapiHeaders).save(NOTIFY_TABLE,
       id, entity,
       reply -> {
@@ -310,7 +314,7 @@ public class NotificationsResourceImpl implements Notify {
                 .map(o -> (Message) o)
                 .collect(Collectors.toList()), entity))
               .compose(client::postMessageDelivery)
-              .setHandler(event -> {
+              .onComplete(event -> {
                 if (event.succeeded()) {
                   asyncResultHandler.handle(succeededFuture(PostNotifyResponse.respond201WithApplicationJson(
                     entity, PostNotifyResponse.headersFor201())));
@@ -417,17 +421,17 @@ public class NotificationsResourceImpl implements Notify {
       .delete(NOTIFY_TABLE, cql,
         reply -> {
           if (reply.succeeded()) {
-            if (reply.result().getUpdated() > 0) {
-              logger.info("Deleted " + reply.result().getUpdated() + " notifies");
+            if (reply.result().rowCount() > 0) {
+              logger.info("Deleted " + reply.result().rowCount() + " notifies");
               asyncResultHandler.handle(succeededFuture(
                 DeleteNotifySelfResponse.respond204()));
             } else {
               logger.info("Deleted no notifications");
               logger.error(messages.getMessage(lang,
-                MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
+                MessageConsts.DeletedCountError, 1, reply.result().rowCount()));
               asyncResultHandler.handle(succeededFuture(DeleteNotifySelfResponse
                 .respond404WithTextPlain(messages.getMessage(lang,
-                  MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
+                  MessageConsts.DeletedCountError, 1, reply.result().rowCount()))));
             }
           } else {
             ValidationHelper.handleError(reply.cause(), asyncResultHandler);
@@ -441,6 +445,9 @@ public class NotificationsResourceImpl implements Notify {
       Handler<AsyncResult<Response>> asyncResultHandler, Context context) {
     if (id.equals("_self")) {
       // The _self endpoint has already handled this request
+      return;
+    }
+    if (respond422IfIdIsNotValid(id, asyncResultHandler)) {
       return;
     }
     getPostgresClient(context, okapiHeaders).getById(NOTIFY_TABLE, id, Notification.class, reply -> {
@@ -465,20 +472,22 @@ public class NotificationsResourceImpl implements Notify {
       // The _self endpoint has already handled this request
       return;
     }
-
+    if (respond422IfIdIsNotValid(id, asyncResultHandler)) {
+      return;
+    }
     getPostgresClient(vertxContext, okapiHeaders)
       .delete(NOTIFY_TABLE, id,
         reply -> {
           if (reply.succeeded()) {
-            if (reply.result().getUpdated() == 1) {
+            if (reply.result().rowCount() == 1) {
               asyncResultHandler.handle(succeededFuture(
                 DeleteNotifyByIdResponse.respond204()));
             } else {
               logger.error(messages.getMessage(lang,
-                MessageConsts.DeletedCountError, 1, reply.result().getUpdated()));
+                MessageConsts.DeletedCountError, 1, reply.result().rowCount()));
               asyncResultHandler.handle(succeededFuture(DeleteNotifyByIdResponse
                 .respond404WithTextPlain(messages.getMessage(lang,
-                  MessageConsts.DeletedCountError, 1, reply.result().getUpdated()))));
+                  MessageConsts.DeletedCountError, 1, reply.result().rowCount()))));
             }
           } else {
             ValidationHelper.handleError(reply.cause(), asyncResultHandler);
@@ -495,6 +504,9 @@ public class NotificationsResourceImpl implements Notify {
     Context vertxContext) {
 
     logger.debug("PUT notify " + id + " " + Json.encode(entity));
+    if (respond422IfIdIsNotValid(id, asyncResultHandler)) {
+      return;
+    }
     String noteId = entity.getId();
     if (noteId != null && !noteId.equals(id)) {
       logger.error("Trying to change note Id from " + id + " to " + noteId);
@@ -517,7 +529,7 @@ public class NotificationsResourceImpl implements Notify {
       .update(NOTIFY_TABLE, entity, id,
         reply -> {
           if (reply.succeeded()) {
-            if (reply.result().getUpdated() == 0)
+            if (reply.result().rowCount() == 0)
               asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
                 .respond404WithTextPlain(id)));
             else { // all ok
@@ -532,4 +544,16 @@ public class NotificationsResourceImpl implements Notify {
         });
   }
 
+  private boolean respond422IfIdIsNotValid(
+    String id, Handler<AsyncResult<Response>> asyncResultHandler) {
+
+    if (!UuidUtil.isUuid(id)) {
+      Errors valErr = ValidationHelper.createValidationErrorMessage(
+        "id", id, "invalid input syntax for type uuid");
+      asyncResultHandler.handle(succeededFuture(PostNotifyResponse
+        .respond422WithApplicationJson(valErr)));
+      return true;
+    }
+    return false;
+  }
 }
