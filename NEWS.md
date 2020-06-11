@@ -1,3 +1,8 @@
+## 2.6.0 2020-06-11
+ * MODNOTIFY-75 Update to RMB 30.0.1
+ * MODNOTIFY-72 Add permissions required field
+ * MODNOTIFY-61 Update ramls and readme
+
 ## 2.5.0 2020-03-12
  * MODNOTIFY-60 Provide ability to handle attachments
 
@@ -6,7 +11,7 @@
  * FOLIO-2256 Enable kube-deploy pipeline for platform-core modules
  * FOLIO-2234 Add LaunchDescriptor settings to each backend core module repository
  * FOLIO-2321 Remove old ModuleDescriptor "metadata" section for each back-end module
- 
+
  ## 2.3.1 2019-07-23
  * MODNOTIFY-53 Upgrade to RMB 26
 
