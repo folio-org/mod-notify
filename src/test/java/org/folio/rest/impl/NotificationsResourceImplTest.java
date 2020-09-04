@@ -23,6 +23,7 @@ import javax.ws.rs.core.Response;
 
 import org.awaitility.Awaitility;
 import org.folio.client.OkapiModulesClient;
+import org.folio.dbschema.ObjectMapperTool;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.EventEntity;
 import org.folio.rest.jaxrs.model.Notification;
@@ -32,7 +33,6 @@ import org.folio.rest.persist.cql.CQLWrapper;
 import org.folio.rest.persist.helpers.LocalRowSet;
 import org.folio.rest.persist.interfaces.Results;
 import org.folio.rest.tools.client.interfaces.HttpClientInterface;
-import org.folio.rest.tools.utils.ObjectMapperTool;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
