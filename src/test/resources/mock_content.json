@@ -2,7 +2,7 @@
   "mocks": [
     {
       "description": "Simple user for looking up",
-      "url": "/users?query=username=mockuser9",
+      "url": "/users?query=username%3D%3D%22mockuser9%22",
       "method": "get",
       "status": 200,
       "receivedData": {
@@ -43,7 +43,7 @@
     },
     {
       "description": "User lookup that succeeds, but lacks critical data",
-      "url": "/users?query=username=badmockuser",
+      "url": "/users?query=username%3D%3D%22badmockuser%22",
       "method": "get",
       "status": 200,
       "receivedData": {
@@ -79,7 +79,7 @@
     },
     {
       "description": "User not found",
-      "url": "/users?query=username=notfound",
+      "url": "/users?query=username%3D%3D%22notfound%22",
       "method": "get",
       "status": 200,
       "receivedData": {
@@ -89,13 +89,13 @@
     },
     {
       "description": "Error in lookup",
-      "url": "/users?query=username=error",
+      "url": "/users?query=username%3D%3D%22error%22",
       "method": "get",
       "status": 500
     },
     {
       "description": "Permission problem",
-      "url": "/users?query=username=permissionproblem",
+      "url": "/users?query=username%3D%3D%22permissionproblem%22",
       "method": "get",
       "status": 403
     }
