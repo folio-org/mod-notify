@@ -35,6 +35,7 @@ import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.TenantTool;
 import org.folio.rest.tools.utils.ValidationHelper;
+import org.folio.util.StringUtil;
 import org.folio.util.UuidUtil;
 
 import io.vertx.core.AsyncResult;
@@ -200,7 +201,11 @@ public class NotificationsResourceImpl implements Notify {
       okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
     String okapiURL = okapiHeaders.get("X-Okapi-Url");
     HttpClientInterface client = getHttpClient(okapiURL, tenantId);
-    String url = "/users?query=username=" + userName;
+    String cql = userName == null ? "" : userName;
+    // mask special CQL characters: \ " * ? ^
+    cql.replace("\\", "\\\\").replace("\"", "\\\"").replace("*", "\\*").replace("?", "\\?").replace("^", "\\^");
+    cql = "username==\"" + cql + "\"";
+    String url = "/users?query=" + StringUtil.urlEncode(cql);
     try {
       logger.debug("Looking up user " + url);
       CompletableFuture<org.folio.rest.tools.client.Response> response
@@ -218,7 +223,7 @@ public class NotificationsResourceImpl implements Notify {
     org.folio.rest.tools.client.Response resp, Notification notification,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
-    String userId, Context vertxContext, String lang) {
+    String userName, Context vertxContext, String lang) {
     switch (resp.getCode()) {
       case 200:
         logger.debug("Received user " + resp.getBody());
@@ -231,25 +236,25 @@ public class NotificationsResourceImpl implements Notify {
             notification.setRecipientId(id);
             postNotify(lang, notification, okapiHeaders, asyncResultHandler, vertxContext);
           } else {
-            logger.error("User lookup failed for " + userId + ". Bad response");
+            logger.error("User lookup failed for " + userName + ". Bad response");
             logger.error(Json.encodePrettily(resp));
             asyncResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
-              .respond400WithTextPlain("User lookup failed for " + userId + ". "
+              .respond400WithTextPlain("User lookup failed for " + userName + ". "
                 + "Bad response " + userResp)));
           }
         } else {  // Can not use ValidationHelper here, we have HTTP responses
-          logger.error("User lookup failed for " + userId);
+          logger.error("User lookup failed for " + userName);
           logger.error(Json.encodePrettily(resp));
           asyncResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
             .respond400WithTextPlain("User lookup failed. "
-              + "Can not find user " + userId)));
+              + "Can not find user " + userName)));
         }
         break;
       case 403:
-        logger.error("Permission problem: User lookup failed for " + userId);
+        logger.error("Permission problem: User lookup failed for " + userName);
         logger.error(Json.encodePrettily(resp));
         asyncResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
-          .respond400WithTextPlain("User lookup failed with 403. " + userId
+          .respond400WithTextPlain("User lookup failed with 403. " + userName
             + " " + Json.encode(resp.getError()))));
         break;
       default:
