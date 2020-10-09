@@ -1,3 +1,7 @@
+## 2.7.0 2020-10-09
+ * Upgrade to RMB v31.0.2 and JDK 11 (MODNOTIFY-80)
+ * Replace CQL = by ==, fix CQL injection, use url encoding (MODNOTIFY-81)
+ 
 ## 2.6.0 2020-06-11
  * MODNOTIFY-75 Update to RMB 30.0.1
  * MODNOTIFY-72 Add permissionsRequired field
