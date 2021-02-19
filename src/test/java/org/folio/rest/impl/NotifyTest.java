@@ -3,6 +3,8 @@ package org.folio.rest.impl;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.PomReader;
@@ -19,8 +21,6 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -36,7 +36,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 @RunWith(VertxUnitRunner.class)
 public class NotifyTest {
 
-  private final Logger logger = LoggerFactory.getLogger("notifytest");
+  private final Logger logger = LogManager.getLogger("notifytest");
   private static final String LS = System.lineSeparator();
   private final Header TEN = new Header("X-Okapi-Tenant", "testlib");
   private final Header USER7 = new Header("X-Okapi-User-Id",

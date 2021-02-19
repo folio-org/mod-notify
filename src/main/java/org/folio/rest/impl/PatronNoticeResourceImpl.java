@@ -3,8 +3,8 @@ package org.folio.rest.impl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.client.OkapiModulesClient;
 import org.folio.client.impl.OkapiModulesClientImpl;
 import org.folio.helper.OkapiModulesClientHelper;
@@ -24,7 +24,7 @@ import static java.util.Collections.singletonList;
 
 public class PatronNoticeResourceImpl implements PatronNotice {
 
-  private static final Logger logger = LoggerFactory.getLogger(PatronNoticeResourceImpl.class);
+  private static final Logger logger = LogManager.getLogger(PatronNoticeResourceImpl.class);
 
   private final Messages messages = Messages.getInstance();
   private final OkapiModulesClientHelper okapiModulesClientHelper = new OkapiModulesClientHelper();

@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.client.OkapiModulesClient;
 import org.folio.client.impl.OkapiModulesClientImpl;
 import org.folio.cql2pgjson.CQL2PgJSON;
@@ -44,13 +46,11 @@ import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 // We have a few repeated strings, which SQ complains about.
 @java.lang.SuppressWarnings({"squid:S1192"})
 public class NotificationsResourceImpl implements Notify {
-  private final Logger logger = LoggerFactory.getLogger("modnotify");
+  private final Logger logger = LogManager.getLogger("modnotify");
   private final Messages messages = Messages.getInstance();
   private static final String NOTIFY_TABLE = "notify_data";
   private static final String LOCATION_PREFIX = "/notify/";

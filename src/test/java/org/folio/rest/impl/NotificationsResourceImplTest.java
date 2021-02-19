@@ -21,6 +21,8 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.awaitility.Awaitility;
 import org.folio.client.OkapiModulesClient;
 import org.folio.dbschema.ObjectMapperTool;
@@ -46,14 +48,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 
 @RunWith(MockitoJUnitRunner.class)
 public class NotificationsResourceImplTest {
-  private final Logger logger = LoggerFactory.getLogger(NotificationsResourceImplTest.class);
+  private final Logger logger = LogManager.getLogger(NotificationsResourceImplTest.class);
 
   private static final String USER_ID = UUID.randomUUID().toString();
   private static final String USERNAME = "username";
