@@ -141,6 +141,12 @@ public class NotifyTest {
       .then().log().ifValidationFails()
       .statusCode(201);
 
+    try {
+      Thread.sleep(2000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
     // Empty list of notifications
     given()
       .header(TEN)
