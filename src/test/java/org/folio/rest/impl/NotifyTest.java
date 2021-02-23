@@ -2,10 +2,12 @@ package org.folio.rest.impl;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.PomReader;
 import org.folio.rest.tools.client.test.HttpClientMock2;
@@ -46,6 +48,7 @@ public class NotifyTest {
   private final Header USER9 = new Header("X-Okapi-User-Id",
     "99999999-9999-9999-9999-999999999999");
   private final Header JSON = new Header("Content-Type", "application/json");
+  private static final int POST_TENANT_TIMEOUT = 10000;
   private String moduleName; // "mod-notify";
   private String moduleVersion; // "0.2.0-SNAPSHOT";
   private String moduleId; // "mod-notify-0.2.0-SNAPSHOT"
@@ -134,18 +137,21 @@ public class NotifyTest {
     // Call the tenant interface to initialize the database
     String tenants = "{\"module_to\":\"" + moduleId + "\"}";
     logger.info("About to call the tenant interface " + tenants);
-    given()
+    String jobId = given()
       .header(TEN).header(JSON)
       .body(tenants)
       .post("/_/tenant")
       .then().log().ifValidationFails()
-      .statusCode(201);
+      .statusCode(201).extract().body().as(TenantJob.class).getId();
 
-    try {
-      Thread.sleep(2000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+    boolean jobCompleted = given()
+      .header(TEN)
+      .get("/_/tenant/" + jobId + "/?wait=" + POST_TENANT_TIMEOUT)
+      .then().log().ifValidationFails()
+      .statusCode(200)
+      .extract().body().as(TenantJob.class).getComplete();
+
+    assertTrue(jobCompleted);
 
     // Empty list of notifications
     given()
