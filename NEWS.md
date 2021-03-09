@@ -1,3 +1,7 @@
+## 2.8.0 2021-03-09
+ * Upgrade to RMB 31.1.5 and Vertx 3.9.4 (MODNOTIFY-83)
+ * Upgrade to RMB 32.1.0 and Vertx 4.0.0 (MODNOTIFY-85)
+
 ## 2.7.0 2020-10-09
  * Upgrade to RMB v31.0.2 and JDK 11 (MODNOTIFY-80)
  * Replace CQL = by ==, fix CQL injection, use url encoding (MODNOTIFY-81)
