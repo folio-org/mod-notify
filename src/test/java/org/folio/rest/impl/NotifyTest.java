@@ -2,8 +2,12 @@ package org.folio.rest.impl;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertTrue;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.PomReader;
 import org.folio.rest.tools.client.test.HttpClientMock2;
@@ -19,8 +23,6 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -36,7 +38,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 @RunWith(VertxUnitRunner.class)
 public class NotifyTest {
 
-  private final Logger logger = LoggerFactory.getLogger("notifytest");
+  private final Logger logger = LogManager.getLogger("notifytest");
   private static final String LS = System.lineSeparator();
   private final Header TEN = new Header("X-Okapi-Tenant", "testlib");
   private final Header USER7 = new Header("X-Okapi-User-Id",
@@ -46,6 +48,7 @@ public class NotifyTest {
   private final Header USER9 = new Header("X-Okapi-User-Id",
     "99999999-9999-9999-9999-999999999999");
   private final Header JSON = new Header("Content-Type", "application/json");
+  private static final int POST_TENANT_TIMEOUT = 10000;
   private String moduleName; // "mod-notify";
   private String moduleVersion; // "0.2.0-SNAPSHOT";
   private String moduleId; // "mod-notify-0.2.0-SNAPSHOT"
@@ -134,12 +137,21 @@ public class NotifyTest {
     // Call the tenant interface to initialize the database
     String tenants = "{\"module_to\":\"" + moduleId + "\"}";
     logger.info("About to call the tenant interface " + tenants);
-    given()
+    String jobId = given()
       .header(TEN).header(JSON)
       .body(tenants)
       .post("/_/tenant")
       .then().log().ifValidationFails()
-      .statusCode(201);
+      .statusCode(201).extract().body().as(TenantJob.class).getId();
+
+    boolean jobCompleted = given()
+      .header(TEN)
+      .get("/_/tenant/" + jobId + "/?wait=" + POST_TENANT_TIMEOUT)
+      .then().log().ifValidationFails()
+      .statusCode(200)
+      .extract().body().as(TenantJob.class).getComplete();
+
+    assertTrue(jobCompleted);
 
     // Empty list of notifications
     given()

@@ -97,7 +97,7 @@ public class SendNotifyTest {
       try {
         TenantAttributes attributes = new TenantAttributes()
           .withModuleTo(String.format("mod-notify-%s", PomReader.INSTANCE.getVersion()));
-        tenantClient.postTenant(attributes, x -> async.complete());
+        tenantClient.postTenant(attributes, postResult -> async.complete());
       } catch (Exception e) {
         context.fail(e);
         async.complete();
