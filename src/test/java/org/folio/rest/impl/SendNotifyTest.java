@@ -16,6 +16,10 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.EventEntity;
@@ -27,8 +31,9 @@ import org.folio.rest.jaxrs.model.Template;
 import org.folio.rest.jaxrs.model.TemplateProcessingResult;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.PomReader;
+import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.folio.rest.tools.utils.RmbVersion;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -38,6 +43,9 @@ import org.junit.runner.RunWith;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -80,23 +88,18 @@ public class SendNotifyTest {
 
   @BeforeClass
   public static void setUp(TestContext context) {
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
     Async async = context.async();
     vertx = Vertx.vertx();
     int port = NetworkUtils.nextFreePort();
-
-    try {
-      PostgresClient.setIsEmbedded(true);
-      PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-    } catch (Exception e) {
-      context.fail(e);
-    }
 
     TenantClient tenantClient = new TenantClient("http://localhost:" + port, TENANT, "diku");
     DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put(HTTP_PORT_JSON_PATH, port));
     vertx.deployVerticle(RestVerticle.class.getName(), options, result -> {
       try {
         TenantAttributes attributes = new TenantAttributes()
-          .withModuleTo(String.format("mod-notify-%s", PomReader.INSTANCE.getVersion()));
+                .withModuleTo(String.format("%s-%s", ModuleName.getModuleName(),
+                        RmbVersion.getRmbVersion()));
         tenantClient.postTenant(attributes, postResult -> async.complete());
       } catch (Exception e) {
         context.fail(e);
@@ -113,7 +116,7 @@ public class SendNotifyTest {
 
   @AfterClass
   public static void tearDown(TestContext context) {
-    PostgresClient.stopEmbeddedPostgres();
+    PostgresClient.stopPostgresTester();
     vertx.close(context.asyncAssertSuccess());
   }
 

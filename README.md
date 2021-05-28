@@ -65,7 +65,7 @@ Run the local stand-alone instance:
 
 ```
 java -jar target/mod-notify-fat.jar \
-  -Dhttp.port=8081 embed_postgres=true
+  -Dhttp.port=8081
 ```
 
 See the `run.sh` script for some simple curl examples.

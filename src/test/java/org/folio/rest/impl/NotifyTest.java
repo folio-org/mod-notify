@@ -4,14 +4,21 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertTrue;
 
+import java.io.FileReader;
+import java.io.IOException;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.PomReader;
-import org.folio.rest.tools.client.test.HttpClientMock2;
+import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
+import org.folio.rest.tools.utils.RmbVersion;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,8 +56,6 @@ public class NotifyTest {
     "99999999-9999-9999-9999-999999999999");
   private final Header JSON = new Header("Content-Type", "application/json");
   private static final int POST_TENANT_TIMEOUT = 10000;
-  private String moduleName; // "mod-notify";
-  private String moduleVersion; // "0.2.0-SNAPSHOT";
   private String moduleId; // "mod-notify-0.2.0-SNAPSHOT"
   Vertx vertx;
   Async async;
@@ -58,27 +63,16 @@ public class NotifyTest {
   private static int port;
 
   @Before
-  public void setUp(TestContext context) {
+  public void setUp(TestContext context) throws IOException, XmlPullParserException {
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
     vertx = Vertx.vertx();
-    moduleName = PomReader.INSTANCE.getModuleName()
-      .replaceAll("_", "-");  // Rmb returns a 'normalized' name, with underscores
-    moduleVersion = PomReader.INSTANCE.getVersion();
-    moduleId = moduleName + "-" + moduleVersion;
+    moduleId = getModuleNameAndVersion();
 
     logger.info("Test setup starting for " + moduleId);
-
-    try {
-      PostgresClient.setIsEmbedded(true);
-      PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-    } catch (Exception e) {
-      context.fail(e);
-      return;
-    }
-
     port = NetworkUtils.nextFreePort();
 
     JsonObject conf = new JsonObject()
-      .put(HttpClientMock2.MOCK_MODE, "true")
+      .put("mock.httpclient", "true")
       .put("http.port", port);
 
     logger.info("notifyTest: Deploying "
@@ -96,7 +90,7 @@ public class NotifyTest {
   public void tearDown(TestContext context) {
     logger.info("Cleaning up after notifyTest");
     async = context.async();
-    PostgresClient.stopEmbeddedPostgres();
+    PostgresClient.stopPostgresTester();
     vertx.close(res -> {   // This logs a stack trace, ignore it.
       async.complete();
     });
@@ -132,7 +126,7 @@ public class NotifyTest {
       .header(TEN)
       .get("/notify")
       .then().log().ifValidationFails()
-      .statusCode(401);
+      .statusCode(500);
 
     // Call the tenant interface to initialize the database
     String tenants = "{\"module_to\":\"" + moduleId + "\"}";
@@ -177,7 +171,7 @@ public class NotifyTest {
       .post("/notify")
       .then().log().ifValidationFails()
       .statusCode(400)
-      .body(containsString("Json content error"));
+      .body(containsString("Unrecognized token"));
 
     String notify1 = "{"
       + "\"id\" : \"0e910843-e948-455c-ace3-7cb276f61897\"," + LS
@@ -192,7 +186,7 @@ public class NotifyTest {
       .post("/notify")
       .then().log().ifValidationFails()
       .statusCode(400)
-      .body(containsString("Json content error"));
+      .body(containsString("Unexpected character (')'"));
 
     String bad3 = notify1.replaceFirst("text", "badFieldName");
     given()
@@ -629,4 +623,9 @@ public class NotifyTest {
     logger.info("notifyTest done");
   }
 
+  private String getModuleNameAndVersion() throws IOException, XmlPullParserException {
+    Model model = new MavenXpp3Reader().read(new FileReader("pom.xml"));
+
+    return model.getArtifactId() + "-" + model.getVersion();
+  }
 }
