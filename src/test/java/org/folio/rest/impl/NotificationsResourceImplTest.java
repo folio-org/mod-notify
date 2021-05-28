@@ -103,7 +103,7 @@ public class NotificationsResourceImplTest {
       return null;
     }).when(postgresClient)
       .get(any(String.class), any(), any(), any(CQLWrapper.class), any(Boolean.class),
-        any(Boolean.class), any());
+        any(Boolean.class), any(Handler.class));
 
     notificationsResource.getNotify("", 0, 10, LANG, okapiHeaders, handler, null);
 
@@ -127,7 +127,7 @@ public class NotificationsResourceImplTest {
       return null;
     }).when(postgresClient)
       .get(any(String.class), any(), any(), any(CQLWrapper.class), any(Boolean.class),
-        any(Boolean.class), any());
+        any(Boolean.class), any(Handler.class));
 
     notificationsResource.getNotify("", 0, 10, LANG, okapiHeaders, handler, null);
 
@@ -154,7 +154,7 @@ public class NotificationsResourceImplTest {
       return null;
     }).when(postgresClient)
       .get(any(String.class), any(), any(), any(CQLWrapper.class), any(Boolean.class),
-        any(Boolean.class), any());
+        any(Boolean.class), any(Handler.class));
 
     okapiHeaders.put(RestVerticle.OKAPI_USERID_HEADER, "user-id");
 
