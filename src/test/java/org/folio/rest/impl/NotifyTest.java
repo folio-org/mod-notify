@@ -4,12 +4,18 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertTrue;
 
+import java.io.FileReader;
+import java.io.IOException;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.PomReader;
 import org.folio.rest.tools.client.test.HttpClientMock2;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.After;
@@ -58,22 +64,24 @@ public class NotifyTest {
   private static int port;
 
   @Before
-  public void setUp(TestContext context) {
+  public void setUp(TestContext context) throws IOException, XmlPullParserException {
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
     vertx = Vertx.vertx();
-    moduleName = PomReader.INSTANCE.getModuleName()
-      .replaceAll("_", "-");  // Rmb returns a 'normalized' name, with underscores
-    moduleVersion = PomReader.INSTANCE.getVersion();
-    moduleId = moduleName + "-" + moduleVersion;
+//    moduleName = PomReader.INSTANCE.getModuleName()
+//      .replaceAll("_", "-");  // Rmb returns a 'normalized' name, with underscores
+//    moduleVersion = PomReader.INSTANCE.getVersion();
+    moduleId = getModuleNameAndVersion();
+//    moduleId = "mod-notify-2.9.0-SNAPSHOT";
 
     logger.info("Test setup starting for " + moduleId);
 
-    try {
-      PostgresClient.setIsEmbedded(true);
-      PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-    } catch (Exception e) {
-      context.fail(e);
-      return;
-    }
+//    try {
+//      PostgresClient.setIsEmbedded(true);
+//      PostgresClient.getInstance(vertx).startEmbeddedPostgres();
+//    } catch (Exception e) {
+//      context.fail(e);
+//      return;
+//    }
 
     port = NetworkUtils.nextFreePort();
 
@@ -96,7 +104,8 @@ public class NotifyTest {
   public void tearDown(TestContext context) {
     logger.info("Cleaning up after notifyTest");
     async = context.async();
-    PostgresClient.stopEmbeddedPostgres();
+//    PostgresClient.stopEmbeddedPostgres();
+    PostgresClient.stopPostgresTester();
     vertx.close(res -> {   // This logs a stack trace, ignore it.
       async.complete();
     });
@@ -132,7 +141,7 @@ public class NotifyTest {
       .header(TEN)
       .get("/notify")
       .then().log().ifValidationFails()
-      .statusCode(401);
+      .statusCode(500);
 
     // Call the tenant interface to initialize the database
     String tenants = "{\"module_to\":\"" + moduleId + "\"}";
@@ -629,4 +638,9 @@ public class NotifyTest {
     logger.info("notifyTest done");
   }
 
+  private static String getModuleNameAndVersion() throws IOException, XmlPullParserException {
+    Model model = new MavenXpp3Reader().read(new FileReader("pom.xml"));
+
+    return model.getArtifactId() + "-" + model.getVersion();
+  }
 }
