@@ -17,6 +17,7 @@ import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.client.test.HttpClientMock2;
+import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -65,24 +66,17 @@ public class NotifyTest {
 
   @Before
   public void setUp(TestContext context) throws IOException, XmlPullParserException {
-    PostgresClient.setPostgresTester(new PostgresTesterContainer());
     vertx = Vertx.vertx();
 //    moduleName = PomReader.INSTANCE.getModuleName()
 //      .replaceAll("_", "-");  // Rmb returns a 'normalized' name, with underscores
 //    moduleVersion = PomReader.INSTANCE.getVersion();
-    moduleId = getModuleNameAndVersion();
-//    moduleId = "mod-notify-2.9.0-SNAPSHOT";
+//    moduleId = getModuleNameAndVersion();
+//    moduleId = String.format("%s", ModuleName.getModuleName());
+    moduleId = "mod-notify-2.9.0-SNAPSHOT";
 
     logger.info("Test setup starting for " + moduleId);
 
-//    try {
-//      PostgresClient.setIsEmbedded(true);
-//      PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-//    } catch (Exception e) {
-//      context.fail(e);
-//      return;
-//    }
-
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
     port = NetworkUtils.nextFreePort();
 
     JsonObject conf = new JsonObject()
@@ -104,10 +98,9 @@ public class NotifyTest {
   public void tearDown(TestContext context) {
     logger.info("Cleaning up after notifyTest");
     async = context.async();
-//    PostgresClient.stopEmbeddedPostgres();
-    PostgresClient.stopPostgresTester();
     vertx.close(res -> {   // This logs a stack trace, ignore it.
       async.complete();
+      PostgresClient.stopPostgresTester();
     });
   }
 
@@ -186,7 +179,7 @@ public class NotifyTest {
       .post("/notify")
       .then().log().ifValidationFails()
       .statusCode(400)
-      .body(containsString("Json content error"));
+      .body(containsString("Unrecognized token"));
 
     String notify1 = "{"
       + "\"id\" : \"0e910843-e948-455c-ace3-7cb276f61897\"," + LS
@@ -201,7 +194,7 @@ public class NotifyTest {
       .post("/notify")
       .then().log().ifValidationFails()
       .statusCode(400)
-      .body(containsString("Json content error"));
+      .body(containsString("Unexpected character"));
 
     String bad3 = notify1.replaceFirst("text", "badFieldName");
     given()
