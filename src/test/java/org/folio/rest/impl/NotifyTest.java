@@ -46,7 +46,7 @@ public class NotifyTest {
 
   private final Logger logger = LogManager.getLogger("notifytest");
   private static final String LS = System.lineSeparator();
-  private final Header TEN = new Header("X-Okapi-Tenant", "testlib");
+  private final Header TEN = new Header("X-Okapi-Tenant", "diku");
   private final Header USER7 = new Header("X-Okapi-User-Id",
     "77777777-7777-7777-7777-777777777777");
   private final Header USER8 = new Header("X-Okapi-User-Id",
@@ -65,7 +65,6 @@ public class NotifyTest {
 
   @Before
   public void setUp(TestContext context) throws IOException, XmlPullParserException {
-    PostgresClient.setPostgresTester(new PostgresTesterContainer());
     vertx = Vertx.vertx();
 //    moduleName = PomReader.INSTANCE.getModuleName()
 //      .replaceAll("_", "-");  // Rmb returns a 'normalized' name, with underscores
@@ -75,14 +74,7 @@ public class NotifyTest {
 
     logger.info("Test setup starting for " + moduleId);
 
-//    try {
-//      PostgresClient.setIsEmbedded(true);
-//      PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-//    } catch (Exception e) {
-//      context.fail(e);
-//      return;
-//    }
-
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
     port = NetworkUtils.nextFreePort();
 
     JsonObject conf = new JsonObject()
@@ -104,10 +96,9 @@ public class NotifyTest {
   public void tearDown(TestContext context) {
     logger.info("Cleaning up after notifyTest");
     async = context.async();
-//    PostgresClient.stopEmbeddedPostgres();
-    PostgresClient.stopPostgresTester();
     vertx.close(res -> {   // This logs a stack trace, ignore it.
       async.complete();
+      PostgresClient.stopPostgresTester();
     });
   }
 
@@ -186,7 +177,7 @@ public class NotifyTest {
       .post("/notify")
       .then().log().ifValidationFails()
       .statusCode(400)
-      .body(containsString("Json content error"));
+      .body(containsString("Unrecognized token"));
 
     String notify1 = "{"
       + "\"id\" : \"0e910843-e948-455c-ace3-7cb276f61897\"," + LS
@@ -201,7 +192,7 @@ public class NotifyTest {
       .post("/notify")
       .then().log().ifValidationFails()
       .statusCode(400)
-      .body(containsString("Json content error"));
+      .body(containsString("Unexpected character"));
 
     String bad3 = notify1.replaceFirst("text", "badFieldName");
     given()
