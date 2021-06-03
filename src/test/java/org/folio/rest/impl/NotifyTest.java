@@ -14,6 +14,8 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
+import org.folio.rest.client.TenantClient;
+import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
 import org.folio.rest.tools.client.test.HttpClientMock2;
@@ -56,28 +58,23 @@ public class NotifyTest {
     "99999999-9999-9999-9999-999999999999");
   private final Header JSON = new Header("Content-Type", "application/json");
   private static final int POST_TENANT_TIMEOUT = 10000;
+  private static final String HTTP_PORT_JSON_PATH = "http.port";
   private String moduleName; // "mod-notify";
   private String moduleVersion; // "0.2.0-SNAPSHOT";
   private String moduleId; // "mod-notify-0.2.0-SNAPSHOT"
-  Vertx vertx;
-  Async async;
+  private Vertx vertx;
 
   private static int port;
 
   @Before
   public void setUp(TestContext context) throws IOException, XmlPullParserException {
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
     vertx = Vertx.vertx();
-//    moduleName = PomReader.INSTANCE.getModuleName()
-//      .replaceAll("_", "-");  // Rmb returns a 'normalized' name, with underscores
-//    moduleVersion = PomReader.INSTANCE.getVersion();
-//    moduleId = getModuleNameAndVersion();
-//    moduleId = String.format("%s", ModuleName.getModuleName());
-    moduleId = "mod-notify-2.9.0-SNAPSHOT";
+    moduleId = getModuleNameAndVersion();
 
     logger.info("Test setup starting for " + moduleId);
-
-    PostgresClient.setPostgresTester(new PostgresTesterContainer());
     port = NetworkUtils.nextFreePort();
+    RestAssured.port = port;
 
     JsonObject conf = new JsonObject()
       .put(HttpClientMock2.MOCK_MODE, "true")
@@ -88,19 +85,34 @@ public class NotifyTest {
       + Json.encode(conf));
     DeploymentOptions opt = new DeploymentOptions()
       .setConfig(conf);
+
+    Async async = context.async();
+
     vertx.deployVerticle(RestVerticle.class.getName(),
-      opt, context.asyncAssertSuccess());
-    RestAssured.port = port;
+      opt, r -> {
+        TenantClient tenantClient = new TenantClient("http://localhost:" + port, "testlib", "token");
+        DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put(HTTP_PORT_JSON_PATH, port));
+        vertx.deployVerticle(RestVerticle.class.getName(), options, result -> {
+          try {
+            TenantAttributes attributes = new TenantAttributes()
+              .withModuleTo(getModuleNameAndVersion());
+            tenantClient.postTenant(attributes, postResult -> async.complete());
+          } catch (Exception e) {
+            context.fail(e);
+            async.complete();
+          }
+        });
+      });
     logger.info("notifyTest: setup done. Using port " + port);
   }
 
   @After
   public void tearDown(TestContext context) {
     logger.info("Cleaning up after notifyTest");
-    async = context.async();
+    Async async = context.async();
+    PostgresClient.stopPostgresTester();
     vertx.close(res -> {   // This logs a stack trace, ignore it.
       async.complete();
-      PostgresClient.stopPostgresTester();
     });
   }
 
@@ -140,7 +152,10 @@ public class NotifyTest {
     String tenants = "{\"module_to\":\"" + moduleId + "\"}";
     logger.info("About to call the tenant interface " + tenants);
     String jobId = given()
-      .header(TEN).header(JSON)
+      .header(TEN)
+      .header(JSON)
+      .header("X-Okapi-Url", "http://localhost:" + port)
+      .header("X-Okapi-Token", "token")
       .body(tenants)
       .post("/_/tenant")
       .then().log().ifValidationFails()
