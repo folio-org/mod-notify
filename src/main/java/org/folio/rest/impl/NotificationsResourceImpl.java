@@ -97,7 +97,7 @@ public class NotificationsResourceImpl implements Notify {
 
   @Override
   @Validate
-  public void getNotifySelf(String query, int offset, int limit,
+  public void getNotifyNotificationSelf(String query, int offset, int limit,
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -343,7 +343,7 @@ public class NotificationsResourceImpl implements Notify {
    */
   @Override
   @Validate
-  public void postNotifySelf(String lang, Notification entity,
+  public void postNotifyNotificationSelf(String lang, Notification entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
     throw new UnsupportedOperationException("Not supported.");
@@ -406,7 +406,7 @@ public class NotificationsResourceImpl implements Notify {
 
   @Override
   @Validate
-  public void deleteNotifySelf(String olderthan, String lang,
+  public void deleteNotifyNotificationSelf(String olderthan, String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -429,12 +429,12 @@ public class NotificationsResourceImpl implements Notify {
             if (reply.result().rowCount() > 0) {
               logger.info("Deleted " + reply.result().rowCount() + " notifies");
               asyncResultHandler.handle(succeededFuture(
-                DeleteNotifySelfResponse.respond204()));
+                DeleteNotifyNotificationSelfResponse.respond204()));
             } else {
               logger.info("Deleted no notifications");
               logger.error(messages.getMessage(lang,
                 MessageConsts.DeletedCountError, 1, reply.result().rowCount()));
-              asyncResultHandler.handle(succeededFuture(DeleteNotifySelfResponse
+              asyncResultHandler.handle(succeededFuture(DeleteNotifyNotificationSelfResponse
                 .respond404WithTextPlain(messages.getMessage(lang,
                   MessageConsts.DeletedCountError, 1, reply.result().rowCount()))));
             }
@@ -448,10 +448,7 @@ public class NotificationsResourceImpl implements Notify {
   @Validate
   public void getNotifyById(String id, String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context context) {
-    if (id.equals("_self")) {
-      // The _self endpoint has already handled this request
-      return;
-    }
+
     if (respond422IfIdIsNotValid(id, asyncResultHandler)) {
       return;
     }
@@ -473,10 +470,6 @@ public class NotificationsResourceImpl implements Notify {
   public void deleteNotifyById(String id, String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext) {
 
-    if (id.equals("_self")) {
-      // The _self endpoint has already handled this request
-      return;
-    }
     if (respond422IfIdIsNotValid(id, asyncResultHandler)) {
       return;
     }
@@ -534,10 +527,10 @@ public class NotificationsResourceImpl implements Notify {
       .update(NOTIFY_TABLE, entity, id,
         reply -> {
           if (reply.succeeded()) {
-            if (reply.result().rowCount() == 0)
+            if (reply.result().rowCount() == 0) {
               asyncResultHandler.handle(succeededFuture(PutNotifyByIdResponse
                 .respond404WithTextPlain(id)));
-            else { // all ok
+            } else { // all ok
               deleteAllOldNotifications(userId, okapiHeaders,
                 dres -> asyncResultHandler.handle(succeededFuture(
                   PutNotifyByIdResponse.respond204())),

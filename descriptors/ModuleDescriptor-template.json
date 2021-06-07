@@ -22,7 +22,7 @@
   "provides": [
     {
       "id": "notify",
-      "version": "2.1",
+      "version": "2.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -50,6 +50,11 @@
           "permissionsRequired": ["notify.item.get"]
         },
         {
+          "methods": ["GET"],
+          "pathPattern": "/notify/notification/_self",
+          "permissionsRequired": ["notify.notification.collection.get"]
+        },
+        {
           "methods": ["PUT"],
           "pathPattern": "/notify/{id}",
           "permissionsRequired": ["notify.item.put"]
@@ -58,6 +63,11 @@
           "methods": ["DELETE"],
           "pathPattern": "/notify/{id}",
           "permissionsRequired": ["notify.item.delete"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/notify/notification/_self",
+          "permissionsRequired": ["notify.notification.item.delete"]
         }
       ]
     },

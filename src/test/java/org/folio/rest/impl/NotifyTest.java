@@ -1,25 +1,19 @@
 package org.folio.rest.impl;
 
 import static io.restassured.RestAssured.given;
+import static org.folio.rest.impl.NotifyUtils.getModuleNameAndVersion;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertTrue;
 
-import java.io.FileReader;
 import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.TenantAttributes;
-import org.folio.rest.jaxrs.model.TenantJob;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.client.test.HttpClientMock2;
-import org.folio.rest.tools.utils.ModuleName;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -59,8 +53,6 @@ public class NotifyTest {
   private final Header JSON = new Header("Content-Type", "application/json");
   private static final int POST_TENANT_TIMEOUT = 10000;
   private static final String HTTP_PORT_JSON_PATH = "http.port";
-  private String moduleName; // "mod-notify";
-  private String moduleVersion; // "0.2.0-SNAPSHOT";
   private String moduleId; // "mod-notify-0.2.0-SNAPSHOT"
   private Vertx vertx;
 
@@ -70,15 +62,14 @@ public class NotifyTest {
   public void setUp(TestContext context) throws IOException, XmlPullParserException {
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
     vertx = Vertx.vertx();
-    moduleId = ModuleName.getModuleName().replaceAll("_", "-") +
-            "-" + getModuleVersion();
+    moduleId = getModuleNameAndVersion();
 
     logger.info("Test setup starting for " + moduleId);
     port = NetworkUtils.nextFreePort();
     RestAssured.port = port;
 
     JsonObject conf = new JsonObject()
-      .put(HttpClientMock2.MOCK_MODE, "true")
+      .put("mock.httpclient", "true")
       .put("http.port", port);
 
     logger.info("notifyTest: Deploying "
@@ -141,37 +132,6 @@ public class NotifyTest {
       .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("Tenant"));
-
-    // Simple GET request with a tenant, but before
-    // we have invoked the tenant interface, so the
-    // call will fail (with lots of traces in the log)
-//    given()
-//      .header(TEN)
-//      .get("/notify")
-//      .then().log().ifValidationFails()
-//      .statusCode(500);
-
-    // Call the tenant interface to initialize the database
-    String tenants = "{\"module_to\":\"" + moduleId + "\"}";
-    logger.info("About to call the tenant interface " + tenants);
-    String jobId = given()
-      .header(TEN)
-      .header(JSON)
-      .header("X-Okapi-Url", "http://localhost:" + port)
-      .header("X-Okapi-Token", "token")
-      .body(tenants)
-      .post("/_/tenant")
-      .then().log().ifValidationFails()
-      .statusCode(201).extract().body().as(TenantJob.class).getId();
-
-    boolean jobCompleted = given()
-      .header(TEN)
-      .get("/_/tenant/" + jobId + "/?wait=" + POST_TENANT_TIMEOUT)
-      .then().log().ifValidationFails()
-      .statusCode(200)
-      .extract().body().as(TenantJob.class).getComplete();
-
-    assertTrue(jobCompleted);
 
     // Empty list of notifications
     given()
@@ -554,14 +514,14 @@ public class NotifyTest {
     // _self
     given()
       .header(TEN)
-      .get("/notify/_self")
+      .get("/notify/notification/_self")
       .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("No UserId"));
 
     given()
       .header(TEN).header(USER7)
-      .get("/notify/_self")
+      .get("/notify/notification/_self")
       .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("\"totalRecords\" : 2")) // both match recipient 7
@@ -569,7 +529,7 @@ public class NotifyTest {
 
     given()
       .header(TEN).header(USER7)
-      .get("/notify/_self?query=seen=true")
+      .get("/notify/notification/_self?query=seen=true")
       .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("\"totalRecords\" : 1"))
@@ -577,7 +537,7 @@ public class NotifyTest {
 
     given()
       .header(TEN).header(USER8)
-      .get("/notify/_self")
+      .get("/notify/notification/_self")
       .then().log().ifValidationFails()
       .body(containsString("\"totalRecords\" : 0")); // none match 8
 
@@ -597,25 +557,25 @@ public class NotifyTest {
     // self delete 1111
     given()
       .header(TEN).header(USER7)
-      .delete("/notify/_self?olderthan=2001-01-01")
+      .delete("/notify/notification/_self?olderthan=2001-01-01")
       .then().log().ifValidationFails()
       .statusCode(404); // too new
 
     given()
       .header(TEN)
-      .delete("/notify/_self?olderthan=2099-01-01")
+      .delete("/notify/notification/_self?olderthan=2099-01-01")
       .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("No UserId"));
 
     given()
       .header(TEN).header(USER7)
-      .delete("/notify/_self?olderthan=2099-01-01")
+      .delete("/notify/notification/_self?olderthan=2099-01-01")
       .then().log().ifValidationFails()
       .statusCode(204); // gone!
     given()
       .header(TEN).header(USER7)
-      .delete("/notify/_self") // no query
+      .delete("/notify/notification/_self") // no query
       .then().log().ifValidationFails()
       .statusCode(404); // already gone
 
@@ -647,11 +607,5 @@ public class NotifyTest {
 
     // All done
     logger.info("notifyTest done");
-  }
-
-  private static String getModuleVersion() throws IOException, XmlPullParserException {
-    Model model = new MavenXpp3Reader().read(new FileReader("pom.xml"));
-
-    return model.getVersion();
   }
 }
