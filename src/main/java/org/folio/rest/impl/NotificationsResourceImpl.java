@@ -97,7 +97,7 @@ public class NotificationsResourceImpl implements Notify {
 
   @Override
   @Validate
-  public void getNotifyNotificationSelf(String query, int offset, int limit,
+  public void getNotifyUserSelf(String query, int offset, int limit,
     String lang, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -343,7 +343,7 @@ public class NotificationsResourceImpl implements Notify {
    */
   @Override
   @Validate
-  public void postNotifyNotificationSelf(String lang, Notification entity,
+  public void postNotifyUserSelf(String lang, Notification entity,
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
     throw new UnsupportedOperationException("Not supported.");
@@ -406,7 +406,7 @@ public class NotificationsResourceImpl implements Notify {
 
   @Override
   @Validate
-  public void deleteNotifyNotificationSelf(String olderthan, String lang,
+  public void deleteNotifyUserSelf(String olderthan, String lang,
     Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
@@ -429,12 +429,12 @@ public class NotificationsResourceImpl implements Notify {
             if (reply.result().rowCount() > 0) {
               logger.info("Deleted " + reply.result().rowCount() + " notifies");
               asyncResultHandler.handle(succeededFuture(
-                DeleteNotifyNotificationSelfResponse.respond204()));
+                DeleteNotifyUserSelfResponse.respond204()));
             } else {
               logger.info("Deleted no notifications");
               logger.error(messages.getMessage(lang,
                 MessageConsts.DeletedCountError, 1, reply.result().rowCount()));
-              asyncResultHandler.handle(succeededFuture(DeleteNotifyNotificationSelfResponse
+              asyncResultHandler.handle(succeededFuture(DeleteNotifyUserSelfResponse
                 .respond404WithTextPlain(messages.getMessage(lang,
                   MessageConsts.DeletedCountError, 1, reply.result().rowCount()))));
             }

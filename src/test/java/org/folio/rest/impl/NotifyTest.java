@@ -1,7 +1,7 @@
 package org.folio.rest.impl;
 
 import static io.restassured.RestAssured.given;
-import static org.folio.rest.impl.NotifyUtils.getModuleNameAndVersion;
+import static org.folio.rest.impl.PomUtils.getModuleId;
 import static org.hamcrest.Matchers.containsString;
 
 import java.io.IOException;
@@ -51,8 +51,10 @@ public class NotifyTest {
   private final Header USER9 = new Header("X-Okapi-User-Id",
     "99999999-9999-9999-9999-999999999999");
   private final Header JSON = new Header("Content-Type", "application/json");
-  private static final int POST_TENANT_TIMEOUT = 10000;
   private static final String HTTP_PORT_JSON_PATH = "http.port";
+  private static final String TENANT_ID = "testlib";
+  private static final String OKAPI_URL = "http://localhost:";
+  private static final String TOKEN = "token";
   private String moduleId; // "mod-notify-0.2.0-SNAPSHOT"
   private Vertx vertx;
 
@@ -62,7 +64,7 @@ public class NotifyTest {
   public void setUp(TestContext context) throws IOException, XmlPullParserException {
     PostgresClient.setPostgresTester(new PostgresTesterContainer());
     vertx = Vertx.vertx();
-    moduleId = getModuleNameAndVersion();
+    moduleId = getModuleId();
 
     logger.info("Test setup starting for " + moduleId);
     port = NetworkUtils.nextFreePort();
@@ -82,8 +84,8 @@ public class NotifyTest {
 
     vertx.deployVerticle(RestVerticle.class.getName(),
       opt, r -> {
-        TenantClient tenantClient = new TenantClient("http://localhost:" + port, "testlib",
-                "token");
+        TenantClient tenantClient = new TenantClient(OKAPI_URL + port, TENANT_ID,
+                TOKEN);
         DeploymentOptions options = new DeploymentOptions().setConfig(
                 new JsonObject().put(HTTP_PORT_JSON_PATH, port));
         vertx.deployVerticle(RestVerticle.class.getName(), options, result -> {
@@ -514,14 +516,14 @@ public class NotifyTest {
     // _self
     given()
       .header(TEN)
-      .get("/notify/notification/_self")
+      .get("/notify/user/_self")
       .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("No UserId"));
 
     given()
       .header(TEN).header(USER7)
-      .get("/notify/notification/_self")
+      .get("/notify/user/_self")
       .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("\"totalRecords\" : 2")) // both match recipient 7
@@ -529,7 +531,7 @@ public class NotifyTest {
 
     given()
       .header(TEN).header(USER7)
-      .get("/notify/notification/_self?query=seen=true")
+      .get("/notify/user/_self?query=seen=true")
       .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("\"totalRecords\" : 1"))
@@ -537,7 +539,7 @@ public class NotifyTest {
 
     given()
       .header(TEN).header(USER8)
-      .get("/notify/notification/_self")
+      .get("/notify/user/_self")
       .then().log().ifValidationFails()
       .body(containsString("\"totalRecords\" : 0")); // none match 8
 
@@ -557,25 +559,25 @@ public class NotifyTest {
     // self delete 1111
     given()
       .header(TEN).header(USER7)
-      .delete("/notify/notification/_self?olderthan=2001-01-01")
+      .delete("/notify/user/_self?olderthan=2001-01-01")
       .then().log().ifValidationFails()
       .statusCode(404); // too new
 
     given()
       .header(TEN)
-      .delete("/notify/notification/_self?olderthan=2099-01-01")
+      .delete("/notify/user/_self?olderthan=2099-01-01")
       .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("No UserId"));
 
     given()
       .header(TEN).header(USER7)
-      .delete("/notify/notification/_self?olderthan=2099-01-01")
+      .delete("/notify/user/_self?olderthan=2099-01-01")
       .then().log().ifValidationFails()
       .statusCode(204); // gone!
     given()
       .header(TEN).header(USER7)
-      .delete("/notify/notification/_self") // no query
+      .delete("/notify/user/_self") // no query
       .then().log().ifValidationFails()
       .statusCode(404); // already gone
 

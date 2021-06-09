@@ -2,9 +2,8 @@ package org.folio.rest.impl;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static org.folio.rest.impl.PomUtils.getModuleId;
 
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -12,9 +11,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
 import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
@@ -93,19 +89,12 @@ public class SendNotifyTest {
     vertx = Vertx.vertx();
     int port = NetworkUtils.nextFreePort();
 
-//    try {
-////      PostgresClient.setIsEmbedded(true);
-////      PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-//    } catch (Exception e) {
-//      context.fail(e);
-//    }
-
     TenantClient tenantClient = new TenantClient("http://localhost:" + port, TENANT, "diku");
     DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put(HTTP_PORT_JSON_PATH, port));
     vertx.deployVerticle(RestVerticle.class.getName(), options, result -> {
       try {
         TenantAttributes attributes = new TenantAttributes()
-          .withModuleTo(getModuleNameAndVersion());
+          .withModuleTo(getModuleId());
         tenantClient.postTenant(attributes, postResult -> async.complete());
       } catch (Exception e) {
         context.fail(e);
@@ -122,7 +111,6 @@ public class SendNotifyTest {
 
   @AfterClass
   public static void tearDown(TestContext context) {
-//    PostgresClient.stopEmbeddedPostgres();
     PostgresClient.stopPostgresTester();
     vertx.close(context.asyncAssertSuccess());
   }
@@ -228,11 +216,5 @@ public class SendNotifyTest {
     templateProcessingResult.setResult(result);
     templateProcessingResult.setMeta(new Meta().withOutputFormat(PLAIN_TEXT_OUTPUT_FORMAT));
     return JsonObject.mapFrom(templateProcessingResult);
-  }
-
-  private static String getModuleNameAndVersion() throws IOException, XmlPullParserException {
-    Model model = new MavenXpp3Reader().read(new FileReader("pom.xml"));
-
-    return model.getArtifactId() + "-" + model.getVersion();
   }
 }

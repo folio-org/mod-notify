@@ -50,11 +50,6 @@
           "permissionsRequired": ["notify.item.get"]
         },
         {
-          "methods": ["GET"],
-          "pathPattern": "/notify/notification/_self",
-          "permissionsRequired": ["notify.notification.collection.get"]
-        },
-        {
           "methods": ["PUT"],
           "pathPattern": "/notify/{id}",
           "permissionsRequired": ["notify.item.put"]
@@ -65,9 +60,14 @@
           "permissionsRequired": ["notify.item.delete"]
         },
         {
+          "methods": ["GET"],
+          "pathPattern": "/notify/user/_self",
+          "permissionsRequired": ["notify.user.collection.get"]
+        },
+        {
           "methods": ["DELETE"],
-          "pathPattern": "/notify/notification/_self",
-          "permissionsRequired": ["notify.notification.item.delete"]
+          "pathPattern": "/notify/user/_self",
+          "permissionsRequired": ["notify.user.collection.delete"]
         }
       ]
     },
