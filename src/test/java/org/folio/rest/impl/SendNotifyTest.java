@@ -1,21 +1,17 @@
 package org.folio.rest.impl;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import io.restassured.RestAssured;
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.http.ContentType;
-import io.restassured.http.Header;
-import io.restassured.specification.RequestSpecification;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import static org.folio.rest.impl.PomUtils.getModuleId;
+
+import java.util.Collections;
+import java.util.UUID;
+
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+
 import org.apache.commons.lang3.StringUtils;
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.client.TenantClient;
 import org.folio.rest.jaxrs.model.EventEntity;
@@ -27,7 +23,6 @@ import org.folio.rest.jaxrs.model.Template;
 import org.folio.rest.jaxrs.model.TemplateProcessingResult;
 import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.PomReader;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -36,13 +31,22 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import java.util.Collections;
-import java.util.UUID;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.ok;
-import static com.github.tomakehurst.wiremock.client.WireMock.okJson;
+import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.http.ContentType;
+import io.restassured.http.Header;
+import io.restassured.specification.RequestSpecification;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 @RunWith(VertxUnitRunner.class)
 public class SendNotifyTest {
@@ -80,23 +84,17 @@ public class SendNotifyTest {
 
   @BeforeClass
   public static void setUp(TestContext context) {
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
     Async async = context.async();
     vertx = Vertx.vertx();
     int port = NetworkUtils.nextFreePort();
-
-    try {
-      PostgresClient.setIsEmbedded(true);
-      PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-    } catch (Exception e) {
-      context.fail(e);
-    }
 
     TenantClient tenantClient = new TenantClient("http://localhost:" + port, TENANT, "diku");
     DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put(HTTP_PORT_JSON_PATH, port));
     vertx.deployVerticle(RestVerticle.class.getName(), options, result -> {
       try {
         TenantAttributes attributes = new TenantAttributes()
-          .withModuleTo(String.format("mod-notify-%s", PomReader.INSTANCE.getVersion()));
+          .withModuleTo(getModuleId());
         tenantClient.postTenant(attributes, postResult -> async.complete());
       } catch (Exception e) {
         context.fail(e);
@@ -113,7 +111,7 @@ public class SendNotifyTest {
 
   @AfterClass
   public static void tearDown(TestContext context) {
-    PostgresClient.stopEmbeddedPostgres();
+    PostgresClient.stopPostgresTester();
     vertx.close(context.asyncAssertSuccess());
   }
 
