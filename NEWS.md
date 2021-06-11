@@ -1,3 +1,6 @@
+## 2.9.0 2021-06-11
+ * Upgrade to RMB 33.0.0 and Vertx 4.1.0 (MODNOTIFY-87)
+
 ## 2.8.0 2021-03-09
  * Upgrade to RMB 31.1.5 and Vertx 3.9.4 (MODNOTIFY-83)
  * Upgrade to RMB 32.1.0 and Vertx 4.0.0 (MODNOTIFY-85)
