@@ -22,7 +22,7 @@
   "provides": [
     {
       "id": "notify",
-      "version": "2.1",
+      "version": "2.2",
       "handlers": [
         {
           "methods": ["GET"],
@@ -58,6 +58,16 @@
           "methods": ["DELETE"],
           "pathPattern": "/notify/{id}",
           "permissionsRequired": ["notify.item.delete"]
+        },
+        {
+          "methods": ["GET"],
+          "pathPattern": "/notify/user/_self",
+          "permissionsRequired": ["notify.user.collection.get"]
+        },
+        {
+          "methods": ["DELETE"],
+          "pathPattern": "/notify/user/_self",
+          "permissionsRequired": ["notify.user.collection.delete"]
         }
       ]
     },

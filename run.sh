@@ -145,7 +145,7 @@ $CURL \
   -H "X-Okapi-Tenant:testlib" \
   -H "X-Okapi-User-Id:77777777-7777-7777-7777-777777777777" \
   -X DELETE\
-  $OKAPIURL/notify/_self?olderthan=1999-12-31
+  $OKAPIURL/notify/user/_self?olderthan=1999-12-31
 echo
 
 echo Test 15: Delete self
@@ -153,7 +153,7 @@ $CURL \
   -H "X-Okapi-Tenant:testlib" \
   -H "X-Okapi-User-Id:77777777-7777-7777-7777-777777777777" \
   -X DELETE\
-  $OKAPIURL/notify/_self?olderthan=2099-12-31
+  $OKAPIURL/notify/user/_self?olderthan=2099-12-31
 echo
 
 echo "Test 16: get a list with the remaining (unseen) note"

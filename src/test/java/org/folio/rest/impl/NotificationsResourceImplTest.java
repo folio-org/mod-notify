@@ -103,7 +103,7 @@ public class NotificationsResourceImplTest {
       return null;
     }).when(postgresClient)
       .get(any(String.class), any(), any(), any(CQLWrapper.class), any(Boolean.class),
-        any(Boolean.class), any());
+        any(Boolean.class), any(Handler.class));
 
     notificationsResource.getNotify("", 0, 10, LANG, okapiHeaders, handler, null);
 
@@ -127,7 +127,7 @@ public class NotificationsResourceImplTest {
       return null;
     }).when(postgresClient)
       .get(any(String.class), any(), any(), any(CQLWrapper.class), any(Boolean.class),
-        any(Boolean.class), any());
+        any(Boolean.class), any(Handler.class));
 
     notificationsResource.getNotify("", 0, 10, LANG, okapiHeaders, handler, null);
 
@@ -154,11 +154,11 @@ public class NotificationsResourceImplTest {
       return null;
     }).when(postgresClient)
       .get(any(String.class), any(), any(), any(CQLWrapper.class), any(Boolean.class),
-        any(Boolean.class), any());
+        any(Boolean.class), any(Handler.class));
 
     okapiHeaders.put(RestVerticle.OKAPI_USERID_HEADER, "user-id");
 
-    notificationsResource.getNotifySelf("", 0, 10, LANG, okapiHeaders, handler, null);
+    notificationsResource.getNotifyUserSelf("", 0, 10, LANG, okapiHeaders, handler, null);
 
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)
@@ -174,7 +174,7 @@ public class NotificationsResourceImplTest {
       status = responseAsyncResult.result().getStatus();
     };
 
-    notificationsResource.getNotifySelf("", 0, 10, LANG, okapiHeaders, handler, null);
+    notificationsResource.getNotifyUserSelf("", 0, 10, LANG, okapiHeaders, handler, null);
 
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)
@@ -395,7 +395,7 @@ public class NotificationsResourceImplTest {
       status = responseAsyncResult.result().getStatus();
     };
 
-    notificationsResource.deleteNotifySelf("2020-01-01", LANG, okapiHeaders, handler, null);
+    notificationsResource.deleteNotifyUserSelf("2020-01-01", LANG, okapiHeaders, handler, null);
 
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)
@@ -418,7 +418,7 @@ public class NotificationsResourceImplTest {
       return null;
     }).when(postgresClient).delete(any(String.class), any(CQLWrapper.class), any());
 
-    notificationsResource.deleteNotifySelf("2020-01-01", LANG, okapiHeaders, handler, null);
+    notificationsResource.deleteNotifyUserSelf("2020-01-01", LANG, okapiHeaders, handler, null);
 
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)
@@ -441,7 +441,7 @@ public class NotificationsResourceImplTest {
       return null;
     }).when(postgresClient).delete(any(String.class), any(CQLWrapper.class), any());
 
-    notificationsResource.deleteNotifySelf("2020-01-01", LANG, okapiHeaders, handler, null);
+    notificationsResource.deleteNotifyUserSelf("2020-01-01", LANG, okapiHeaders, handler, null);
 
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)
@@ -464,7 +464,7 @@ public class NotificationsResourceImplTest {
       return null;
     }).when(postgresClient).delete(any(String.class), any(CQLWrapper.class), any());
 
-    notificationsResource.deleteNotifySelf("2020-01-01", LANG, okapiHeaders, handler, null);
+    notificationsResource.deleteNotifyUserSelf("2020-01-01", LANG, okapiHeaders, handler, null);
 
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)

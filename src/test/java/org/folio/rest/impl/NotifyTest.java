@@ -1,16 +1,19 @@
 package org.folio.rest.impl;
 
 import static io.restassured.RestAssured.given;
+import static org.folio.rest.impl.PomUtils.getModuleId;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.folio.postgres.testing.PostgresTesterContainer;
 import org.folio.rest.RestVerticle;
-import org.folio.rest.jaxrs.model.TenantJob;
+import org.folio.rest.client.TenantClient;
+import org.folio.rest.jaxrs.model.TenantAttributes;
 import org.folio.rest.persist.PostgresClient;
-import org.folio.rest.tools.PomReader;
-import org.folio.rest.tools.client.test.HttpClientMock2;
 import org.folio.rest.tools.utils.NetworkUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -48,37 +51,27 @@ public class NotifyTest {
   private final Header USER9 = new Header("X-Okapi-User-Id",
     "99999999-9999-9999-9999-999999999999");
   private final Header JSON = new Header("Content-Type", "application/json");
-  private static final int POST_TENANT_TIMEOUT = 10000;
-  private String moduleName; // "mod-notify";
-  private String moduleVersion; // "0.2.0-SNAPSHOT";
+  private static final String HTTP_PORT_JSON_PATH = "http.port";
+  private static final String TENANT_ID = "testlib";
+  private static final String OKAPI_URL = "http://localhost:";
+  private static final String TOKEN = "token";
   private String moduleId; // "mod-notify-0.2.0-SNAPSHOT"
-  Vertx vertx;
-  Async async;
+  private Vertx vertx;
 
   private static int port;
 
   @Before
-  public void setUp(TestContext context) {
+  public void setUp(TestContext context) throws IOException, XmlPullParserException {
+    PostgresClient.setPostgresTester(new PostgresTesterContainer());
     vertx = Vertx.vertx();
-    moduleName = PomReader.INSTANCE.getModuleName()
-      .replaceAll("_", "-");  // Rmb returns a 'normalized' name, with underscores
-    moduleVersion = PomReader.INSTANCE.getVersion();
-    moduleId = moduleName + "-" + moduleVersion;
+    moduleId = getModuleId();
 
     logger.info("Test setup starting for " + moduleId);
-
-    try {
-      PostgresClient.setIsEmbedded(true);
-      PostgresClient.getInstance(vertx).startEmbeddedPostgres();
-    } catch (Exception e) {
-      context.fail(e);
-      return;
-    }
-
     port = NetworkUtils.nextFreePort();
+    RestAssured.port = port;
 
     JsonObject conf = new JsonObject()
-      .put(HttpClientMock2.MOCK_MODE, "true")
+      .put("mock.httpclient", "true")
       .put("http.port", port);
 
     logger.info("notifyTest: Deploying "
@@ -86,17 +79,34 @@ public class NotifyTest {
       + Json.encode(conf));
     DeploymentOptions opt = new DeploymentOptions()
       .setConfig(conf);
+
+    Async async = context.async();
+
     vertx.deployVerticle(RestVerticle.class.getName(),
-      opt, context.asyncAssertSuccess());
-    RestAssured.port = port;
+      opt, r -> {
+        TenantClient tenantClient = new TenantClient(OKAPI_URL + port, TENANT_ID,
+                TOKEN);
+        DeploymentOptions options = new DeploymentOptions().setConfig(
+                new JsonObject().put(HTTP_PORT_JSON_PATH, port));
+        vertx.deployVerticle(RestVerticle.class.getName(), options, result -> {
+          try {
+            TenantAttributes attributes = new TenantAttributes()
+              .withModuleTo(moduleId);
+            tenantClient.postTenant(attributes, postResult -> async.complete());
+          } catch (Exception e) {
+            context.fail(e);
+            async.complete();
+          }
+        });
+      });
     logger.info("notifyTest: setup done. Using port " + port);
   }
 
   @After
   public void tearDown(TestContext context) {
     logger.info("Cleaning up after notifyTest");
-    async = context.async();
-    PostgresClient.stopEmbeddedPostgres();
+    Async async = context.async();
+    PostgresClient.stopPostgresTester();
     vertx.close(res -> {   // This logs a stack trace, ignore it.
       async.complete();
     });
@@ -125,34 +135,6 @@ public class NotifyTest {
       .statusCode(400)
       .body(containsString("Tenant"));
 
-    // Simple GET request with a tenant, but before
-    // we have invoked the tenant interface, so the
-    // call will fail (with lots of traces in the log)
-    given()
-      .header(TEN)
-      .get("/notify")
-      .then().log().ifValidationFails()
-      .statusCode(401);
-
-    // Call the tenant interface to initialize the database
-    String tenants = "{\"module_to\":\"" + moduleId + "\"}";
-    logger.info("About to call the tenant interface " + tenants);
-    String jobId = given()
-      .header(TEN).header(JSON)
-      .body(tenants)
-      .post("/_/tenant")
-      .then().log().ifValidationFails()
-      .statusCode(201).extract().body().as(TenantJob.class).getId();
-
-    boolean jobCompleted = given()
-      .header(TEN)
-      .get("/_/tenant/" + jobId + "/?wait=" + POST_TENANT_TIMEOUT)
-      .then().log().ifValidationFails()
-      .statusCode(200)
-      .extract().body().as(TenantJob.class).getComplete();
-
-    assertTrue(jobCompleted);
-
     // Empty list of notifications
     given()
       .header(TEN)
@@ -177,7 +159,7 @@ public class NotifyTest {
       .post("/notify")
       .then().log().ifValidationFails()
       .statusCode(400)
-      .body(containsString("Json content error"));
+      .body(containsString("Unrecognized token"));
 
     String notify1 = "{"
       + "\"id\" : \"0e910843-e948-455c-ace3-7cb276f61897\"," + LS
@@ -192,7 +174,7 @@ public class NotifyTest {
       .post("/notify")
       .then().log().ifValidationFails()
       .statusCode(400)
-      .body(containsString("Json content error"));
+      .body(containsString("Unexpected character"));
 
     String bad3 = notify1.replaceFirst("text", "badFieldName");
     given()
@@ -534,14 +516,14 @@ public class NotifyTest {
     // _self
     given()
       .header(TEN)
-      .get("/notify/_self")
+      .get("/notify/user/_self")
       .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("No UserId"));
 
     given()
       .header(TEN).header(USER7)
-      .get("/notify/_self")
+      .get("/notify/user/_self")
       .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("\"totalRecords\" : 2")) // both match recipient 7
@@ -549,7 +531,7 @@ public class NotifyTest {
 
     given()
       .header(TEN).header(USER7)
-      .get("/notify/_self?query=seen=true")
+      .get("/notify/user/_self?query=seen=true")
       .then().log().ifValidationFails()
       .statusCode(200)
       .body(containsString("\"totalRecords\" : 1"))
@@ -557,7 +539,7 @@ public class NotifyTest {
 
     given()
       .header(TEN).header(USER8)
-      .get("/notify/_self")
+      .get("/notify/user/_self")
       .then().log().ifValidationFails()
       .body(containsString("\"totalRecords\" : 0")); // none match 8
 
@@ -577,25 +559,25 @@ public class NotifyTest {
     // self delete 1111
     given()
       .header(TEN).header(USER7)
-      .delete("/notify/_self?olderthan=2001-01-01")
+      .delete("/notify/user/_self?olderthan=2001-01-01")
       .then().log().ifValidationFails()
       .statusCode(404); // too new
 
     given()
       .header(TEN)
-      .delete("/notify/_self?olderthan=2099-01-01")
+      .delete("/notify/user/_self?olderthan=2099-01-01")
       .then().log().ifValidationFails()
       .statusCode(400)
       .body(containsString("No UserId"));
 
     given()
       .header(TEN).header(USER7)
-      .delete("/notify/_self?olderthan=2099-01-01")
+      .delete("/notify/user/_self?olderthan=2099-01-01")
       .then().log().ifValidationFails()
       .statusCode(204); // gone!
     given()
       .header(TEN).header(USER7)
-      .delete("/notify/_self") // no query
+      .delete("/notify/user/_self") // no query
       .then().log().ifValidationFails()
       .statusCode(404); // already gone
 
@@ -628,5 +610,4 @@ public class NotifyTest {
     // All done
     logger.info("notifyTest done");
   }
-
 }
