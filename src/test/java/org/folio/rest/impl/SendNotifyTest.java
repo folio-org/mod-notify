@@ -122,16 +122,18 @@ public class SendNotifyTest {
   }
 
   @Test
-  public void testValidRequest() {
-    RestAssured.given()
-      .spec(spec)
-      .header(new Header(RestVerticle.OKAPI_HEADER_TOKEN, TOKEN_STUB))
-      .header(mockUrlHeader)
-      .when()
-      .body(buildNotificationEntity(RESET_PASSWORD_EVENT_NAME).toString())
-      .post(POST_NOTIFICATION_PATH)
-      .then()
-      .statusCode(201);
+  public void testValidRequest() throws InterruptedException {
+    for (int i = 0; i < 2; i++) {
+      RestAssured.given()
+        .spec(spec)
+        .header(new Header(RestVerticle.OKAPI_HEADER_TOKEN, TOKEN_STUB))
+        .header(mockUrlHeader)
+        .when()
+        .body(buildNotificationEntity(RESET_PASSWORD_EVENT_NAME).toString())
+        .post(POST_NOTIFICATION_PATH)
+        .then()
+        .statusCode(201);
+    }
   }
 
   @Test
