@@ -14,16 +14,11 @@ public final class WebClientFactory {
   }
 
   /**
-   * Create WebClient for Vert.x instance.
+   * get WebClient - one instance per Vert.x instance.
    * @param vertx object.
    * @return webclient.
    */
   public static synchronized WebClient getWebClient(Vertx vertx) {
-    if (clients.containsKey(vertx)) {
-      return clients.get(vertx);
-    }
-    WebClient webClient = WebClient.create(vertx);
-    clients.put(vertx, webClient);
-    return webClient;
+    return clients.computeIfAbsent(vertx, x -> WebClient.create(vertx));
   }
 }
