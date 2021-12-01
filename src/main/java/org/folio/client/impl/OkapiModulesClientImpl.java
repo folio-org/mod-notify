@@ -7,6 +7,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import org.folio.client.OkapiModulesClient;
+import org.folio.helper.WebClientFactory;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.EventEntity;
 import org.folio.rest.jaxrs.model.EventEntityCollection;
@@ -36,8 +37,7 @@ public class OkapiModulesClientImpl implements OkapiModulesClient {
   private static final String OKAPI_HEADER_URL = "x-okapi-url";
 
   public OkapiModulesClientImpl(Vertx vertx, Map<String, String> okapiHeaders) {
-
-    webClient = WebClient.create(vertx);
+    webClient = WebClientFactory.getWebClient(vertx);
     tenant = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     token = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TOKEN);
     okapiUrl = okapiHeaders.get(OKAPI_HEADER_URL);
