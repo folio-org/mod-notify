@@ -6,8 +6,12 @@ import io.vertx.ext.web.client.WebClient;
 import java.util.HashMap;
 import java.util.Map;
 
-public class WebClientFactory {
+public final class WebClientFactory {
   private static final Map<Vertx, WebClient> clients = new HashMap<>();
+
+  private WebClientFactory() {
+    throw new UnsupportedOperationException("WebClientFactory");
+  }
 
   /**
    * Create WebClient for Vert.x instance.
