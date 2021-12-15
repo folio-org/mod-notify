@@ -264,7 +264,7 @@ public class NotifyTest {
       .body(notify2)
       .post("/notify")
       .then().log().ifValidationFails()
-      .body(containsString("duplicate key"))
+      .body(containsString("duplicate"))
       .statusCode(422);
 
     // Get both notifications a few different ways
