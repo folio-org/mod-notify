@@ -4,6 +4,8 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import org.folio.client.OkapiModulesClient;
@@ -70,11 +72,7 @@ public class OkapiModulesClientImpl implements OkapiModulesClient {
   public Future<TemplateProcessingResult> postTemplateRequest(TemplateProcessingRequest request) {
 
     Promise<HttpResponse<Buffer>> promise = Promise.promise();
-
-    webClient.postAbs(okapiUrl + "/template-request")
-      .putHeader(RestVerticle.OKAPI_HEADER_TENANT, tenant)
-      .putHeader(RestVerticle.OKAPI_HEADER_TOKEN, token)
-      .putHeader(RestVerticle.OKAPI_REQUESTID_HEADER, requestId)
+    postAbs("/template-request")
       .putHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
       .putHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
       .sendJson(request, promise);
@@ -86,15 +84,19 @@ public class OkapiModulesClientImpl implements OkapiModulesClient {
   public Future<Void> postMessageDelivery(NotifySendRequest request) {
 
     Promise<HttpResponse<Buffer>> promise = Promise.promise();
-
-    webClient.postAbs(okapiUrl + "/message-delivery")
-      .putHeader(RestVerticle.OKAPI_HEADER_TENANT, tenant)
-      .putHeader(RestVerticle.OKAPI_HEADER_TOKEN, token)
-      .putHeader(RestVerticle.OKAPI_REQUESTID_HEADER, requestId)
+    postAbs("/message-delivery")
       .putHeader(HttpHeaders.ACCEPT, MediaType.TEXT_PLAIN)
       .sendJson(request, promise);
 
     return promise.future().map(responseMapper(Void.class));
+  }
+
+  private HttpRequest<Buffer> postAbs(String path) {
+
+    return webClient.requestAbs(HttpMethod.POST, okapiUrl + path)
+      .putHeader(RestVerticle.OKAPI_HEADER_TENANT, tenant)
+      .putHeader(RestVerticle.OKAPI_HEADER_TOKEN, token)
+      .putHeader(RestVerticle.OKAPI_REQUESTID_HEADER, requestId);
   }
 
   private static <T> Function<HttpResponse<Buffer>, T> responseMapper(Class<T> type) {
