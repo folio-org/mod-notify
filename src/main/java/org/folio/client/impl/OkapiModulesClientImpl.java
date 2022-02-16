@@ -31,6 +31,7 @@ public class OkapiModulesClientImpl implements OkapiModulesClient {
   private String tenant;
   private String token;
   private String okapiUrl;
+  private String requestId;
 
   private WebClient webClient;
 
@@ -41,6 +42,7 @@ public class OkapiModulesClientImpl implements OkapiModulesClient {
     tenant = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT);
     token = okapiHeaders.get(RestVerticle.OKAPI_HEADER_TOKEN);
     okapiUrl = okapiHeaders.get(OKAPI_HEADER_URL);
+    requestId = okapiHeaders.get(RestVerticle.OKAPI_REQUESTID_HEADER);
   }
 
   @Override
@@ -53,6 +55,7 @@ public class OkapiModulesClientImpl implements OkapiModulesClient {
       .putHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
       .putHeader(RestVerticle.OKAPI_HEADER_TENANT, tenant)
       .putHeader(RestVerticle.OKAPI_HEADER_TOKEN, token)
+      .putHeader(RestVerticle.OKAPI_REQUESTID_HEADER, requestId)
       .send(promise);
 
     return promise.future()
@@ -71,6 +74,7 @@ public class OkapiModulesClientImpl implements OkapiModulesClient {
     webClient.postAbs(okapiUrl + "/template-request")
       .putHeader(RestVerticle.OKAPI_HEADER_TENANT, tenant)
       .putHeader(RestVerticle.OKAPI_HEADER_TOKEN, token)
+      .putHeader(RestVerticle.OKAPI_REQUESTID_HEADER, requestId)
       .putHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON)
       .putHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
       .sendJson(request, promise);
@@ -86,6 +90,7 @@ public class OkapiModulesClientImpl implements OkapiModulesClient {
     webClient.postAbs(okapiUrl + "/message-delivery")
       .putHeader(RestVerticle.OKAPI_HEADER_TENANT, tenant)
       .putHeader(RestVerticle.OKAPI_HEADER_TOKEN, token)
+      .putHeader(RestVerticle.OKAPI_REQUESTID_HEADER, requestId)
       .putHeader(HttpHeaders.ACCEPT, MediaType.TEXT_PLAIN)
       .sendJson(request, promise);
 
