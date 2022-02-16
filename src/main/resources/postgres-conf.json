@@ -1,7 +1,0 @@
-{
-  "host" : "10.0.2.15",
-  "port" : 5433,
-  "database" : "okapi_modules",
-  "username" : "folio_admin",
-  "password" : "folio_admin"
-}
