@@ -5,8 +5,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.client.OkapiModulesClient;
-import org.folio.client.impl.OkapiModulesClientImpl;
+import org.folio.client.NoticesClient;
 import org.folio.helper.OkapiModulesClientHelper;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
@@ -34,7 +33,7 @@ public class PatronNoticeResourceImpl implements PatronNotice {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    OkapiModulesClient client = makeOkapiModulesClient(vertxContext, okapiHeaders);
+    NoticesClient client = getNoticesClient(vertxContext, okapiHeaders);
 
     client.postTemplateRequest(getOkapiModulesClientHelper().buildTemplateProcessingRequest(entity))
       .map(result -> getOkapiModulesClientHelper().buildNotifySendRequest(result, entity))
@@ -56,10 +55,10 @@ public class PatronNoticeResourceImpl implements PatronNotice {
       });
   }
 
-  OkapiModulesClient makeOkapiModulesClient(Context vertxContext, Map<String,
+  NoticesClient getNoticesClient(Context vertxContext, Map<String,
     String> okapiHeaders) {
 
-    return new OkapiModulesClientImpl(vertxContext.owner(), okapiHeaders);
+    return new NoticesClient(vertxContext.owner(), okapiHeaders);
   }
 
   OkapiModulesClientHelper getOkapiModulesClientHelper() {
