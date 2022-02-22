@@ -1,3 +1,8 @@
+## 2.10.0 2022-02-22
+ * Update RMB to v33.2.4 (MODNOTIFY-99)
+ * Upgrade to RMB 33.2.2 (log4j 2.16.0) (MODNOTIFY-98)
+ * Socket leak (MODNOTIFY-94)
+
 ## 2.9.0 2021-06-11
  * Upgrade to RMB 33.0.0 and Vertx 4.1.0 (MODNOTIFY-87)
 
