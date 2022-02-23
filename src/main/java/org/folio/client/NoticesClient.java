@@ -1,7 +1,9 @@
 package org.folio.client;
 
-import static javax.ws.rs.core.HttpHeaders.*;
-import static javax.ws.rs.core.MediaType.*;
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 import java.util.Map;
 
@@ -31,7 +33,6 @@ public class NoticesClient extends OkapiClient {
       .addQueryParam("query", "name==" + name)
       .putHeader(ACCEPT, APPLICATION_JSON)
       .send(promise);
-
 
     return promise.future()
       .map(responseMapper(EventEntityCollection.class))
