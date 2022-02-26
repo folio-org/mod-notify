@@ -163,6 +163,16 @@
       "description": "Post Patron Notice"
     },
     {
+      "permissionName": "notify.user.collection.get",
+      "displayName": "Notifications - get notify collection for self",
+      "description": "Get notify collection for self user"
+    },
+    {
+      "permissionName": "notify.user.collection.delete",
+      "displayName": "Notifications - delete notify collection for self",
+      "description": "Delete notify collection for self user"
+    },
+    {
       "permissionName": "notify.all",
       "displayName": "Notifications module - all permissions",
       "description": "Entire set of permissions needed to use the notify modules",
