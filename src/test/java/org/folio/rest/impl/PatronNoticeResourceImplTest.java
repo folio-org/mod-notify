@@ -63,7 +63,7 @@ public class PatronNoticeResourceImplTest {
 
   @Before
   public void setUp() {
-    doReturn(client).when(patronNoticeResource).getNoticesClient(any(), any());
+    doReturn(client).when(patronNoticeResource).makeNoticesClient(any(), any());
 
     doReturn(succeededFuture(templateProcessingResult)).when(client)
       .postTemplateRequest(templateProcessingRequest);

@@ -184,7 +184,7 @@ public class NotificationsResourceImpl implements Notify {
     return PgUtil.postgresClient(context, okapiHeaders);
   }
 
-  NoticesClient getNoticesClient(Context context, Map<String, String> okapiHeaders) {
+  NoticesClient makeNoticesClient(Context context, Map<String, String> okapiHeaders) {
     return new NoticesClient(context.owner(), okapiHeaders);
   }
 
@@ -300,7 +300,7 @@ public class NotificationsResourceImpl implements Notify {
               .respond201WithApplicationJson(entity, PostNotifyResponse.
                 headersFor201().withLocation(LOCATION_PREFIX + ret))));
           } else {
-            NoticesClient client = getNoticesClient(context, okapiHeaders);
+            NoticesClient client = makeNoticesClient(context, okapiHeaders);
 
             client.getEventConfig(entity.getEventConfigName())
               .compose(eventEntity -> CompositeFuture.all(eventEntity.getTemplates()

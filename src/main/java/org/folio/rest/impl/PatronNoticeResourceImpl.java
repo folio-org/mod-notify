@@ -35,7 +35,7 @@ public class PatronNoticeResourceImpl implements PatronNotice {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    NoticesClient client = getNoticesClient(vertxContext, okapiHeaders);
+    NoticesClient client = makeNoticesClient(vertxContext, okapiHeaders);
 
     client.postTemplateRequest(getOkapiModulesClientHelper().buildTemplateProcessingRequest(entity))
       .map(result -> getOkapiModulesClientHelper().buildNotifySendRequest(result, entity))
@@ -57,7 +57,7 @@ public class PatronNoticeResourceImpl implements PatronNotice {
       });
   }
 
-  NoticesClient getNoticesClient(Context vertxContext, Map<String,
+  NoticesClient makeNoticesClient(Context vertxContext, Map<String,
     String> okapiHeaders) {
 
     return new NoticesClient(vertxContext.owner(), okapiHeaders);

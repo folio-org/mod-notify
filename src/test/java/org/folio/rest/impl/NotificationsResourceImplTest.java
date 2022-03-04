@@ -84,7 +84,7 @@ public class NotificationsResourceImplTest {
 
     doReturn(httpClient).when(notificationsResource).getHttpClient(any(), any());
     doReturn(postgresClient).when(notificationsResource).getPostgresClient(any(), any());
-    doReturn(noticesClient).when(notificationsResource).getNoticesClient(any(), any());
+    doReturn(noticesClient).when(notificationsResource).makeNoticesClient(any(), any());
   }
 
   @Test
