@@ -24,7 +24,7 @@ import javax.ws.rs.core.Response;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.awaitility.Awaitility;
-import org.folio.client.OkapiModulesClient;
+import org.folio.client.NoticesClient;
 import org.folio.dbschema.ObjectMapperTool;
 import org.folio.rest.RestVerticle;
 import org.folio.rest.jaxrs.model.EventEntity;
@@ -69,7 +69,7 @@ public class NotificationsResourceImplTest {
   private PostgresClient postgresClient;
 
   @Mock
-  private OkapiModulesClient okapiModulesClient;
+  private NoticesClient noticesClient;
 
   @Mock
   private Notification notification;
@@ -84,7 +84,7 @@ public class NotificationsResourceImplTest {
 
     doReturn(httpClient).when(notificationsResource).getHttpClient(any(), any());
     doReturn(postgresClient).when(notificationsResource).getPostgresClient(any(), any());
-    doReturn(okapiModulesClient).when(notificationsResource).getOkapiModulesClient(any(), any());
+    doReturn(noticesClient).when(notificationsResource).makeNoticesClient(any(), any());
   }
 
   @Test
@@ -226,7 +226,7 @@ public class NotificationsResourceImplTest {
     };
 
     mockServicesForSuccessfulPost();
-    doReturn(succeededFuture()).when(okapiModulesClient).postMessageDelivery(any());
+    doReturn(succeededFuture()).when(noticesClient).postMessageDelivery(any());
 
     notificationsResource.postNotifyUsernameByUsername(USERNAME, LANG, notification,
       okapiHeaders, handler, null);
@@ -249,7 +249,7 @@ public class NotificationsResourceImplTest {
     };
 
     mockServicesForSuccessfulPost();
-    doReturn(failedFuture(new BadRequestException())).when(okapiModulesClient)
+    doReturn(failedFuture(new BadRequestException())).when(noticesClient)
       .postMessageDelivery(any());
 
     notificationsResource.postNotifyUsernameByUsername(USERNAME, LANG, notification,
@@ -273,7 +273,7 @@ public class NotificationsResourceImplTest {
     };
 
     mockServicesForSuccessfulPost();
-    doReturn(failedFuture(new Exception())).when(okapiModulesClient)
+    doReturn(failedFuture(new Exception())).when(noticesClient)
       .postMessageDelivery(any());
 
     notificationsResource.postNotifyUsernameByUsername(USERNAME, LANG, notification,
@@ -794,7 +794,7 @@ public class NotificationsResourceImplTest {
     }
     doReturn("recipient").when(notification).getRecipientId();
     doReturn("event-config-name").when(notification).getEventConfigName();
-    doReturn(succeededFuture(new EventEntity())).when(okapiModulesClient)
+    doReturn(succeededFuture(new EventEntity())).when(noticesClient)
       .getEventConfig(eq("event-config-name"));
     doAnswer(invocationOnMock -> {
       ((Handler<AsyncResult<String>>) invocationOnMock.getArgument(3))

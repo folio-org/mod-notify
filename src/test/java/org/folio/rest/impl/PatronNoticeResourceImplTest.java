@@ -22,7 +22,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.http.HttpHeaders;
 import org.awaitility.Awaitility;
-import org.folio.client.OkapiModulesClient;
+import org.folio.client.NoticesClient;
 import org.folio.helper.OkapiModulesClientHelper;
 import org.folio.rest.jaxrs.model.Context;
 import org.folio.rest.jaxrs.model.Errors;
@@ -48,7 +48,7 @@ public class PatronNoticeResourceImplTest {
   private PatronNoticeResourceImpl patronNoticeResource;
 
   @Mock
-  private OkapiModulesClient client;
+  private NoticesClient client;
 
   @Spy
   private OkapiModulesClientHelper okapiModulesClientHelper;
@@ -63,7 +63,7 @@ public class PatronNoticeResourceImplTest {
 
   @Before
   public void setUp() {
-    doReturn(client).when(patronNoticeResource).makeOkapiModulesClient(any(), any());
+    doReturn(client).when(patronNoticeResource).makeNoticesClient(any(), any());
 
     doReturn(succeededFuture(templateProcessingResult)).when(client)
       .postTemplateRequest(templateProcessingRequest);

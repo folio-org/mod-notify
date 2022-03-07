@@ -16,8 +16,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.client.OkapiModulesClient;
-import org.folio.client.impl.OkapiModulesClientImpl;
+import org.folio.client.NoticesClient;
 import org.folio.cql2pgjson.CQL2PgJSON;
 import org.folio.cql2pgjson.exception.FieldException;
 import org.folio.helper.OkapiModulesClientHelper;
@@ -185,8 +184,8 @@ public class NotificationsResourceImpl implements Notify {
     return PgUtil.postgresClient(context, okapiHeaders);
   }
 
-  OkapiModulesClient getOkapiModulesClient(Context context, Map<String, String> okapiHeaders) {
-    return new OkapiModulesClientImpl(context.owner(), okapiHeaders);
+  NoticesClient makeNoticesClient(Context context, Map<String, String> okapiHeaders) {
+    return new NoticesClient(context.owner(), okapiHeaders);
   }
 
   @Override
@@ -301,7 +300,7 @@ public class NotificationsResourceImpl implements Notify {
               .respond201WithApplicationJson(entity, PostNotifyResponse.
                 headersFor201().withLocation(LOCATION_PREFIX + ret))));
           } else {
-            OkapiModulesClient client = getOkapiModulesClient(context, okapiHeaders);
+            NoticesClient client = makeNoticesClient(context, okapiHeaders);
 
             client.getEventConfig(entity.getEventConfigName())
               .compose(eventEntity -> CompositeFuture.all(eventEntity.getTemplates()

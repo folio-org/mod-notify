@@ -1,12 +1,16 @@
 package org.folio.rest.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Context;
-import io.vertx.core.Handler;
+import static io.vertx.core.Future.succeededFuture;
+import static java.util.Collections.singletonList;
+
+import java.util.Map;
+
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.core.Response;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.folio.client.OkapiModulesClient;
-import org.folio.client.impl.OkapiModulesClientImpl;
+import org.folio.client.NoticesClient;
 import org.folio.helper.OkapiModulesClientHelper;
 import org.folio.rest.jaxrs.model.Error;
 import org.folio.rest.jaxrs.model.Errors;
@@ -15,12 +19,9 @@ import org.folio.rest.jaxrs.resource.PatronNotice;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.core.Response;
-import java.util.Map;
-
-import static io.vertx.core.Future.succeededFuture;
-import static java.util.Collections.singletonList;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Handler;
 
 public class PatronNoticeResourceImpl implements PatronNotice {
 
@@ -34,7 +35,7 @@ public class PatronNoticeResourceImpl implements PatronNotice {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    OkapiModulesClient client = makeOkapiModulesClient(vertxContext, okapiHeaders);
+    NoticesClient client = makeNoticesClient(vertxContext, okapiHeaders);
 
     client.postTemplateRequest(getOkapiModulesClientHelper().buildTemplateProcessingRequest(entity))
       .map(result -> getOkapiModulesClientHelper().buildNotifySendRequest(result, entity))
@@ -56,10 +57,10 @@ public class PatronNoticeResourceImpl implements PatronNotice {
       });
   }
 
-  OkapiModulesClient makeOkapiModulesClient(Context vertxContext, Map<String,
+  NoticesClient makeNoticesClient(Context vertxContext, Map<String,
     String> okapiHeaders) {
 
-    return new OkapiModulesClientImpl(vertxContext.owner(), okapiHeaders);
+    return new NoticesClient(vertxContext.owner(), okapiHeaders);
   }
 
   OkapiModulesClientHelper getOkapiModulesClientHelper() {
