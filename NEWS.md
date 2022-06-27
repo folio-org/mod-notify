@@ -1,3 +1,8 @@
+## 2.11.0 2022-06-27
+* Add undefined permissions: notify.user.collection.get, notify.user.collection.delete (MODNOTIFY-103)
+* Add 'X-Okapi-Request-Id' header to API calls (MODNOTIFY-55)
+* Upgrade to RMB v34.0.0 (MODNOTIFY-104)
+
 ## 2.10.0 2022-02-22
  * Upgrade to RMB 33.2.4 (MODNOTIFY-99)
  * Use new api-lint and api-doc CI facilities (FOLIO-3231)
