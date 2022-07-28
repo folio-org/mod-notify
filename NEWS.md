@@ -1,3 +1,7 @@
+## 2.12.0 IN-PROGRESS
+
+* Supports users interface versions 15.0 16.0 (MODNOTIFY-106)
+
 ## 2.11.0 2022-06-27
 * Add undefined permissions: notify.user.collection.get, notify.user.collection.delete (MODNOTIFY-103)
 * Add 'X-Okapi-Request-Id' header to API calls (MODNOTIFY-55)
