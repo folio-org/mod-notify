@@ -1,6 +1,6 @@
-## 2.12.0 IN-PROGRESS
-
+## 2.12.0 2022-10-18
 * Supports users interface versions 15.0 16.0 (MODNOTIFY-106)
+* Upgrade to RMB 35.0.0 and Vertx 4.3.3 (MODNOTIFY-111)
 
 ## 2.11.0 2022-06-27
 * Add undefined permissions: notify.user.collection.get, notify.user.collection.delete (MODNOTIFY-103)
