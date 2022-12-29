@@ -90,7 +90,6 @@ public class NotificationsResourceImpl implements Notify {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-   logger.debug("getNotify:: parameters: query = {}, okapiHeaders = {}", query, okapiHeaders);
     getNotifyBoth(false, query, offset, limit, okapiHeaders,
       asyncResultHandler, vertxContext);
   }
