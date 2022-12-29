@@ -90,8 +90,7 @@ public class NotificationsResourceImpl implements Notify {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    logger.warn("geNotify:: parameters: query = {}, offset = {}, limit = {}, lang = {}, okapiHeaders = {}",
-      query, offset, limit, lang, okapiHeaders);
+   logger.debug("getNotify:: parameters: query = {}, okapiHeaders = {}", query, okapiHeaders);
     getNotifyBoth(false, query, offset, limit, okapiHeaders,
       asyncResultHandler, vertxContext);
   }
@@ -103,8 +102,7 @@ public class NotificationsResourceImpl implements Notify {
     Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    logger.warn("geNotifyUserSelf:: parameters: query = {}, offset = {}, limit = {}, lang = {}, okapiHeaders = {}",
-      query, offset, limit, lang, okapiHeaders);
+    logger.debug("getNotify:: parameters: query = {}, okapiHeaders = {}", query, okapiHeaders);
     getNotifyBoth(true, query, offset, limit,
       okapiHeaders, asyncResultHandler, vertxContext);
   }
