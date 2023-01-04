@@ -8,7 +8,6 @@ import java.util.Map;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
 
-import io.vertx.core.json.Json;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.client.NoticesClient;
@@ -36,7 +35,6 @@ public class PatronNoticeResourceImpl implements PatronNotice {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    logger.debug("postPatronNotice:: parameters: lang={}, entity={}", lang, Json.encode(entity));
     NoticesClient client = makeNoticesClient(vertxContext, okapiHeaders);
 
     client.postTemplateRequest(getOkapiModulesClientHelper().buildTemplateProcessingRequest(entity))
@@ -45,7 +43,6 @@ public class PatronNoticeResourceImpl implements PatronNotice {
       .onComplete(res -> {
         if (res.failed()) {
           logger.error(res.cause());
-          logger.warn("postPatronNotice:: failed to send patron notice");
           if (res.cause().getClass() == BadRequestException.class) {
             Error error = new Error().withMessage(res.cause().getMessage());
             Errors errors = new Errors().withErrors(singletonList(error));
@@ -55,7 +52,6 @@ public class PatronNoticeResourceImpl implements PatronNotice {
           asyncResultHandler.handle(succeededFuture(PostPatronNoticeResponse
             .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
         } else {
-          logger.info("postPatronNotice:: patron notice sent successfully");
           asyncResultHandler.handle(succeededFuture(PostPatronNoticeResponse.respond200()));
         }
       });
