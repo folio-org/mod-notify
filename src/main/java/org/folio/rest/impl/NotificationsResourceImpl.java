@@ -120,7 +120,7 @@ public class NotificationsResourceImpl implements Notify {
     Handler<AsyncResult<Response>> asyncResultHandler) {
     String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
     if (userId == null) {
-      logger.info("selfGetQuery:: no user id");
+      logger.warn("selfGetQuery:: no user id");
       asyncResultHandler.handle(succeededFuture(GetNotifyResponse.
         respond400WithTextPlain("No UserId")));
       return null;
@@ -156,7 +156,7 @@ public class NotificationsResourceImpl implements Notify {
       }
       cql = getCQL(query, limit, offset);
     } catch (Exception e) {
-      logger.warn("getNotifyBoth:: exception", e);
+      logger.warn("getNotifyBoth:: Failed to create cql", e);
       ValidationHelper.handleError(e, asyncResultHandler);
     }
     getPostgresClient(vertxContext, okapiHeaders)
@@ -173,9 +173,9 @@ public class NotificationsResourceImpl implements Notify {
             notes.setTotalRecords(totalRecords);
             asyncResultHandler.handle(succeededFuture(
               GetNotifyResponse.respond200WithApplicationJson(notes)));
-            logger.info("getNotifyBoth:: returning {} notes of {}", notifylist.size(), totalRecords);
+            logger.info("getNotifyBoth:: returning {} notifications of {}", notifylist.size(), totalRecords);
           } else {
-            logger.warn("getNotifyBoth:: exception: " + reply.cause());
+            logger.warn("getNotifyBoth:: Failed to get notifications", reply.cause());
             ValidationHelper.handleError(reply.cause(), asyncResultHandler);
           }
         });
@@ -212,7 +212,7 @@ public class NotificationsResourceImpl implements Notify {
     cql = "username==\"" + cql + "\"";
     String url = "/users?query=" + StringUtil.urlEncode(cql);
     try {
-      logger.debug("postNotifyUsernameByUsername:: Looking up user " + url);
+      logger.debug("postNotifyUsernameByUsername:: Looking up user {}", url);
       CompletableFuture<org.folio.rest.tools.client.Response> response
         = client.request(url, okapiHeaders);
       response.whenComplete((resp, ex)
@@ -220,7 +220,7 @@ public class NotificationsResourceImpl implements Notify {
           asyncResultHandler, userName, vertxContext, lang)
       );
     } catch (Exception e) {
-      logger.warn("postNotifyUsernameByUsername:: exception", e);
+      logger.warn("postNotifyUsernameByUsername:: Failed to send user query", e);
       ValidationHelper.handleError(e, asyncResultHandler);
     }
   }
@@ -242,14 +242,14 @@ public class NotificationsResourceImpl implements Notify {
             notification.setRecipientId(id);
             postNotify(lang, notification, okapiHeaders, asyncResultHandler, vertxContext);
           } else {
-            logger.info("handleLookupUserResponse:: User lookup failed for {}. Bad response: {}",
+            logger.warn("handleLookupUserResponse:: User lookup failed for {}. Bad response: {}",
               () -> userName, () -> asJson(resp));
             asyncResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
               .respond400WithTextPlain("User lookup failed for " + userName + ". "
                 + "Bad response " + userResp)));
           }
         } else {  // Can not use ValidationHelper here, we have HTTP responses
-          logger.info("handleLookupUserResponse:: User lookup failed for {}. Response: {}",
+          logger.warn("handleLookupUserResponse:: User lookup failed for {}. Response: {}",
             () -> userName, () -> asJson(resp));
           asyncResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
             .respond400WithTextPlain("User lookup failed. "
@@ -257,15 +257,15 @@ public class NotificationsResourceImpl implements Notify {
         }
         break;
       case 403:
-        logger.info("handleLookupUserResponse:: Permission problem: User lookup failed for {}. Response: {}",
+        logger.warn("handleLookupUserResponse:: Permission problem: User lookup failed for {}. Response: {}",
           () -> userName, () -> asJson(resp));
         asyncResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
           .respond400WithTextPlain("User lookup failed with 403. " + userName
             + " " + Json.encode(resp.getError()))));
         break;
       default:
-        logger.info("handleLookupUserResponse:: User lookup failed with {} code. Response: {}",
-          resp.getCode(), asJson(resp));
+        logger.warn("handleLookupUserResponse:: User lookup failed with {} code. Response: {}",
+          () -> resp.getCode(), () -> asJson(resp));
         asyncResultHandler.handle(
           succeededFuture(PostNotifyUsernameByUsernameResponse
             .respond500WithTextPlain(internalErrorMsg(null, lang))));
@@ -285,7 +285,7 @@ public class NotificationsResourceImpl implements Notify {
       () -> asJson(entity), () -> headersAsString(okapiHeaders));
     String recip = entity.getRecipientId();
     if (recip == null || recip.isEmpty()) {
-      logger.info("postNotify:: recipientId is missing");
+      logger.warn("postNotify:: recipientId is missing");
       Errors valErr = ValidationHelper.createValidationErrorMessage(
         "recipientId", "", "Required");
       asyncResultHandler.handle(succeededFuture(PostNotifyResponse
@@ -340,7 +340,7 @@ public class NotificationsResourceImpl implements Notify {
                   asyncResultHandler.handle(succeededFuture(
                     PostNotifyResponse.respond400WithTextPlain(event.cause().getMessage())));
                 } else {
-                  logger.warn("postNotify:: error", event.cause());
+                  logger.warn("postNotify:: Failed to post notification", event.cause());
                   asyncResultHandler.handle(succeededFuture(PostNotifyResponse.respond500WithTextPlain(event.cause())));
                 }
               });
@@ -403,9 +403,9 @@ public class NotificationsResourceImpl implements Notify {
   private String selfDelQuery(String olderthan, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler) {
     String userId = okapiHeaders.get(RestVerticle.OKAPI_USERID_HEADER);
-    logger.debug("Trying to delete _self notifies for {} since {}", userId, olderthan);
+    logger.debug("Trying to delete _self notifications for {} since {}", userId, olderthan);
     if (userId == null) {
-      logger.info("selfDelQuery:: No user id, cannot delete _self notifies");
+      logger.warn("selfDelQuery:: No user id, cannot delete _self notifications");
       asyncResultHandler.handle(succeededFuture(GetNotifyResponse
         .respond400WithTextPlain("No UserId")));
       return null;
@@ -418,7 +418,7 @@ public class NotificationsResourceImpl implements Notify {
     } else {
       query = selfQuery + " and (metadata.updatedDate<" + olderthan + ")";
     }
-    logger.info("selfDelQuery:: result = " + query);
+    logger.info("selfDelQuery:: result = {}", query);
     return query;
   }
 
@@ -439,7 +439,7 @@ public class NotificationsResourceImpl implements Notify {
       logger.debug("deleteNotifyUserSelf:: query = {}", query);
       cql = getCQL(query, -1, -1);
     } catch (Exception e) {
-      logger.warn("deleteNotifyUserSelf:: Deleting _self notifies failed", e);
+      logger.warn("deleteNotifyUserSelf:: Deleting _self notifications failed", e);
       ValidationHelper.handleError(e, asyncResultHandler);
       return;
     }
@@ -449,7 +449,7 @@ public class NotificationsResourceImpl implements Notify {
           if (reply.succeeded()) {
             logger.info("deleteNotifyUserSelf:: deleted _self notifications");
             if (reply.result().rowCount() > 0) {
-              logger.info("Deleted " + reply.result().rowCount() + " notifies");
+              logger.info("deleteNotifyUserSelf:: Deleted {} notifications", reply.result().rowCount());
               asyncResultHandler.handle(succeededFuture(
                 DeleteNotifyUserSelfResponse.respond204()));
             } else {
@@ -461,7 +461,7 @@ public class NotificationsResourceImpl implements Notify {
                   MessageConsts.DeletedCountError, 1, reply.result().rowCount()))));
             }
           } else {
-            logger.warn("deleteNotifyUserSelf:: Deleting _self notifies failed", reply.cause());
+            logger.warn("deleteNotifyUserSelf:: Deleting _self notifications failed", reply.cause());
             ValidationHelper.handleError(reply.cause(), asyncResultHandler);
           }
         });
@@ -472,8 +472,8 @@ public class NotificationsResourceImpl implements Notify {
   public void getNotifyById(String id, String lang, Map<String, String> okapiHeaders,
       Handler<AsyncResult<Response>> asyncResultHandler, Context context) {
 
-    logger.debug("getNotifyById:: parameters: id = {}, okapiHeaders = {}",
-      () -> id, () -> headersAsString(okapiHeaders));
+    logger.debug("getNotifyById:: parameters: id = {}, lang = {}, okapiHeaders = {}",
+      () -> id, () -> lang, () -> headersAsString(okapiHeaders));
     if (respond422IfIdIsNotValid(id, asyncResultHandler)) {
       logger.info("getNotifyById:: id is not valid");
       return;
@@ -484,7 +484,7 @@ public class NotificationsResourceImpl implements Notify {
         return;
       }
       if (reply.result() == null) {
-        logger.info("getNotifyById:: No notify found with id = {} ", id);
+        logger.info("getNotifyById:: No notification found with id = {} ", id);
         asyncResultHandler.handle(succeededFuture(GetNotifyByIdResponse.respond404WithTextPlain(id)));
         return;
       }
@@ -531,7 +531,7 @@ public class NotificationsResourceImpl implements Notify {
     Context vertxContext) {
 
     logger.debug("putNotifyById:: parameters: id = {}, lang = {}, entity = {}, okapiHeaders = {}",
-      () -> id, () -> asJson(entity), () -> headersAsString(okapiHeaders));
+      () -> id, () -> lang, () -> asJson(entity), () -> headersAsString(okapiHeaders));
     if (respond422IfIdIsNotValid(id, asyncResultHandler)) {
       return;
     }
