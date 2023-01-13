@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -39,6 +40,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 
@@ -801,5 +803,9 @@ public class NotificationsResourceImplTest {
         .handle(makeAsyncResult("entity-id", true));
       return null;
     }).when(postgresClient).save(any(String.class), any(String.class), any(), any());
+    try (var mockedPostgresClient = mockStatic(PostgresClient.class)) {
+      mockedPostgresClient.when(() -> PostgresClient.pojo2JsonObject(notification))
+        .thenReturn(new JsonObject().put("id", "notificationId").put("recepientId", "notification_recepient"));
+    }
   }
 }
