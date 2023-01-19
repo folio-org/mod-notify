@@ -1,4 +1,3 @@
-
 package org.folio.util;
 
 import static com.google.common.primitives.Ints.min;
@@ -114,8 +113,14 @@ public class LogUtil {
     try {
       return responseAsyncResult -> {
         Response response = responseAsyncResult.result();
-        logger.info("{}:: result: HTTP response (code: {}, body: {})", () -> methodName,
-          response::getStatus, () -> asJson(response.getEntity()));
+        Object entity = response.getEntity();
+        String template = "{}:: result: HTTP response (code: {}, body: {})";
+        if (entity instanceof String) {
+          logger.info(template, methodName, response.getStatus(), crop((String) entity));
+        } else {
+          logger.info(template, () -> methodName, response::getStatus,
+            () -> asJson(response.getEntity()));
+        }
         asyncResultHandler.handle(responseAsyncResult);
       };
     } catch (Exception ex) {
