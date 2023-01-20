@@ -618,21 +618,21 @@ public class NotificationsResourceImpl implements Notify {
       .update(NOTIFY_TABLE, entity, id,
         reply -> {
           if (reply.succeeded()) {
-            log.info("deleteNotifyById:: Updated succeeded");
+            log.info("putNotifyById:: Updated succeeded");
             int rowCount = reply.result().rowCount();
             if (rowCount == 0) {
-              log.info("deleteNotifyById:: 0 notification updated (notification not found)");
+              log.info("putNotifyById:: 0 notification updated (notification not found)");
               loggingResultHandler.handle(succeededFuture(PutNotifyByIdResponse
                 .respond404WithTextPlain(id)));
             } else { // all ok
-              log.info("deleteNotifyById:: {} notification updated", rowCount);
+              log.info("putNotifyById:: {} notification updated", rowCount);
               deleteAllOldNotifications(userId, okapiHeaders,
                 dres -> loggingResultHandler.handle(succeededFuture(
                   PutNotifyByIdResponse.respond204())),
                  vertxContext);
             }
           } else {
-            log.warn("deleteNotifyById:: Update failed", reply.cause());
+            log.warn("putNotifyById:: Update failed", reply.cause());
             ValidationHelper.handleError(reply.cause(), loggingResultHandler);
           }
         });
