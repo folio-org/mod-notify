@@ -38,6 +38,14 @@ public class LogUtil {
       return null;
     }
 
+    if (object instanceof String) {
+      return (String) object;
+    }
+
+    if (object instanceof Number) {
+      return object.toString();
+    }
+
     if (object instanceof JsonObject) {
       try {
         return crop(((JsonObject) object).encode());
