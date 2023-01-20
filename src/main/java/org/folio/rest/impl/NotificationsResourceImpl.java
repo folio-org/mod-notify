@@ -73,9 +73,6 @@ public class NotificationsResourceImpl implements Notify {
    * @return The message string
    */
   private String internalErrorMsg(Exception exception, String lang) {
-    log.debug("internalErrorMsg:: parameters exception: {}, lang: {}", exception.getMessage(),
-      lang);
-
     if (exception != null) {
       log.warn(exception.getMessage(), exception);
     }
@@ -160,8 +157,7 @@ public class NotificationsResourceImpl implements Notify {
    */
   @java.lang.SuppressWarnings({"squid:S00107"}) // 8 parameters, I know
   private void getNotifyBoth(boolean self, String query, int offset, int limit,
-    Map<String, String> okapiHeaders,
-    Handler<AsyncResult<Response>> asyncResultHandler,
+    Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
     String queryParameter = query;
@@ -280,14 +276,14 @@ public class NotificationsResourceImpl implements Notify {
             postNotify(lang, notification, okapiHeaders, loggingResultHandler, vertxContext);
           } else {
             log.warn("handleLookupUserResponse:: User lookup failed for {}. Bad response: {}",
-              () -> userName, () -> asJson(resp));
+              () -> userName, () -> asJson(resp.getBody()));
             loggingResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
               .respond400WithTextPlain("User lookup failed for " + userName + ". "
                 + "Bad response " + userResp)));
           }
         } else {  // Can not use ValidationHelper here, we have HTTP responses
           log.warn("handleLookupUserResponse:: User lookup failed for {}. Response: {}",
-            () -> userName, () -> asJson(resp));
+            () -> userName, () -> asJson(resp.getBody()));
           loggingResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
             .respond400WithTextPlain("User lookup failed. "
               + "Can not find user " + userName)));
@@ -302,7 +298,7 @@ public class NotificationsResourceImpl implements Notify {
         break;
       default:
         log.warn("handleLookupUserResponse:: User lookup failed with {} code. Response: {}",
-          resp::getCode, () -> asJson(resp));
+          resp::getCode, () -> asJson(resp.getBody()));
         loggingResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
           .respond500WithTextPlain(internalErrorMsg(null, lang))));
         break;
