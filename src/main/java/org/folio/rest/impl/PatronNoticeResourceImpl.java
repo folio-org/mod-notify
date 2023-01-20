@@ -48,7 +48,6 @@ public class PatronNoticeResourceImpl implements PatronNotice {
       .compose(client::postMessageDelivery)
       .onComplete(res -> {
         if (res.failed()) {
-          log.error("postPatronNotice:: Failed to send patron notice");
           Throwable cause = res.cause();
           if (cause.getClass() == BadRequestException.class) {
             log.warn("postPatronNotice:: Failed to send patron notice - Bad request", cause);
@@ -58,6 +57,7 @@ public class PatronNoticeResourceImpl implements PatronNotice {
               .respond422WithApplicationJson(errors)));
             return;
           }
+          log.warn("postPatronNotice:: Failed to send patron notice", cause);
           loggingResultHandler.handle(succeededFuture(PostPatronNoticeResponse
             .respond500WithTextPlain(messages.getMessage(lang,
               MessageConsts.InternalServerError))));
