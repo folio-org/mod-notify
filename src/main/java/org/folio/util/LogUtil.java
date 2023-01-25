@@ -12,6 +12,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.folio.rest.jaxrs.model.PatronNoticeEntity;
 import org.folio.rest.persist.PostgresClient;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -147,5 +148,17 @@ public class LogUtil {
       log.warn("crop:: Failed to crop a string", ex);
       return null;
     }
+  }
+
+  public static String patronNoticeAsString(PatronNoticeEntity patronNoticeEntity) {
+    if (patronNoticeEntity == null) {
+      return null;
+    }
+    return asJson(new PatronNoticeEntity()
+      .withRecipientId(patronNoticeEntity.getRecipientId())
+      .withDeliveryChannel(patronNoticeEntity.getDeliveryChannel())
+      .withTemplateId(patronNoticeEntity.getTemplateId())
+      .withOutputFormat(patronNoticeEntity.getOutputFormat())
+      .withLang(patronNoticeEntity.getLang()));
   }
 }

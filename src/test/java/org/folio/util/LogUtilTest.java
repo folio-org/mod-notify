@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNull;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.folio.rest.jaxrs.model.Context;
+import org.folio.rest.jaxrs.model.PatronNoticeEntity;
 import org.junit.Test;
 
 import io.vertx.core.json.JsonObject;
@@ -56,6 +58,21 @@ public class LogUtilTest {
     list.add(2.2);
     list.add("string");
     assertEquals("list(size: 3, elements: [1, 2.2, string])", LogUtil.asJson(list));
+  }
+
+  @Test
+  public void patronNoticeAsStringShouldReturnJsonStringWithNoContext() {
+    PatronNoticeEntity patronNoticeEntity = new PatronNoticeEntity()
+      .withRecipientId("recipientId")
+      .withDeliveryChannel("email")
+      .withTemplateId("templateId")
+      .withOutputFormat("text/html")
+      .withLang("en")
+      .withContext(new Context().withAdditionalProperty("test", "test"));
+
+    assertEquals("{\"recipientId\":\"recipientId\",\"deliveryChannel\":\"email\"," +
+      "\"templateId\":\"templateId\",\"outputFormat\":\"text/html\",\"lang\":\"en\"}",
+      LogUtil.patronNoticeAsString(patronNoticeEntity));
   }
 
 }

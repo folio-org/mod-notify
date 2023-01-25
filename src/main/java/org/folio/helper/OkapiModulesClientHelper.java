@@ -2,6 +2,7 @@ package org.folio.helper;
 
 import static java.util.Collections.singletonList;
 import static org.folio.util.LogUtil.asJson;
+import static org.folio.util.LogUtil.patronNoticeAsString;
 
 import java.util.List;
 import java.util.UUID;
@@ -22,8 +23,8 @@ public class OkapiModulesClientHelper {
   public NotifySendRequest buildNotifySendRequest(TemplateProcessingResult templateProcessingResult,
     PatronNoticeEntity entity) {
 
-    log.debug("buildNotifySendRequest:: parameters result: {}, entity: {}", () -> asJson(templateProcessingResult),
-      () -> asJson(entity));
+    log.debug("buildNotifySendRequest:: parameters result: {}, entity: {}",
+      () -> asJson(templateProcessingResult), () -> patronNoticeAsString(entity));
 
     Message message = new Message()
         .withHeader(templateProcessingResult.getResult().getHeader())
@@ -37,7 +38,8 @@ public class OkapiModulesClientHelper {
       .withMessages(singletonList(message))
       .withRecipientUserId(entity.getRecipientId());
 
-    log.info("buildNotifySendRequest:: result: {}", () -> asJson(result));
+    log.info("buildNotifySendRequest:: result: NotifySendRequest(id={})",
+      result::getNotificationId);
 
     return result;
   }
@@ -57,7 +59,8 @@ public class OkapiModulesClientHelper {
   }
 
   public TemplateProcessingRequest buildTemplateProcessingRequest(PatronNoticeEntity entity) {
-    log.debug("buildTemplateProcessingRequest:: parameters entity: {}", () -> asJson(entity));
+    log.debug("buildTemplateProcessingRequest:: parameters entity: {}",
+      () -> patronNoticeAsString(entity));
 
     TemplateProcessingRequest result = new TemplateProcessingRequest()
       .withTemplateId(entity.getTemplateId())
@@ -65,7 +68,7 @@ public class OkapiModulesClientHelper {
       .withLang(entity.getLang())
       .withContext(entity.getContext());
 
-    log.info("buildTemplateProcessingRequest:: result: {}", () -> asJson(result));
+    log.info("buildTemplateProcessingRequest:: result: TemplateProcessingRequest");
 
     return result;
   }
