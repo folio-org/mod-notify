@@ -57,7 +57,7 @@ public class OkapiModulesClientHelper {
   }
 
   public TemplateProcessingRequest buildTemplateProcessingRequest(PatronNoticeEntity entity) {
-    log.debug("buildTemplateProcessingRequest:: entity: {}", () -> asJson(entity));
+    log.debug("buildTemplateProcessingRequest:: parameters entity: {}", () -> asJson(entity));
 
     TemplateProcessingRequest result = new TemplateProcessingRequest()
       .withTemplateId(entity.getTemplateId())
@@ -73,7 +73,7 @@ public class OkapiModulesClientHelper {
   public TemplateProcessingRequest buildTemplateProcessingRequest(Template template,
     Notification notification) {
 
-    log.debug("buildTemplateProcessingRequest:: template: {}, notification: {}",
+    log.debug("buildTemplateProcessingRequest:: parameters template: {}, notification: {}",
       () -> asJson(template), () -> asJson(notification));
 
     TemplateProcessingRequest result = new TemplateProcessingRequest()
