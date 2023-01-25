@@ -2,6 +2,8 @@ package org.folio.rest.impl;
 
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.Collections.singletonList;
+import static org.folio.util.LogUtil.loggingResponseHandler;
+import static org.folio.util.LogUtil.patronNoticeAsString;
 
 import java.util.Map;
 
@@ -25,8 +27,7 @@ import io.vertx.core.Handler;
 
 public class PatronNoticeResourceImpl implements PatronNotice {
 
-  private static final Logger logger = LogManager.getLogger(PatronNoticeResourceImpl.class);
-
+  private static final Logger log = LogManager.getLogger(PatronNoticeResourceImpl.class);
   private final Messages messages = Messages.getInstance();
   private final OkapiModulesClientHelper okapiModulesClientHelper = new OkapiModulesClientHelper();
 
@@ -35,24 +36,34 @@ public class PatronNoticeResourceImpl implements PatronNotice {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
+    log.debug("postPatronNotice:: parameters lang: {}, entity {}", () -> lang,
+      () -> patronNoticeAsString(entity));
+
     NoticesClient client = makeNoticesClient(vertxContext, okapiHeaders);
+    Handler<AsyncResult<Response>> loggingResultHandler = loggingResponseHandler(
+      "postPatronNotice", asyncResultHandler, log);
 
     client.postTemplateRequest(getOkapiModulesClientHelper().buildTemplateProcessingRequest(entity))
       .map(result -> getOkapiModulesClientHelper().buildNotifySendRequest(result, entity))
       .compose(client::postMessageDelivery)
       .onComplete(res -> {
         if (res.failed()) {
-          logger.error(res.cause());
-          if (res.cause().getClass() == BadRequestException.class) {
-            Error error = new Error().withMessage(res.cause().getMessage());
+          Throwable cause = res.cause();
+          if (cause.getClass() == BadRequestException.class) {
+            log.warn("postPatronNotice:: Failed to send patron notice - Bad request", cause);
+            Error error = new Error().withMessage(cause.getMessage());
             Errors errors = new Errors().withErrors(singletonList(error));
-            asyncResultHandler.handle(succeededFuture(PostPatronNoticeResponse.respond422WithApplicationJson(errors)));
+            loggingResultHandler.handle(succeededFuture(PostPatronNoticeResponse
+              .respond422WithApplicationJson(errors)));
             return;
           }
-          asyncResultHandler.handle(succeededFuture(PostPatronNoticeResponse
-            .respond500WithTextPlain(messages.getMessage(lang, MessageConsts.InternalServerError))));
+          log.warn("postPatronNotice:: Failed to send patron notice", cause);
+          loggingResultHandler.handle(succeededFuture(PostPatronNoticeResponse
+            .respond500WithTextPlain(messages.getMessage(lang,
+              MessageConsts.InternalServerError))));
         } else {
-          asyncResultHandler.handle(succeededFuture(PostPatronNoticeResponse.respond200()));
+          log.info("postPatronNotice:: Patron notice sent successfully");
+          loggingResultHandler.handle(succeededFuture(PostPatronNoticeResponse.respond200()));
         }
       });
   }

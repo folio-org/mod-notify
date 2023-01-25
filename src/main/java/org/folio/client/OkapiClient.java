@@ -8,6 +8,7 @@ import static org.folio.okapi.common.XOkapiHeaders.REQUEST_ID;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.TOKEN;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
+import static org.folio.util.LogUtil.asJson;
 
 import java.util.Map;
 import java.util.function.Function;
@@ -16,6 +17,8 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.InternalServerErrorException;
 
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -25,6 +28,7 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
 public class OkapiClient {
+  private static final Logger log = LogManager.getLogger(OkapiClient.class);
   private final WebClient webClient;
   private final String okapiUrl;
   private final String tenant;
@@ -41,6 +45,7 @@ public class OkapiClient {
   }
 
   protected HttpRequest<Buffer> postAbs(String path) {
+    log.debug("postAbs:: parameters path: {}", path);
     return webClient.requestAbs(HttpMethod.POST, okapiUrl + path)
       .putHeader(TENANT, tenant)
       .putHeader(TOKEN, token)
@@ -48,6 +53,7 @@ public class OkapiClient {
   }
 
   protected HttpRequest<Buffer> getAbs(String path) {
+    log.debug("getAbs:: parameters path: {}", path);
     return webClient.requestAbs(HttpMethod.GET, okapiUrl + path)
       .putHeader(TENANT, tenant)
       .putHeader(TOKEN, token)
@@ -55,14 +61,19 @@ public class OkapiClient {
   }
 
   protected static <T> Function<HttpResponse<Buffer>, T> responseMapper(Class<T> type) {
+    log.debug("responseMapper:: parameters type: {}", type);
     return resp -> {
       if (resp.statusCode() == SC_BAD_REQUEST) {
+        log.info("responseMapper:: response status code is {}", SC_BAD_REQUEST);
         throw new BadRequestException(resp.bodyAsString());
       }
       if (resp.statusCode() != SC_OK && resp.statusCode() != SC_NO_CONTENT) {
+        log.info("responseMapper:: response status code is not {} or {}", SC_OK, SC_NO_CONTENT);
         throw new InternalServerErrorException();
       }
-      return type == Void.class ? null : resp.bodyAsJson(type);
+      T result = type == Void.class ? null : resp.bodyAsJson(type);
+      log.info("responseMapper:: result: {}", () -> asJson(result));
+      return result;
     };
   }
 }
