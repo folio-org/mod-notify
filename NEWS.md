@@ -1,3 +1,7 @@
+## 3.0.0 2022-02-23
+* Logging improvement (MODNOTIFY-100)
+* Logging improvement - check log4j configuration (MODNOTIFY-119)
+
 ## 2.12.0 2022-10-18
 * Supports users interface versions 15.0 16.0 (MODNOTIFY-106)
 * Upgrade to RMB 35.0.0 and Vertx 4.3.3 (MODNOTIFY-111)
@@ -25,7 +29,7 @@
 ## 2.7.0 2020-10-09
  * Upgrade to RMB v31.0.2 and JDK 11 (MODNOTIFY-80)
  * Replace CQL = by ==, fix CQL injection, use url encoding (MODNOTIFY-81)
- 
+
 ## 2.6.0 2020-06-11
  * MODNOTIFY-75 Update to RMB 30.0.1
  * MODNOTIFY-72 Add permissionsRequired field
