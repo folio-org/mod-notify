@@ -50,7 +50,7 @@ public class NoticesClient extends OkapiClient {
   }
 
   public Future<TemplateProcessingResult> postTemplateRequest(TemplateProcessingRequest request) {
-    log.debug("postTemplateRequest:: parameters request: {}", () -> asJson(request));
+    log.info("postTemplateRequest:: parameters request: {}", () -> asJson(request));
     Promise<HttpResponse<Buffer>> promise = Promise.promise();
     postAbs("/template-request")
       .putHeader(ACCEPT, APPLICATION_JSON)

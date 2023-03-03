@@ -23,7 +23,7 @@ public class OkapiModulesClientHelper {
   public NotifySendRequest buildNotifySendRequest(TemplateProcessingResult templateProcessingResult,
     PatronNoticeEntity entity) {
 
-    log.debug("buildNotifySendRequest:: parameters result: {}, entity: {}",
+    log.info("buildNotifySendRequest:: parameters result: {}, entity: {}",
       () -> asJson(templateProcessingResult), () -> patronNoticeAsString(entity));
 
     Message message = new Message()
@@ -32,12 +32,12 @@ public class OkapiModulesClientHelper {
         .withAttachments(templateProcessingResult.getResult().getAttachments())
         .withDeliveryChannel(entity.getDeliveryChannel())
         .withOutputFormat(entity.getOutputFormat());
-
+  log.info("Message is {}",message);
     NotifySendRequest result = new NotifySendRequest()
       .withNotificationId(UUID.randomUUID().toString())
       .withMessages(singletonList(message))
       .withRecipientUserId(entity.getRecipientId());
-
+log.info("result is {}",result);
     log.info("buildNotifySendRequest:: result: NotifySendRequest(id={})",
       result::getNotificationId);
 
@@ -45,7 +45,7 @@ public class OkapiModulesClientHelper {
   }
 
   public NotifySendRequest buildNotifySendRequest(List<Message> messages, Notification entity) {
-    log.debug("buildNotifySendRequest:: parameters messages: {}, entity: {}",
+    log.info("buildNotifySendRequest:: parameters messages: {}, entity: {}",
       () -> asJson(messages), () -> asJson(entity));
 
     NotifySendRequest result = new NotifySendRequest()
@@ -59,7 +59,7 @@ public class OkapiModulesClientHelper {
   }
 
   public TemplateProcessingRequest buildTemplateProcessingRequest(PatronNoticeEntity entity) {
-    log.debug("buildTemplateProcessingRequest:: parameters entity: {}",
+    log.info("Inside buildTemplateProcessingRequest:: parameters entity: {}",
       () -> patronNoticeAsString(entity));
 
     TemplateProcessingRequest result = new TemplateProcessingRequest()
@@ -68,7 +68,7 @@ public class OkapiModulesClientHelper {
       .withLang(entity.getLang())
       .withContext(entity.getContext());
 
-    log.info("buildTemplateProcessingRequest:: result: TemplateProcessingRequest");
+    log.info("buildTemplateProcessingRequest:: result: TemplateProcessingRequest {}",result);
 
     return result;
   }
@@ -76,7 +76,7 @@ public class OkapiModulesClientHelper {
   public TemplateProcessingRequest buildTemplateProcessingRequest(Template template,
     Notification notification) {
 
-    log.debug("buildTemplateProcessingRequest:: parameters template: {}, notification: {}",
+    log.info("buildTemplateProcessingRequest:: parameters template: {}, notification: {}",
       () -> asJson(template), () -> asJson(notification));
 
     TemplateProcessingRequest result = new TemplateProcessingRequest()

@@ -36,7 +36,7 @@ public class PatronNoticeResourceImpl implements PatronNotice {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    log.debug("postPatronNotice:: parameters lang: {}, entity {}", () -> lang,
+    log.info("postPatronNotice:: parameters lang: {}, entity {}", () -> lang,
       () -> patronNoticeAsString(entity));
 
     NoticesClient client = makeNoticesClient(vertxContext, okapiHeaders);
