@@ -64,12 +64,12 @@ public class NoticesClient extends OkapiClient {
   }
 
   public Future<Void> postMessageDelivery(NotifySendRequest request) {
-    log.debug("postMessageDelivery:: parameters request: {}", () -> asJson(request));
+    log.info("postMessageDelivery:: parameters request: {}", () -> asJson(request));
     Promise<HttpResponse<Buffer>> promise = Promise.promise();
     postAbs("/message-delivery")
       .putHeader(ACCEPT, TEXT_PLAIN)
       .sendJson(request, promise);
-
+    log.info("postMessageDelivery:: promise {}", promise);
     return promise.future()
       .onSuccess(r -> log.info("postMessageDelivery:: result: {}", () -> bodyAsString(r)))
       .map(responseMapper(Void.class));
