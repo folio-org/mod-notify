@@ -108,7 +108,7 @@ public class LogUtil {
   }
 
   public static String bodyAsString(HttpResponse<Buffer> response) {
-    log.info("bodyAsString:: response {}", response);
+    log.info("bodyAsString:: json Object {}", response.bodyAsJsonObject());
     log.info("bodyAsString:: response {}", response.bodyAsString());
     try {
       return crop(response.bodyAsString().replaceAll(R_N_LINE_SEPARATOR, R_LINE_SEPARATOR));
