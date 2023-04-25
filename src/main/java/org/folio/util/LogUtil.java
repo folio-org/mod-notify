@@ -108,7 +108,9 @@ public class LogUtil {
   }
 
   public static String bodyAsString(HttpResponse<Buffer> response) {
-    log.info("bodyAsString:: response Object {}", response);
+    log.info("bodyAsString:: response body {}", response.body());
+    log.info("bodyAsString:: response toString {}", response.toString());
+    log.info("bodyAsString:: response statuscode {}", response.statusCode());
     log.info("bodyAsString:: buffer Object {}", response.bodyAsBuffer());
     log.info("bodyAsString:: response bodyAsString {}", response.bodyAsString());
     try {
