@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
@@ -108,13 +109,11 @@ public class LogUtil {
   }
 
   public static String bodyAsString(HttpResponse<Buffer> response) {
-    log.info("bodyAsString:: response body {}", response.body());
-    log.info("bodyAsString:: response toString {}", response.toString());
-    log.info("bodyAsString:: response statuscode {}", response.statusCode());
-    log.info("bodyAsString:: buffer Object {}", response.bodyAsBuffer());
-    log.info("bodyAsString:: response bodyAsString {}", response.bodyAsString());
     try {
-      return crop(response.bodyAsString().replaceAll(R_N_LINE_SEPARATOR, R_LINE_SEPARATOR));
+      return Optional.ofNullable(response.bodyAsString())
+        .map(LogUtil::crop)
+        .map(str -> str.replaceAll(R_N_LINE_SEPARATOR, R_LINE_SEPARATOR))
+        .orElse(null);
     } catch (Exception ex) {
       log.warn("logResponseBody:: Failed to log an HTTP response", ex);
       return null;
