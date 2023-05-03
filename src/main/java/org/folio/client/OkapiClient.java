@@ -8,7 +8,6 @@ import static org.folio.okapi.common.XOkapiHeaders.REQUEST_ID;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.TOKEN;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
-import static org.folio.util.LogUtil.asJson;
 
 import java.util.Map;
 import java.util.function.Function;
