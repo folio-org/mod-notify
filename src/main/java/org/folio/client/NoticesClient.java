@@ -58,9 +58,9 @@ public class NoticesClient extends OkapiClient {
       .sendJson(request, promise);
 
     return promise.future()
-      .onSuccess(r -> log.info("postTemplateRequest:: Posted Template Request Successfully", () -> bodyAsString(r)))
+      .onSuccess(r -> log.info("postTemplateRequest:: Posted Template Request Successfully"))
       .map(responseMapper(TemplateProcessingResult.class))
-      .onSuccess(r -> log.info("postTemplateRequest:: Posted Template Request Successfully", () -> asJson(r)));
+      .onSuccess(r -> log.info("postTemplateRequest:: Posted Template Request Successfully"));
   }
 
   public Future<Void> postMessageDelivery(NotifySendRequest request) {
