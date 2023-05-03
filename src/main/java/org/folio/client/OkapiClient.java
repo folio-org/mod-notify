@@ -72,7 +72,7 @@ public class OkapiClient {
         throw new InternalServerErrorException();
       }
       T result = type == Void.class ? null : resp.bodyAsJson(type);
-      log.info("responseMapper:: result: {}", () -> asJson(result));
+      log.info("responseMapper:: Mapped Response Successfully", () -> asJson(result));
       return result;
     };
   }
