@@ -8,7 +8,6 @@ import static org.folio.okapi.common.XOkapiHeaders.REQUEST_ID;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
 import static org.folio.okapi.common.XOkapiHeaders.TOKEN;
 import static org.folio.okapi.common.XOkapiHeaders.URL;
-import static org.folio.util.LogUtil.asJson;
 
 import java.util.Map;
 import java.util.function.Function;
@@ -72,7 +71,7 @@ public class OkapiClient {
         throw new InternalServerErrorException();
       }
       T result = type == Void.class ? null : resp.bodyAsJson(type);
-      log.info("responseMapper:: result: {}", () -> asJson(result));
+      log.info("responseMapper:: Mapped Response Successfully");
       return result;
     };
   }
