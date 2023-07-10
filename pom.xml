@@ -20,6 +20,7 @@
     <ramlfiles_path>${basedir}/ramls</ramlfiles_path>
     <vertx-version>4.3.3</vertx-version>
     <java.version>17</java.version>
+    <aspectj.version>1.9.19</aspectj.version>
   </properties>
 
   <repositories>
@@ -225,13 +226,13 @@
       </plugin>
 
       <plugin>
-        <groupId>com.nickwongdev</groupId>
+        <groupId>dev.aspectj</groupId>
         <artifactId>aspectj-maven-plugin</artifactId>
-        <version>1.12.6</version>
+        <version>1.13.1</version>
         <configuration>
           <verbose>true</verbose>
           <showWeaveInfo>false</showWeaveInfo>
-          <complianceLevel>1.8</complianceLevel>
+          <release>${java.version}</release>
           <XaddSerialVersionUID>true</XaddSerialVersionUID>
           <aspectLibraries>
             <aspectLibrary>
@@ -251,12 +252,12 @@
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjrt</artifactId>
-            <version>1.9.6</version>
+            <version>${aspectj.version}</version>
           </dependency>
           <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjtools</artifactId>
-            <version>1.9.6</version>
+            <version>${aspectj.version}</version>
           </dependency>
         </dependencies>
       </plugin>
