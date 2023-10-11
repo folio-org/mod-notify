@@ -1,3 +1,9 @@
+## 3.1.0 2023-10-11
+* Use GitHub Workflows api-lint and api-schema-lint and api-doc (MODNOTIFY-123)
+* Fixed Null Pointer Exception (MODNOTIFY-124)
+* Investigate the Email body generated in logs while sending Notices. (MODNOTIFY-125)
+* Update to Java 17 mod-notify (MODNOTIFY-129)
+
 ## 3.0.0 2022-02-23
 * Logging improvement (MODNOTIFY-100)
 * Logging improvement - check log4j configuration (MODNOTIFY-119)
