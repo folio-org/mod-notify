@@ -1,3 +1,7 @@
+## 3.2.0 2024-03-20
+* maven-model 3.9.5, plexus-utils 3.5.1 (MODNOTIFY-131)
+* mod-notify Quesnelia 2024 R1 - RMB v35.2.x update (MODNOTIFY-133)
+
 ## 3.1.0 2023-10-11
 * Use GitHub Workflows api-lint and api-schema-lint and api-doc (MODNOTIFY-123)
 * Fixed Null Pointer Exception (MODNOTIFY-124)
