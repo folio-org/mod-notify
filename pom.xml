@@ -21,6 +21,7 @@
     <vertx-version>4.5.4</vertx-version>
     <java.version>17</java.version>
     <aspectj.version>1.9.21.1</aspectj.version>
+    <folio-module-descriptor-validator.version>1.0.0</folio-module-descriptor-validator.version>
   </properties>
 
   <repositories>
@@ -426,6 +427,19 @@
           <pushChanges>false</pushChanges>
           <localCheckout>true</localCheckout>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.folio</groupId>
+        <artifactId>folio-module-descriptor-validator</artifactId>
+        <version>${folio-module-descriptor-validator.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>validate</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
     </plugins>

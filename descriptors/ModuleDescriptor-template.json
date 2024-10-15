@@ -42,7 +42,7 @@
         {
           "methods": ["POST"],
           "pathPattern": "/notify/_username/{uid}",
-          "permissionsRequired": ["notify.item.post"]
+          "permissionsRequired": ["notify.user.item.post"]
         },
         {
           "methods": ["GET"],
@@ -148,6 +148,11 @@
       "description": "Create notification"
     },
     {
+      "permissionName": "notify.user.item.post",
+      "displayName": "Notifications - create notification for a user",
+      "description": "Create notification for a user"
+    },
+    {
       "permissionName": "notify.item.put",
       "displayName": "Notifications - modify notification",
       "description": "Modify notification"
@@ -180,6 +185,7 @@
         "notify.collection.get",
         "notify.item.get",
         "notify.item.post",
+        "notify.user.item.post",
         "notify.item.put",
         "notify.item.delete"
       ],
