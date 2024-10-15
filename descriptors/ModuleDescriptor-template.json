@@ -16,7 +16,7 @@
     },
     {
       "id": "message-delivery",
-      "version": "1.0"
+      "version": "1.1"
     }
   ],
   "provides": [
@@ -36,7 +36,7 @@
           "modulePermissions" : [
             "event.config.collection.get",
             "template-request.post",
-            "sender.message-delivery"
+            "sender.message-delivery.post"
           ]
         },
         {
@@ -81,7 +81,7 @@
           "permissionsRequired": ["patron-notice.post"],
           "modulePermissions" : [
             "template-request.post",
-            "sender.message-delivery"
+            "sender.message-delivery.post"
           ]
         }
       ]
