@@ -96,7 +96,7 @@ public class PatronNoticeTest {
 
     RestAssured.given()
       .spec(spec)
-      .body(mapFrom(entity).encode())
+      .body(entity)
       .when()
       .post("/patron-notice")
       .then()
@@ -114,7 +114,7 @@ public class PatronNoticeTest {
 
     RestAssured.given()
       .spec(spec)
-      .body(mapFrom(entity).encode())
+      .body(entity)
       .when()
       .post("/patron-notice")
       .then()
@@ -132,7 +132,7 @@ public class PatronNoticeTest {
 
     RestAssured.given()
       .spec(spec)
-      .body(mapFrom(entity).encode())
+      .body(entity)
       .when()
       .post("/patron-notice")
       .then()
