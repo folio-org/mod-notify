@@ -1,3 +1,8 @@
+## 3.3.0 2024-10-30
+* Upgrade RMB version to V.35.3.0 ([MODNOTIFY-136](https://folio-org.atlassian.net/browse/MODNOTIFY-136))
+* Review and cleanup Module Descriptors for mod-notify ([MODNOTIFY-134](https://folio-org.atlassian.net/browse/MODNOTIFY-134))
+* Update the permission name from MODSENDER-69 ([MODNOTIFY-135](https://folio-org.atlassian.net/browse/MODNOTIFY-135))
+
 ## 3.2.0 2024-03-20
 * maven-model 3.9.5, plexus-utils 3.5.1 (MODNOTIFY-131)
 * mod-notify Quesnelia 2024 R1 - RMB v35.2.x update (MODNOTIFY-133)
