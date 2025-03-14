@@ -1,3 +1,6 @@
+## 3.4.0 2025-03-14
+* Update mod-notify to Java 21 ([FOLIO-4226](https://folio-org.atlassian.net/browse/FOLIO-4226))
+
 ## 3.3.0 2024-10-30
 * Upgrade RMB version to V.35.3.0 ([MODNOTIFY-136](https://folio-org.atlassian.net/browse/MODNOTIFY-136))
 * Review and cleanup Module Descriptors for mod-notify ([MODNOTIFY-134](https://folio-org.atlassian.net/browse/MODNOTIFY-134))
