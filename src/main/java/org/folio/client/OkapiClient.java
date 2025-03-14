@@ -1,8 +1,5 @@
 package org.folio.client;
 
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_NO_CONTENT;
-import static org.apache.http.HttpStatus.SC_OK;
 import static org.folio.okapi.common.WebClientFactory.getWebClient;
 import static org.folio.okapi.common.XOkapiHeaders.REQUEST_ID;
 import static org.folio.okapi.common.XOkapiHeaders.TENANT;
@@ -33,6 +30,9 @@ public class OkapiClient {
   private final String tenant;
   private final String token;
   private final String requestId;
+  private static final int SC_BAD_REQUEST = 400;
+  private static final int SC_NO_CONTENT = 204;
+  private static final int SC_OK = 200;
 
   public OkapiClient(Vertx vertx, Map<String, String> okapiHeaders) {
     CaseInsensitiveMap<String, String> headers = new CaseInsensitiveMap<>(okapiHeaders);
