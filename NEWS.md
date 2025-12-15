@@ -1,3 +1,6 @@
+## 3.3.1 2025-12-16
+* Update to RMB 35.3.1, Vert.x 4.5.22 ([MODNOTIFY-152](https://folio-org.atlassian.net/browse/MODNOTIFY-152))
+
 ## 3.3.0 2024-10-30
 * Upgrade RMB version to V.35.3.0 ([MODNOTIFY-136](https://folio-org.atlassian.net/browse/MODNOTIFY-136))
 * Review and cleanup Module Descriptors for mod-notify ([MODNOTIFY-134](https://folio-org.atlassian.net/browse/MODNOTIFY-134))
