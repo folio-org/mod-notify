@@ -1,3 +1,6 @@
+## 3.4.1 2025-12-16
+* Update to RMB 35.4.1, Vert.x 4.5.22 ([MODNOTIFY-153](https://folio-org.atlassian.net/browse/MODNOTIFY-153))
+
 ## 3.4.0 2025-03-14
 * Update mod-notify to Java 21 ([FOLIO-4226](https://folio-org.atlassian.net/browse/FOLIO-4226))
 
