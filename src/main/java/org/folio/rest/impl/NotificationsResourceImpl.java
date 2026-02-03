@@ -11,11 +11,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
 
+import io.vertx.core.Future;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.folio.client.NoticesClient;
@@ -42,7 +42,6 @@ import org.folio.util.StringUtil;
 import org.folio.util.UuidUtil;
 
 import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
 import io.vertx.core.json.Json;
@@ -347,20 +346,19 @@ public class NotificationsResourceImpl implements Notify {
             NoticesClient client = makeNoticesClient(context, okapiHeaders);
 
             client.getEventConfig(entity.getEventConfigName())
-              .compose(eventEntity -> CompositeFuture.all(eventEntity.getTemplates()
-                .stream()
+              .compose(eventEntity -> Future.all(eventEntity.getTemplates().stream()
                 .map(template -> client.postTemplateRequest(
-                    okapiModulesClientHelper.buildTemplateProcessingRequest(template, entity))
+                  okapiModulesClientHelper.buildTemplateProcessingRequest(template, entity))
                   .map(result -> new Message()
                     .withHeader(result.getResult().getHeader())
                     .withBody(result.getResult().getBody())
                     .withDeliveryChannel(template.getDeliveryChannel())
                     .withOutputFormat(template.getOutputFormat())))
-                .collect(Collectors.toList())))
+                .toList()))
               .map(results -> okapiModulesClientHelper.buildNotifySendRequest(results.list()
                 .stream()
                 .map(o -> (Message) o)
-                .collect(Collectors.toList()), entity))
+                .toList(), entity))
               .compose(client::postMessageDelivery)
               .onComplete(event -> {
                 if (event.succeeded()) {

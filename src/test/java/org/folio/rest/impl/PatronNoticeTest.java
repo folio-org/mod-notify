@@ -76,13 +76,15 @@ public class PatronNoticeTest {
       .build();
 
     DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
-    vertx.deployVerticle(RestVerticle.class, options, context.asyncAssertSuccess());
+    vertx.deployVerticle(RestVerticle.class, options)
+      .onComplete(context.asyncAssertSuccess());
   }
 
 
   @AfterClass
   public static void tearDown(TestContext context) {
-    vertx.close(context.asyncAssertSuccess());
+    vertx.close()
+      .onComplete(context.asyncAssertSuccess());
   }
 
   @Test

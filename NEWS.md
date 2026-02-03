@@ -1,3 +1,6 @@
+## 3.5.0-SNAPSHOT 2026-XX-XX
+* Upgrade module to Vert.x 5.0 ([MODNOTIFY-148](https://folio-org.atlassian.net/browse/MODNOTIFY-148))
+
 ## 3.4.0 2025-03-14
 * Update mod-notify to Java 21 ([FOLIO-4226](https://folio-org.atlassian.net/browse/FOLIO-4226))
 

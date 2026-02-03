@@ -91,16 +91,17 @@ public class SendNotifyTest {
 
     TenantClient tenantClient = new TenantClient("http://localhost:" + port, TENANT, "diku");
     DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put(HTTP_PORT_JSON_PATH, port));
-    vertx.deployVerticle(RestVerticle.class.getName(), options, result -> {
-      try {
-        TenantAttributes attributes = new TenantAttributes()
-          .withModuleTo(getModuleId());
-        tenantClient.postTenant(attributes, postResult -> async.complete());
-      } catch (Exception e) {
-        context.fail(e);
-        async.complete();
-      }
-    });
+    vertx.deployVerticle(RestVerticle.class.getName(), options)
+      .onComplete(result -> {
+        try {
+          TenantAttributes attributes = new TenantAttributes()
+            .withModuleTo(getModuleId());
+          tenantClient.postTenant(attributes, postResult -> async.complete());
+        } catch (Exception e) {
+          context.fail(e);
+          async.complete();
+        }
+      });
 
     spec = new RequestSpecBuilder()
       .setContentType(ContentType.JSON)
@@ -112,7 +113,8 @@ public class SendNotifyTest {
   @AfterClass
   public static void tearDown(TestContext context) {
     PostgresClient.stopPostgresTester();
-    vertx.close(context.asyncAssertSuccess());
+    vertx.close()
+      .onComplete(context.asyncAssertSuccess());
   }
 
   @Before
@@ -122,7 +124,7 @@ public class SendNotifyTest {
   }
 
   @Test
-  public void testValidRequest() throws InterruptedException {
+  public void testValidRequest() {
     for (int i = 0; i < 2; i++) {
       RestAssured.given()
         .spec(spec)

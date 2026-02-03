@@ -20,7 +20,7 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.http.HttpHeaders;
+import org.folio.HttpHeaders;
 import org.awaitility.Awaitility;
 import org.folio.client.NoticesClient;
 import org.folio.helper.OkapiModulesClientHelper;
