@@ -23,9 +23,6 @@ public class OkapiModulesClientHelper {
   public NotifySendRequest buildNotifySendRequest(TemplateProcessingResult templateProcessingResult,
     PatronNoticeEntity entity) {
 
-    log.debug("buildNotifySendRequest:: parameters result: {}, entity: {}",
-      () -> asJson(templateProcessingResult), () -> patronNoticeAsString(entity));
-
     Message message = new Message()
         .withHeader(templateProcessingResult.getResult().getHeader())
         .withBody(templateProcessingResult.getResult().getBody())
@@ -45,9 +42,6 @@ public class OkapiModulesClientHelper {
   }
 
   public NotifySendRequest buildNotifySendRequest(List<Message> messages, Notification entity) {
-    log.debug("buildNotifySendRequest:: parameters messages: {}, entity: {}",
-      () -> asJson(messages), () -> asJson(entity));
-
     NotifySendRequest result = new NotifySendRequest()
       .withNotificationId(UUID.randomUUID().toString())
       .withMessages(messages)
@@ -59,8 +53,8 @@ public class OkapiModulesClientHelper {
   }
 
   public TemplateProcessingRequest buildTemplateProcessingRequest(PatronNoticeEntity entity) {
-    log.debug("buildTemplateProcessingRequest:: parameters entity: {}",
-      () -> patronNoticeAsString(entity));
+    log.debug("buildTemplateProcessingRequest:: parameters templateId: {}",
+      entity::getTemplateId);
 
     TemplateProcessingRequest result = new TemplateProcessingRequest()
       .withTemplateId(entity.getTemplateId())
@@ -75,10 +69,6 @@ public class OkapiModulesClientHelper {
 
   public TemplateProcessingRequest buildTemplateProcessingRequest(Template template,
     Notification notification) {
-
-    log.debug("buildTemplateProcessingRequest:: parameters template: {}, notification: {}",
-      () -> asJson(template), () -> asJson(notification));
-
     TemplateProcessingRequest result = new TemplateProcessingRequest()
       .withTemplateId(template.getTemplateId())
       .withOutputFormat(template.getOutputFormat())

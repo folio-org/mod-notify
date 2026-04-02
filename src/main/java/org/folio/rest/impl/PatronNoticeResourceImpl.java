@@ -3,7 +3,6 @@ package org.folio.rest.impl;
 import static io.vertx.core.Future.succeededFuture;
 import static java.util.Collections.singletonList;
 import static org.folio.util.LogUtil.loggingResponseHandler;
-import static org.folio.util.LogUtil.patronNoticeAsString;
 
 import java.util.Map;
 
@@ -36,8 +35,7 @@ public class PatronNoticeResourceImpl implements PatronNotice {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    log.debug("postPatronNotice:: parameters lang: {}, entity {}", () -> lang,
-      () -> patronNoticeAsString(entity));
+    log.debug("postPatronNotice:: parameters lang: {}", () -> lang);
 
     NoticesClient client = makeNoticesClient(vertxContext, okapiHeaders);
     Handler<AsyncResult<Response>> loggingResultHandler = loggingResponseHandler(

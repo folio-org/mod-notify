@@ -224,9 +224,8 @@ public class NotificationsResourceImpl implements Notify {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    log.debug("postNotifyUsernameByUsername:: parameters userName: {}, lang: {}, " +
-        "notification: {}, okapiHeaders: {}", () -> userName, () -> lang,
-      () -> asJson(notification), () -> headersAsString(okapiHeaders));
+    log.debug("postNotifyUsernameByUsername:: parameters lang: {}, okapiHeaders: {}",
+      () -> lang, () -> headersAsString(okapiHeaders));
 
     String tenantId = TenantTool.calculateTenantId(
       okapiHeaders.get(RestVerticle.OKAPI_HEADER_TENANT));
@@ -253,51 +252,46 @@ public class NotificationsResourceImpl implements Notify {
     Handler<AsyncResult<Response>> asyncResultHandler, String userName, Context vertxContext,
     String lang) {
 
-    log.debug("handleLookupUserResponse:: parameters resp.code: {}, resp.body: {}, " +
-        "notification: {}, okapiHeaders: {}, userName: {}, lang: {}", resp::getCode, resp::getBody,
-      () -> notification, () -> headersAsString(okapiHeaders), () -> userName, () -> lang);
+    log.debug("handleLookupUserResponse:: parameters resp.code: {}, okapiHeaders: {}, lang: {}",
+      resp::getCode, () -> headersAsString(okapiHeaders), () -> lang);
 
     Handler<AsyncResult<Response>> loggingResultHandler = loggingResponseHandler(
       "handleLookupUserResponse", asyncResultHandler, log);
 
     switch (resp.getCode()) {
       case 200:
-        log.debug("handleLookupUserResponse:: Received user {}", () -> asJson(resp.getBody()));
+        log.debug("handleLookupUserResponse:: Received user lookup response");
         JsonObject userResp = resp.getBody();
         if (userResp.getInteger("totalRecords", 0) > 0) {
           if (userResp.containsKey("users")
             && !userResp.getJsonArray("users").isEmpty()
             && userResp.getJsonArray("users").getJsonObject(0).containsKey("id")) {
 
-            log.info("handleLookupUserResponse:: User lookup succeeded for {}", userName);
+            log.info("handleLookupUserResponse:: User lookup succeeded");
             String id = userResp.getJsonArray("users").getJsonObject(0).getString("id");
             notification.setRecipientId(id);
             postNotify(lang, notification, okapiHeaders, loggingResultHandler, vertxContext);
           } else {
-            log.warn("handleLookupUserResponse:: User lookup failed for {}. Bad response: {}",
-              () -> userName, () -> asJson(resp.getBody()));
+            log.warn("handleLookupUserResponse:: User lookup failed. Bad response");
             loggingResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
               .respond400WithTextPlain("User lookup failed for " + userName + ". "
                 + "Bad response " + userResp)));
           }
         } else {  // Can not use ValidationHelper here, we have HTTP responses
-          log.warn("handleLookupUserResponse:: User lookup failed for {}. Response: {}",
-            () -> userName, () -> asJson(resp.getBody()));
+          log.warn("handleLookupUserResponse:: User lookup failed");
           loggingResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
             .respond400WithTextPlain("User lookup failed. "
               + "Can not find user " + userName)));
         }
         break;
       case 403:
-        log.warn("handleLookupUserResponse:: Insufficient permissions (403). User lookup failed " +
-            "for {}. Response: {}", () -> userName, () -> asJson(resp.getBody()));
+        log.warn("handleLookupUserResponse:: Insufficient permissions (403). User lookup failed");
         loggingResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
           .respond400WithTextPlain("User lookup failed with 403. " + userName
             + " " + Json.encode(resp.getError()))));
         break;
       default:
-        log.warn("handleLookupUserResponse:: User lookup failed with {} code. Response: {}",
-          resp::getCode, () -> asJson(resp.getBody()));
+        log.warn("handleLookupUserResponse:: User lookup failed with {} code", resp::getCode);
         loggingResultHandler.handle(succeededFuture(PostNotifyUsernameByUsernameResponse
           .respond500WithTextPlain(internalErrorMsg(null, lang))));
         break;
@@ -309,8 +303,8 @@ public class NotificationsResourceImpl implements Notify {
   public void postNotify(String lang, Notification entity, Map<String, String> okapiHeaders,
     Handler<AsyncResult<Response>> asyncResultHandler, Context context) {
 
-    log.debug("postNotify:: parameters lang: {}, entity: {}, okapiHeaders: {}",
-      () -> lang, () -> asJson(entity), () -> headersAsString(okapiHeaders));
+    log.debug("postNotify:: parameters lang: {}, okapiHeaders: {}",
+      () -> lang, () -> headersAsString(okapiHeaders));
 
     Handler<AsyncResult<Response>> loggingResultHandler = loggingResponseHandler(
       "postNotify", asyncResultHandler, log);
@@ -583,8 +577,8 @@ public class NotificationsResourceImpl implements Notify {
     Map<String, String> okapiHeaders, Handler<AsyncResult<Response>> asyncResultHandler,
     Context vertxContext) {
 
-    log.debug("putNotifyById:: parameters id: {}, lang: {}, entity: {}, okapiHeaders: {}",
-      () -> id, () -> lang, () -> asJson(entity), () -> headersAsString(okapiHeaders));
+    log.debug("putNotifyById:: parameters id: {}, lang: {}, okapiHeaders: {}",
+      () -> id, () -> lang, () -> headersAsString(okapiHeaders));
 
     Handler<AsyncResult<Response>> loggingResultHandler = loggingResponseHandler(
       "putNotifyById", asyncResultHandler, log);
