@@ -1,5 +1,21 @@
-## 3.5.0-SNAPSHOT 2026-XX-XX
+## 3.5.0 2026-04-16
+
+### Breaking changes
 * Upgrade module to Vert.x 5.0 ([MODNOTIFY-148](https://folio-org.atlassian.net/browse/MODNOTIFY-148))
+
+### Bug fixes
+* Remove sensitive data from logs ([MODNOTIFY-142](https://folio-org.atlassian.net/browse/MODNOTIFY-142))
+
+### Dependencies
+* Bump `raml-module-builder` from `35.4.0` to `36.0.0`
+* Bump `vert.x` from `4.5.13` to `5.0.6`
+* Bump `log4j` to `2.25.2`
+* Bump `rest-assured` to `6.0.0`
+* Bump `wiremock` to `3.12.1`
+* Bump `awaitility` to `4.3.0`
+* Bump `assertj` to `3.25.3`
+* Bump `mockito` to `5.16.0`
+* Bump `okapi-testing` to `7.0.1`
 
 ## 3.4.0 2025-03-14
 * Update mod-notify to Java 21 ([FOLIO-4226](https://folio-org.atlassian.net/browse/FOLIO-4226))
