@@ -22,7 +22,7 @@
     <!-- Dependency versions -->
     <raml-module-builder.version>36.0.0</raml-module-builder.version>
     <vertx-version>5.1.2</vertx-version>
-    <log4j.version>2.25.2</log4j.version>
+    <log4j.version>2.26.0</log4j.version>
 
     <!-- Test dependency versions -->
     <junit.version>4.13.2</junit.version>
