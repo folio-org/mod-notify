@@ -1,3 +1,8 @@
+## 3.6.0 In Progress
+* Use GitHub Workflows for Maven ([MODNOTIFY-154](https://folio-org.atlassian.net/browse/MODNOTIFY-154))
+
+---
+
 ## 3.5.0 2026-04-16
 
 ### Breaking changes
