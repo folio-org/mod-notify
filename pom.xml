@@ -21,7 +21,7 @@
 
     <!-- Dependency versions -->
     <raml-module-builder.version>36.0.0</raml-module-builder.version>
-    <vertx-version>5.1.2</vertx-version>
+    <vertx-version>5.1.3</vertx-version>
     <log4j.version>2.26.0</log4j.version>
 
     <!-- Test dependency versions -->
@@ -32,7 +32,7 @@
     <maven-model.version>3.9.16</maven-model.version>
     <assertj.version>3.27.7</assertj.version>
     <mockito.version>5.23.0</mockito.version>
-    <okapi-testing.version>7.0.4</okapi-testing.version>
+    <okapi-testing.version>7.0.5</okapi-testing.version>
 
     <!-- Plugin versions -->
     <aspectj.version>1.9.25.1</aspectj.version>
