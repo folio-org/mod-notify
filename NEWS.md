@@ -1,5 +1,6 @@
 ## 3.6.0 In Progress
 * Use GitHub Workflows for Maven ([MODNOTIFY-154](https://folio-org.atlassian.net/browse/MODNOTIFY-154))
+* Support version `2.0` of interface `mod-event` ([MODEVENTC-77](https://folio-org.atlassian.net/browse/MODEVENTC-77))
 
 ---
 
