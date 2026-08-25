@@ -9,6 +9,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -145,6 +146,36 @@ public class PatronNoticeResourceImplTest {
     Awaitility.await()
       .atMost(1, TimeUnit.SECONDS)
       .until(() -> handlerIsCalled);
+  }
+
+  @Test
+  public void shouldCallHandlerWith400StatusWhenSmsNoticeIsNotPlainText() {
+    var smsEntity = new PatronNoticeEntity()
+      .withContext(new Context())
+      .withDeliveryChannel("sms")
+      .withLang(LANG)
+      .withOutputFormat(MediaType.TEXT_HTML)
+      .withRecipientId("recipient-id")
+      .withTemplateId("template-id");
+
+    Handler<AsyncResult<Response>> handler = responseAsyncResult -> {
+      handlerIsCalled = true;
+
+      assertTrue(responseAsyncResult.succeeded());
+      assertEquals(400, responseAsyncResult.result().getStatus());
+      assertEquals(MediaType.TEXT_PLAIN,
+        responseAsyncResult.result().getHeaderString(HttpHeaders.CONTENT_TYPE));
+      assertEquals("SMS notifications must use outputFormat 'text/plain'. Received: 'text/html'",
+        responseAsyncResult.result().getEntity());
+    };
+
+    patronNoticeResource.postPatronNotice(LANG, smsEntity, okapiHeaders, handler, null);
+
+    Awaitility.await()
+      .atMost(1, TimeUnit.SECONDS)
+      .until(() -> handlerIsCalled);
+
+    verify(client, never()).postTemplateRequest(any());
   }
 
   PatronNoticeEntity makeEntity() {
