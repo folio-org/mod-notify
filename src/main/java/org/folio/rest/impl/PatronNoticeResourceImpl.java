@@ -19,6 +19,7 @@ import org.folio.rest.jaxrs.model.PatronNoticeEntity;
 import org.folio.rest.jaxrs.resource.PatronNotice;
 import org.folio.rest.tools.messages.MessageConsts;
 import org.folio.rest.tools.messages.Messages;
+import org.folio.util.PatronNoticeValidator;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Context;
@@ -37,9 +38,18 @@ public class PatronNoticeResourceImpl implements PatronNotice {
 
     log.debug("postPatronNotice:: parameters lang: {}", () -> lang);
 
-    NoticesClient client = makeNoticesClient(vertxContext, okapiHeaders);
-    Handler<AsyncResult<Response>> loggingResultHandler = loggingResponseHandler(
+    var loggingResultHandler = loggingResponseHandler(
       "postPatronNotice", asyncResultHandler, log);
+
+    var validationError = PatronNoticeValidator.validate(entity);
+    if (validationError.isPresent()) {
+      log.warn("postPatronNotice:: Rejecting request: {}", validationError.get());
+      loggingResultHandler.handle(succeededFuture(
+        PostPatronNoticeResponse.respond400WithTextPlain(validationError.get())));
+      return;
+    }
+
+    var client = makeNoticesClient(vertxContext, okapiHeaders);
 
     client.postTemplateRequest(getOkapiModulesClientHelper().buildTemplateProcessingRequest(entity))
       .map(result -> getOkapiModulesClientHelper().buildNotifySendRequest(result, entity))

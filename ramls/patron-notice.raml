@@ -1,7 +1,7 @@
 #%RAML 1.0
 title: Patron Notice API
 baseUri: https://github.com/folio-org/mod-notify
-version: v1.1
+version: v1.2
 
 documentation:
   - title: mod-notify API
@@ -30,6 +30,11 @@ traits:
     responses:
       200:
         description: Patron notice successfully sent
+      400:
+        description: Bad request, e.g. an SMS notice with a non-plain-text output format
+        body:
+          text/plain:
+            example: "SMS notifications must use outputFormat 'text/plain'. Received: 'text/html'"
       422:
         description: Unprocessable entity, e.g. incorrect template id or recipient id
         body:

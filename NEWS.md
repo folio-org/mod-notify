@@ -1,6 +1,10 @@
 ## 3.6.0 In Progress
 * Use GitHub Workflows for Maven ([MODNOTIFY-154](https://folio-org.atlassian.net/browse/MODNOTIFY-154))
 * Support version `2.0` of interface `mod-event` ([MODEVENTC-77](https://folio-org.atlassian.net/browse/MODEVENTC-77))
+* Validate sms template formats ([MODNOTIFY-161](https://folio-org.atlassian.net/browse/MODNOTIFY-161))
+
+### Dependencies
+* bump `patron-notice` from `1.1` to `1.2`
 
 ---
 

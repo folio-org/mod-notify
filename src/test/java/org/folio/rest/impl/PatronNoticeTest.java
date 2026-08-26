@@ -37,6 +37,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
+import static org.hamcrest.Matchers.containsString;
 
 @RunWith(VertxUnitRunner.class)
 public class PatronNoticeTest {
@@ -139,6 +140,43 @@ public class PatronNoticeTest {
       .post("/patron-notice")
       .then()
       .statusCode(422);
+  }
+
+  @Test
+  public void testPostPatronNoticeWithSmsAndPlainTextOutputFormat() {
+
+    var entity = new PatronNoticeEntity()
+      .withRecipientId(RECIPIENT_ID)
+      .withTemplateId(TEMPLATE_ID)
+      .withDeliveryChannel("sms")
+      .withOutputFormat(MediaType.TEXT_PLAIN);
+
+    RestAssured.given()
+      .spec(spec)
+      .body(entity)
+      .when()
+      .post("/patron-notice")
+      .then()
+      .statusCode(200);
+  }
+
+  @Test
+  public void testPostPatronNoticeWithSmsAndHtmlOutputFormatIsRejected() {
+
+    var entity = new PatronNoticeEntity()
+      .withRecipientId(RECIPIENT_ID)
+      .withTemplateId(TEMPLATE_ID)
+      .withDeliveryChannel("sms")
+      .withOutputFormat(TEXT_HTML);
+
+    RestAssured.given()
+      .spec(spec)
+      .body(entity)
+      .when()
+      .post("/patron-notice")
+      .then()
+      .statusCode(400)
+      .body(containsString("SMS notifications must use outputFormat 'text/plain'"));
   }
 
   private static void mockOkapiModules() {
